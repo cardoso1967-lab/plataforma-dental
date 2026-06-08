@@ -20,9 +20,12 @@ import {
   LogOut,
 } from 'lucide-react';
 
+import { useAuth } from '@/components/AuthProvider';
+
 export const Sidebar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const { logout } = useAuth();
 
   const menuItems = [
     { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
@@ -113,13 +116,13 @@ export const Sidebar: React.FC = () => {
 
         {/* Footer */}
         <div className="p-4 border-t border-slate-800">
-          <Link
-            href="/"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-semibold text-rose-400 hover:bg-rose-950/30 hover:text-rose-300 transition-colors w-full"
+          <button
+            onClick={logout}
+            className="flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-semibold text-rose-400 hover:bg-rose-950/30 hover:text-rose-300 transition-colors w-full text-left bg-transparent border-none outline-none cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
-            <span>Voltar ao Portal</span>
-          </Link>
+            <span>Sair do Painel</span>
+          </button>
         </div>
       </aside>
     </>

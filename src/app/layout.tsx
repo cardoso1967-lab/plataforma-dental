@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { AuthProvider } from '@/components/AuthProvider';
 
 export const metadata: Metadata = {
   title: 'Plataforma Dental | Venda e Assistência Técnica Odontológica',
@@ -17,7 +18,9 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className="h-full">
       <body className="h-full bg-slate-50 text-slate-900 antialiased flex flex-col">
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

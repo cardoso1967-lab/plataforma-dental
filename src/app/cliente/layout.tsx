@@ -4,12 +4,15 @@ import React from 'react';
 import { BottomNav } from '@/components/ui/BottomNav';
 import { LayoutDashboard, Receipt, Wrench, LifeBuoy, Stethoscope, LogOut } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from '@/components/AuthProvider';
 
 export default function ClienteLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { logout } = useAuth();
+  
   const clientNavItems = [
     { label: 'Início', href: '/cliente/dashboard', icon: LayoutDashboard },
     { label: 'Pedidos', href: '/cliente/pedidos', icon: Receipt },
@@ -43,13 +46,13 @@ export default function ClienteLayout({
           </nav>
         </div>
 
-        <Link
-          href="/"
-          className="flex items-center gap-2 text-xs font-semibold text-rose-400 hover:text-rose-300 py-2.5 transition-colors"
+        <button
+          onClick={logout}
+          className="flex items-center gap-2 text-xs font-semibold text-rose-400 hover:text-rose-300 py-2.5 transition-colors cursor-pointer w-full text-left bg-transparent border-none outline-none"
         >
           <LogOut className="w-4 h-4" />
           <span>Sair do Portal</span>
-        </Link>
+        </button>
       </aside>
 
       {/* Header simplificado para mobile */}
@@ -58,9 +61,12 @@ export default function ClienteLayout({
           <Stethoscope className="w-5 h-5 text-brand-clinical" />
           <span className="font-extrabold text-sm tracking-tight">Portal do Cliente</span>
         </Link>
-        <Link href="/" className="text-xs font-semibold text-rose-400 flex items-center gap-1">
+        <button 
+          onClick={logout}
+          className="text-xs font-semibold text-rose-400 flex items-center gap-1 bg-transparent border-none outline-none cursor-pointer"
+        >
           <LogOut className="w-4 h-4" /> Sair
-        </Link>
+        </button>
       </div>
 
       {/* Área do conteúdo */}

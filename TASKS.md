@@ -10,10 +10,10 @@ Acompanhamento de tarefas por fase para o projeto Plataforma Dental.
 
 ---
 
-## Fase 2 — Autenticação e Portal do Cliente (Próxima Fase)
-- [ ] **Autenticação**: Integração do Supabase Auth para controle e proteção das rotas de admin, cliente e técnico.
-- [ ] **Portal cliente**: Implementação da visualização detalhada dos equipamentos e histórico de pedidos.
-- [ ] **Abertura de chamados**: Formulário integrado ao banco de dados para o cliente abrir ordens de serviço.
+## Fase 2 — Autenticação e Portal do Cliente (Concluída)
+- [x] **Autenticação**: Integração do Supabase Auth para controle e proteção das rotas de admin, cliente e técnico.
+- [x] **Portal cliente**: Implementação da visualização detalhada dos equipamentos e histórico de pedidos.
+- [x] **Abertura de chamados**: Formulário integrado ao banco de dados para o cliente abrir ordens de serviço.
 
 ---
 
