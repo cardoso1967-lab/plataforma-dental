@@ -4,7 +4,7 @@ Acompanhamento de tarefas por fase para o projeto Plataforma Dental.
 
 ## Fase 1 — Estrutura Inicial e Base de Dados (Atual)
 - [x] **Preparação**: Inicialização do projeto Next.js + TS + Tailwind e configurações globais.
-- [x] **Banco de dados**: Criação da migração inicial com enums, tabelas, triggers e RLS.
+- [x] **Banco de dados**: Criação da migração inicial com enums, tabelas, triggers e RLS. *(Aplicada com sucesso no Supabase)*
 - [x] **Estrutura do app**: Organização de pastas, criação de rotas (públicas, admin, cliente, técnico) e layouts.
 - [x] **Mobile first**: Criação dos componentes base responsivos (BottomNav, Sidebar, cards e botões).
 
