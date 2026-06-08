@@ -16,8 +16,8 @@ export default function RootLayout({
 }>) {
   // Inicialmente configuramos como pt-BR. Posteriormente suportará es-MX via i18n
   return (
-    <html lang="pt-BR" className="h-full">
-      <body className="h-full bg-slate-50 text-slate-900 antialiased flex flex-col">
+    <html lang="pt-BR" className="h-full" suppressHydrationWarning>
+      <body className="h-full bg-slate-50 text-slate-900 antialiased flex flex-col" suppressHydrationWarning>
         <AuthProvider>
           {children}
         </AuthProvider>
