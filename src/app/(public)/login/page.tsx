@@ -24,26 +24,60 @@ export default function LoginPage() {
     setError(null);
 
     try {
+      // 1. Ejecutar signInWithPassword
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (authError) {
-        setError(authError.message === 'Invalid login credentials' 
+      if (authError || !data.user) {
+        setError(authError?.message === 'Invalid login credentials' 
           ? 'Credenciais inválidas. Verifique seu e-mail e senha.'
-          : authError.message);
+          : (authError?.message || 'Erro ao autenticar. Tente novamente.'));
         setLoading(false);
         return;
       }
 
-      // Redireciona via router para que o Middleware processe a rota correta conforme o perfil
+      console.log('Login OK');
+      console.log('User ID encontrado:', data.user.id);
+
+      // 2. Buscar el registro en profiles usando el ID del usuario
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role, name')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profileError || !profile) {
+        console.error('Erro ao buscar perfil do usuário:', profileError?.message);
+        setError('Erro ao carregar dados do perfil do usuário. Entre em contato com o administrador.');
+        setLoading(false);
+        return;
+      }
+
+      console.log('Profile encontrado');
+      console.log('Role encontrada:', profile.role);
+
+      // 3. Determinar la ruta de destino según la columna role
+      let targetRoute = '/cliente/dashboard';
+      if (profile.role === 'admin') {
+        targetRoute = '/admin/dashboard';
+      } else if (profile.role === 'vendedor') {
+        targetRoute = '/admin/pedidos-venda';
+      } else if (profile.role === 'suporte') {
+        targetRoute = '/admin/ordens-servico';
+      } else if (profile.role === 'tecnico') {
+        targetRoute = '/tecnico/dashboard';
+      }
+
+      console.log('Rota de destino:', targetRoute);
+
+      // 4. Redireccionar usando router.replace y ejecutar router.refresh
+      router.replace(targetRoute);
       router.refresh();
-      // Pequeño delay para dejar que refresh ocurra y luego empujar a una ruta raíz para disparar middleware
-      setTimeout(() => {
-        router.push('/cliente/dashboard');
-      }, 500);
+
     } catch (err: any) {
+      console.error('Falha de execução no fluxo de login:', err);
       setError('Ocorreu um erro ao tentar fazer login. Tente novamente.');
       setLoading(false);
     }

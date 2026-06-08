@@ -1,6 +1,25 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+// Helper para redireccionar preservando las cookies de sesión actualizadas
+function redirectWithCookies(supabaseResponse: NextResponse, redirectUrl: URL) {
+  const redirectResponse = NextResponse.redirect(redirectUrl);
+  
+  // Copiar todas las cookies de la respuesta de Supabase a la respuesta de redirección
+  supabaseResponse.cookies.getAll().forEach((cookie) => {
+    redirectResponse.cookies.set(cookie.name, cookie.value, {
+      path: cookie.path,
+      domain: cookie.domain,
+      maxAge: cookie.maxAge,
+      secure: cookie.secure,
+      sameSite: cookie.sameSite,
+      expires: cookie.expires,
+    });
+  });
+  
+  return redirectResponse;
+}
+
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -27,8 +46,12 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refresca la sesión
-  const { data: { user } } = await supabase.auth.getUser();
+  // Refresca la sesión y obtiene al usuario
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+  if (userError) {
+    console.error('Erro de autenticação ao obter usuário no middleware:', userError.message);
+  }
 
   const pathname = request.nextUrl.pathname;
 
@@ -39,55 +62,65 @@ export async function middleware(request: NextRequest) {
   const isProtectedPath = isAdminPath || isClientePath || isTecnicoPath;
   const isLoginPage = pathname === '/login';
 
-  // Si no está logueado y accede a ruta protegida, va a login
+  // 1. Si no está logueado y accede a ruta protegida -> Redirigir a /login
   if (isProtectedPath && !user) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
-    return NextResponse.redirect(url);
+    return redirectWithCookies(supabaseResponse, url);
   }
 
-  // Si está logueado, validamos su rol y acceso
+  // 2. Si está logueado, validar rol y accesos
   if (user) {
-    // Intentamos obtener el rol desde la base de datos
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    let role = 'cliente';
 
-    const role = profile?.role || 'cliente';
+    try {
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
 
-    // Determina el destino correspondiente al rol
+      if (profileError) {
+        console.error('Erro seguro ao consultar perfil no middleware (ID do usuário omitido por segurança):', profileError.message);
+      } else if (profile?.role) {
+        role = profile.role;
+      }
+    } catch (err: any) {
+      console.error('Falha de execução ao buscar perfil no middleware:', err?.message || err);
+    }
+
+    // Definir panel correspondiente al rol
     let roleDashboard = '/cliente/dashboard';
     if (role === 'admin') roleDashboard = '/admin/dashboard';
     else if (role === 'vendedor') roleDashboard = '/admin/pedidos-venda';
     else if (role === 'suporte') roleDashboard = '/admin/ordens-servico';
     else if (role === 'tecnico') roleDashboard = '/tecnico/dashboard';
 
-    // Si está en la página de login, redirige a su respectivo dashboard
+    // Si intenta acceder a /login estando ya logueado -> Redirigir a su panel
     if (isLoginPage) {
       const url = request.nextUrl.clone();
       url.pathname = roleDashboard;
-      return NextResponse.redirect(url);
+      return redirectWithCookies(supabaseResponse, url);
     }
 
-    // Validación de accesos cruzados
+    // Validaciones de acceso cruzado:
+    // Cliente en ruta de admin o técnico -> Redirigir a su panel
     if (isClientePath && role !== 'cliente') {
       const url = request.nextUrl.clone();
       url.pathname = roleDashboard;
-      return NextResponse.redirect(url);
+      return redirectWithCookies(supabaseResponse, url);
     }
 
     if (isTecnicoPath && role !== 'tecnico') {
       const url = request.nextUrl.clone();
       url.pathname = roleDashboard;
-      return NextResponse.redirect(url);
+      return redirectWithCookies(supabaseResponse, url);
     }
 
     if (isAdminPath && !['admin', 'vendedor', 'suporte'].includes(role)) {
       const url = request.nextUrl.clone();
       url.pathname = roleDashboard;
-      return NextResponse.redirect(url);
+      return redirectWithCookies(supabaseResponse, url);
     }
   }
 
