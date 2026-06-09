@@ -47,3 +47,21 @@ A autenticação por perfis foi testada e validada com sucesso com os seguintes 
 4. **[Confirmado]** A chave `SUPABASE_SERVICE_ROLE_KEY` está vazia e protegida.
 5. **[Confirmado]** A migração inicial `001_initial_schema.sql` foi aplicada.
 6. **[Confirmado]** O projeto compila com sucesso usando `npm run build` após a supressão do Hydration Warning.
+
+---
+
+## Validação da Fase 3 — Gestão Operacional e Agenda Kanban
+
+A Fase 3 foi implementada e testada localmente com sucesso:
+
+1. **Migração 003**: Criado o arquivo `supabase/migrations/003_extend_service_order_status.sql` para estender o tipo ENUM de status no Supabase, adicionando os estados `tecnico_atribuido`, `visita_agendada` e `aguardando_peca`.
+2. **CRUD de Clientes**: A tela `/admin/clientes` foi integrada ao Supabase, permitindo criar, editar e excluir clínicas/dentistas de forma responsiva, com suporte à associação de contas de perfil de forma segura.
+3. **Gestão de Equipamentos**: Os equipamentos dos clientes (`client_equipment`) são gerenciados diretamente a partir da ficha do cliente no painel de detalhes lateral.
+4. **CRUD de Técnicos**: A tela `/admin/tecnicos` permite o gerenciamento completo da rede credenciada de técnicos, suas especialidades operacionais e a vinculação de contas de usuários com papel `tecnico`.
+5. **CRUD de Produtos**: A tela `/admin/produtos` gerencia o catálogo geral de equipamentos e peças, gerando os slugs dinamicamente e resolvendo conflitos em tempo de inserção.
+6. **Abertura de Chamados (OS)**: O formulário em `/admin/ordens-servico` permite a criação manual de OS designando técnicos e programando visitas operacionais de forma integrada ao Supabase.
+7. **Agenda Kanban**: Implementada com sucesso a visualização Kanban em `/admin/agenda` com as 9 colunas de status. Inclui o Drag & Drop nativo de HTML5 para desktop e ações rápidas móveis (reagendar, alterar status, delegar técnico).
+8. **Agenda Lista**: Implementados filtros em tempo real por data, técnico, cliente, status, prioridade, cidade e equipamento.
+9. **Histórico de Alterações**: Toda mudança de status executada na agenda (Kanban ou Lista) gera instantaneamente um registro na tabela `service_order_status_history`.
+10. **Build de Produção**: O projeto compila completamente sem erros de TypeScript e avisos de hidratação (`Compiled successfully`).
+
