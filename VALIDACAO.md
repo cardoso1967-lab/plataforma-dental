@@ -52,16 +52,24 @@ A autenticação por perfis foi testada e validada com sucesso com os seguintes 
 
 ## Validação da Fase 3 — Gestão Operacional e Agenda Kanban
 
-A Fase 3 foi implementada e testada localmente com sucesso:
+A Fase 3 foi validada sistematicamente de ponta a ponta com os seguintes resultados de testes e homologação:
 
-1. **Migração 003**: Criado o arquivo `supabase/migrations/003_extend_service_order_status.sql` para estender o tipo ENUM de status no Supabase, adicionando os estados `tecnico_atribuido`, `visita_agendada` e `aguardando_peca`.
-2. **CRUD de Clientes**: A tela `/admin/clientes` foi integrada ao Supabase, permitindo criar, editar e excluir clínicas/dentistas de forma responsiva, com suporte à associação de contas de perfil de forma segura.
-3. **Gestão de Equipamentos**: Os equipamentos dos clientes (`client_equipment`) são gerenciados diretamente a partir da ficha do cliente no painel de detalhes lateral.
-4. **CRUD de Técnicos**: A tela `/admin/tecnicos` permite o gerenciamento completo da rede credenciada de técnicos, suas especialidades operacionais e a vinculação de contas de usuários com papel `tecnico`.
-5. **CRUD de Produtos**: A tela `/admin/produtos` gerencia o catálogo geral de equipamentos e peças, gerando os slugs dinamicamente e resolvendo conflitos em tempo de inserção.
-6. **Abertura de Chamados (OS)**: O formulário em `/admin/ordens-servico` permite a criação manual de OS designando técnicos e programando visitas operacionais de forma integrada ao Supabase.
-7. **Agenda Kanban**: Implementada com sucesso a visualização Kanban em `/admin/agenda` com as 9 colunas de status. Inclui o Drag & Drop nativo de HTML5 para desktop e ações rápidas móveis (reagendar, alterar status, delegar técnico).
-8. **Agenda Lista**: Implementados filtros em tempo real por data, técnico, cliente, status, prioridade, cidade e equipamento.
-9. **Histórico de Alterações**: Toda mudança de status executada na agenda (Kanban ou Lista) gera instantaneamente um registro na tabela `service_order_status_history`.
-10. **Build de Produção**: O projeto compila completamente sem erros de TypeScript e avisos de hidratação (`Compiled successfully`).
+1. **CRUD de Clientes**: A tela `/admin/clientes` foi integrada com sucesso à tabela `customers`. Validada a listagem em tempo real, busca de clientes por Razão Social/CNPJ, cadastro de novos registros (com vinculação de `profile_id` opcional) e exclusão segura.
+2. **CRUD de Técnicos**: A tela `/admin/tecnicos` foi conectada à tabela `technicians` fazendo join em `profiles` para puxar os dados dos usuários. Validada a edição de especialidades usando caixas de seleção interativas e a alteração do status ativo/inativo.
+3. **CRUD de Produtos**: A tela `/admin/produtos` está operacional. Validada a inserção com SKU único, preços com formato BRL, definição de tipo e geração automática de slug (com sistema preventivo contra colisões de chaves).
+4. **Equipamentos do Cliente**: Validado o cadastro de equipamentos diretamente a partir do painel de detalhes do cliente na tela de Clientes. O fluxo cria, edita e deleta registros em `client_equipment` atualizando a tela na mesma hora.
+5. **Criação Manual de OS**: O formulário na tela `/admin/ordens-servico` permite a criação de OS pelo admin. Selecionar o cliente filtra dinamicamente apenas os equipamentos que pertencem a ele.
+6. **Atribuição de Técnico à OS**: O admin pode atribuir técnicos às ordens de serviço no momento da criação/edição ou de forma rápida a partir da agenda Kanban/Lista.
+7. **Visualização da OS na Agenda**: As OS são exibidas na agenda (`/admin/agenda`) distribuídas pelas 9 colunas de status. Cada card mostra com clareza o código da OS, cliente, equipamento, técnico designado, prioridade e data.
+8. **Alternância Kanban/Lista**: Validado o switch superior na tela de agenda. A alternância é instantânea e mantém o estado dos dados carregados.
+9. **Filtros da Lista**: Na visualização em Lista, os filtros por Data, Técnico, Cliente, Status, Prioridade, Cidade e Tipo de Equipamento funcionam de forma cumulativa em tempo real.
+10. **Movimento de OS no Kanban**: 
+    - **Desktop**: O Drag & Drop nativo de HTML5 foi implementado com efeitos visuais e bordas dinâmicas durante o arrasto de cards.
+    - **Mobile**: Disponibilizada uma interface móvel com botões grandes para Alterar status, Reagendar e Atribuir técnico de forma prática em telas de toque.
+11. **Histórico Automático (`service_order_status_history`)**: Toda mudança de status na agenda (seja por arrastar o card ou pelos botões móveis) gera de forma transparente um novo registro de auditoria apontando o ID do usuário administrador responsável.
+12. **Responsividade**: As telas foram testadas sob diferentes resoluções (Mobile, Tablet e Desktop) apresentando layout flexível e botões com tamanhos adequados para toque em dispositivos móveis.
+13. **Acesso do Admin**: Confirmado que o middleware (`middleware.ts`) continua dando passagem correta para o perfil de `admin` acessar as telas de gerenciamento `/admin/*`.
+14. **Acesso de Técnico e Cliente**: Validado que as políticas do middleware barram acessos cruzados (ex: cliente tentando ver `/admin/*`), redirecionando-os de forma automática a seus respectivos portais (`/tecnico/dashboard` e `/cliente/dashboard`).
+15. **Compilação de Produção**: O comando `npm run build` foi executado localmente terminando com sucesso (`Compiled successfully` e sem qualquer erro de TypeScript ou Hydration).
+
 
