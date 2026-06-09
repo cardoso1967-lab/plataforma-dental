@@ -400,12 +400,14 @@ export default function AdminAgendaPage() {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Header y Alternador */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-extrabold text-brand-dark tracking-tight flex items-center gap-2">
-            <Calendar className="w-7 h-7 text-brand-clinical" />
+    <div className="space-y-8 animate-in fade-in duration-300">
+      {/* Header y Alternador Premium */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 border-b border-slate-100 pb-5">
+        <div className="space-y-1 text-left">
+          <h1 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2.5">
+            <div className="p-2 bg-sky-50 text-brand-clinical rounded-2xl shadow-2xs">
+              <Calendar className="w-6 h-6" />
+            </div>
             Agenda Operativa
           </h1>
           <p className="text-xs text-slate-500 font-medium">
@@ -414,7 +416,7 @@ export default function AdminAgendaPage() {
         </div>
 
         {/* Switch de vistas premium */}
-        <div className="flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl self-start md:self-auto border border-slate-200/60 shadow-xs">
+        <div className="flex items-center gap-2 bg-slate-100/80 p-1.5 rounded-2xl self-start md:self-auto border border-slate-200/50 shadow-xs">
           <button
             onClick={() => setViewMode('kanban')}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 ${
@@ -439,10 +441,10 @@ export default function AdminAgendaPage() {
           </button>
           <button
             disabled
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-400 bg-transparent border-none cursor-not-allowed"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-400 bg-transparent border-none cursor-not-allowed"
           >
-            <Calendar className="w-4 h-4 text-slate-300" />
-            <span>Calendário <span className="text-[7.5px] px-1 py-0.2 bg-slate-200 text-slate-500 rounded font-bold uppercase tracking-wider">Breve</span></span>
+            <Calendar className="w-4 h-4 text-slate-305" />
+            <span>Calendário <span className="text-[7px] px-1.5 py-0.5 bg-slate-200 text-slate-500 rounded font-black uppercase tracking-widest">Breve</span></span>
           </button>
         </div>
       </div>
@@ -456,7 +458,7 @@ export default function AdminAgendaPage() {
           {/* VISTA KANBAN */}
           {viewMode === 'kanban' && (
             <div className="overflow-x-auto pb-6 no-scrollbar -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
-              <div className="flex gap-4 min-w-[2100px] items-start py-2">
+              <div className="flex gap-4.5 min-w-[2200px] items-start py-2">
                 {KANBAN_STATUSES.map((statusCol) => {
                   const ordersInCol = serviceOrders.filter(os => os.status === statusCol.id);
                   const isOver = draggedOverCol === statusCol.id;
@@ -467,118 +469,136 @@ export default function AdminAgendaPage() {
                       onDragOver={(e) => handleDragOver(e, statusCol.id)}
                       onDragLeave={() => setDraggedOverCol(null)}
                       onDrop={(e) => handleDrop(e, statusCol.id)}
-                      className={`flex-1 min-w-[220px] bg-slate-50 border border-slate-100 rounded-2xl p-4.5 space-y-4.5 transition-all duration-300 ${
-                        isOver ? 'bg-sky-50/40 border-2 border-dashed border-brand-clinical scale-[1.01]' : 'shadow-xs'
+                      className={`flex-1 min-w-[230px] bg-slate-50/50 border border-slate-100 rounded-2xl p-4.5 space-y-4 transition-all duration-300 ${
+                        isOver ? 'bg-sky-50/30 border-2 border-dashed border-brand-clinical scale-[1.01] shadow-sm' : 'shadow-xs'
                       }`}
                     >
                       {/* Column Header */}
                       <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                        <span className="font-extrabold text-xs text-brand-dark leading-tight tracking-wide">{statusCol.label}</span>
-                        <span className="text-[9.5px] font-black px-2 py-0.5 bg-slate-200/80 text-slate-700 rounded-full font-sans">
+                        <span className="font-extrabold text-xs text-slate-800 leading-tight tracking-wide">{statusCol.label}</span>
+                        <span className={`text-[9.5px] font-black px-2.5 py-0.5 rounded-full border ${statusCol.color} shadow-3xs`}>
                           {ordersInCol.length}
                         </span>
                       </div>
 
                       {/* Column Cards */}
                       <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-0.5 no-scrollbar min-h-[200px] transition-all duration-300">
-                        {ordersInCol.map((os) => (
-                          <div
-                            key={os.id}
-                            draggable
-                            onDragStart={(e) => handleDragStart(e, os.id)}
-                            className="bg-white rounded-2xl p-4 border border-slate-100 hover:shadow-md transition-all duration-300 hover:scale-[1.01] cursor-grab active:cursor-grabbing space-y-3.5 shadow-xs text-left"
-                          >
-                            {/* Card Header */}
-                            <div className="flex justify-between items-start gap-1">
-                              <span className="text-[9px] font-mono font-black text-brand-clinical bg-sky-50 px-2 py-0.5 rounded-lg border border-sky-100/10">
-                                #{os.id.substring(0, 6).toUpperCase()}
-                              </span>
-                              <span className={`text-[8.5px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${
-                                priorityMap[os.priority]?.class || 'bg-slate-100'
-                              }`}>
-                                {priorityMap[os.priority]?.label || os.priority}
-                              </span>
-                            </div>
+                        {ordersInCol.map((os) => {
+                          const initials = os.customer?.company_name.substring(0, 2).toUpperCase() || 'OS';
+                          const colors = [
+                            'bg-sky-50 text-brand-clinical border-sky-100',
+                            'bg-emerald-50 text-emerald-600 border-emerald-100',
+                            'bg-indigo-50 text-indigo-600 border-indigo-100',
+                            'bg-purple-50 text-purple-600 border-purple-100',
+                            'bg-amber-50 text-amber-600 border-amber-100',
+                          ];
+                          const colorIndex = initials.charCodeAt(0) % colors.length;
+                          const initialsColor = colors[colorIndex];
 
-                            {/* Client & Equipment info */}
-                            <div className="space-y-1">
-                              <h4 className="font-extrabold text-xs text-brand-dark line-clamp-1 leading-snug">
-                                {os.customer?.company_name}
-                              </h4>
-                              {os.equipment ? (
-                                <p className="text-[10px] font-semibold text-slate-500 flex items-center gap-1">
-                                  <Wrench className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                                  <span className="line-clamp-1">{os.equipment.name}</span>
-                                </p>
-                              ) : (
-                                <span className="text-[9px] text-slate-400 italic font-semibold">Sem equipamento registrado</span>
-                              )}
-                            </div>
+                          return (
+                            <div
+                              key={os.id}
+                              draggable
+                              onDragStart={(e) => handleDragStart(e, os.id)}
+                              className="bg-white rounded-2xl p-4 border border-slate-100 hover:border-slate-200 hover:shadow-md transition-all duration-300 hover:scale-[1.015] cursor-grab active:cursor-grabbing space-y-3.5 shadow-2xs text-left"
+                            >
+                              {/* Card Header */}
+                              <div className="flex justify-between items-start gap-1">
+                                <span className="text-[9px] font-mono font-black text-brand-clinical bg-sky-50 px-2 py-0.5 rounded-lg border border-sky-100/10">
+                                  #{os.id.substring(0, 6).toUpperCase()}
+                                </span>
+                                <span className={`text-[8px] font-black px-2 py-0.5 rounded-md border uppercase tracking-wider ${
+                                  priorityMap[os.priority]?.class || 'bg-slate-100'
+                                }`}>
+                                  {priorityMap[os.priority]?.label || os.priority}
+                                </span>
+                              </div>
 
-                            {/* Técnico y Fecha */}
-                            <div className="pt-3 border-t border-slate-50 space-y-2 text-[10px] text-slate-600 font-semibold leading-relaxed">
-                              <div className="flex items-center gap-1.5">
-                                {os.technician?.profile ? (
-                                  <>
-                                    <div className="w-5 h-5 bg-sky-100 text-brand-clinical rounded-full flex items-center justify-center text-[8.5px] font-black">
-                                      {getInitials(os.technician.profile.name)}
-                                    </div>
-                                    <span className="line-clamp-1 text-slate-700">
-                                      {os.technician.profile.name}
-                                    </span>
-                                  </>
+                              {/* Client & Equipment info */}
+                              <div className="space-y-1.5">
+                                <div className="flex items-center gap-2">
+                                  <div className={`w-6 h-6 rounded-lg border flex items-center justify-center font-extrabold text-[8.5px] ${initialsColor} flex-shrink-0`}>
+                                    {initials}
+                                  </div>
+                                  <h4 className="font-extrabold text-xs text-slate-800 line-clamp-1 leading-snug">
+                                    {os.customer?.company_name}
+                                  </h4>
+                                </div>
+                                {os.equipment ? (
+                                  <p className="text-[10px] font-semibold text-slate-500 flex items-center gap-1.5">
+                                    <Wrench className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                                    <span className="line-clamp-1">{os.equipment.name}</span>
+                                  </p>
                                 ) : (
-                                  <>
-                                    <div className="w-5 h-5 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center">
-                                      <User className="w-3 h-3" />
-                                    </div>
-                                    <span className="text-slate-400 italic">Não designado</span>
-                                  </>
+                                  <span className="text-[9px] text-slate-400 italic font-semibold pl-8 block">Sem equipamento registrado</span>
                                 )}
                               </div>
-                              
-                              {os.scheduled_date && (
-                                <div className="flex items-center gap-1.5 text-[9px] text-slate-400 font-medium">
-                                  <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                  <span>{new Date(os.scheduled_date).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</span>
+
+                              {/* Técnico y Fecha */}
+                              <div className="pt-3 border-t border-slate-50 space-y-2 text-[10px] text-slate-600 font-semibold leading-relaxed">
+                                <div className="flex items-center gap-1.5">
+                                  {os.technician?.profile ? (
+                                    <>
+                                      <div className="w-5 h-5 bg-sky-100 text-brand-clinical rounded-full flex items-center justify-center text-[8.5px] font-black">
+                                        {getInitials(os.technician.profile.name)}
+                                      </div>
+                                      <span className="line-clamp-1 text-slate-700">
+                                        {os.technician.profile.name}
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <div className="w-5 h-5 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center">
+                                        <User className="w-3 h-3 text-slate-350" />
+                                      </div>
+                                      <span className="text-slate-405 italic">Não designado</span>
+                                    </>
+                                  )}
                                 </div>
-                              )}
-                            </div>
+                                
+                                {os.scheduled_date && (
+                                  <div className="flex items-center gap-1.5 text-[9px] text-slate-400 font-medium">
+                                    <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                    <span>{new Date(os.scheduled_date).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</span>
+                                  </div>
+                                )}
+                              </div>
 
-                            {/* Acciones móviles */}
-                            <div className="flex flex-wrap gap-1.5 pt-3 border-t border-slate-50 md:hidden justify-between">
+                              {/* Acciones móviles */}
+                              <div className="flex flex-wrap gap-1.5 pt-3 border-t border-slate-50 md:hidden justify-between">
+                                <button
+                                  onClick={() => openQuickAction(os, 'status')}
+                                  className="text-[8.5px] font-black px-2 py-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-750 transition-colors border border-slate-200/40"
+                                >
+                                  Status
+                                </button>
+                                <button
+                                  onClick={() => openQuickAction(os, 'tech')}
+                                  className="text-[8.5px] font-black px-2 py-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-750 transition-colors border border-slate-200/40"
+                                >
+                                  Técnico
+                                </button>
+                                <button
+                                  onClick={() => openQuickAction(os, 'date')}
+                                  className="text-[8.5px] font-black px-2 py-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-750 transition-colors border border-slate-200/40"
+                                >
+                                  Agendar
+                                </button>
+                              </div>
+
+                              {/* Botón Detalles */}
                               <button
-                                onClick={() => openQuickAction(os, 'status')}
-                                className="text-[8.5px] font-black px-2 py-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-700 transition-colors"
+                                onClick={() => setSelectedOS(os)}
+                                className="w-full text-center text-[9.5px] font-extrabold text-slate-500 hover:text-brand-clinical bg-slate-50 hover:bg-sky-50/50 py-2 rounded-xl transition-colors duration-300 mt-1.5 border border-slate-100/50"
                               >
-                                Status
-                              </button>
-                              <button
-                                onClick={() => openQuickAction(os, 'tech')}
-                                className="text-[8.5px] font-black px-2 py-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-700 transition-colors"
-                              >
-                                Técnico
-                              </button>
-                              <button
-                                onClick={() => openQuickAction(os, 'date')}
-                                className="text-[8.5px] font-black px-2 py-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-700 transition-colors"
-                              >
-                                Agendar
+                                Ver detalhes
                               </button>
                             </div>
-
-                            {/* Botón Detalles */}
-                            <button
-                              onClick={() => setSelectedOS(os)}
-                              className="w-full text-center text-[9.5px] font-extrabold text-slate-500 hover:text-brand-clinical bg-slate-50 hover:bg-sky-50/50 py-2 rounded-xl transition-colors duration-300 mt-1.5 border border-slate-100/50"
-                            >
-                              Ver detalhes
-                            </button>
-                          </div>
-                        ))}
+                          );
+                        })}
 
                         {ordersInCol.length === 0 && (
-                          <div className="text-center py-12 text-[10px] text-slate-400 italic font-semibold border-2 border-dashed border-slate-200/50 rounded-2xl bg-white/30">
+                          <div className="text-center py-12 text-[10px] text-slate-450 italic font-semibold border border-dashed border-slate-200 rounded-2xl bg-slate-50/10">
                             Arraste chamados aqui
                           </div>
                         )}

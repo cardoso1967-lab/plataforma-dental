@@ -227,7 +227,6 @@ export default function AdminProdutosPage() {
     }
   };
 
-  // Filtrar productos
   const filteredProducts = products.filter(p => {
     const text = searchTerm.toLowerCase();
     const name = p.name.toLowerCase();
@@ -239,12 +238,14 @@ export default function AdminProdutosPage() {
   });
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-extrabold text-brand-dark tracking-tight flex items-center gap-2">
-            <Package className="w-7 h-7 text-brand-clinical" />
+    <div className="space-y-8 animate-in fade-in duration-300">
+      {/* Header Premium */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
+        <div className="space-y-1 text-left">
+          <h1 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2.5">
+            <div className="p-2 bg-purple-50 text-purple-650 rounded-2xl shadow-2xs">
+              <Package className="w-6 h-6" />
+            </div>
             Gestão de Produtos
           </h1>
           <p className="text-xs text-slate-500 font-medium">
@@ -253,16 +254,40 @@ export default function AdminProdutosPage() {
         </div>
         <button
           onClick={() => openModal()}
-          className="bg-brand-clinical hover:bg-sky-700 text-white text-xs font-bold px-4 py-2.5 rounded-lg transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+          className="bg-brand-clinical hover:bg-sky-700 hover:shadow-md text-white text-xs font-bold px-4.5 py-2.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm hover:scale-[1.02] active:scale-[0.98] self-start md:self-center"
         >
           <Plus className="w-4 h-4" /> Novo Produto
         </button>
       </div>
 
+      {/* Métricas rápidas de catálogo */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white p-4.5 rounded-2xl border border-slate-100 shadow-2xs text-left">
+          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">Produtos Registrados</span>
+          <p className="text-lg font-black text-slate-800">{products.length}</p>
+          <span className="text-[9.5px] text-slate-400 font-medium">Total do portfólio</span>
+        </div>
+        <div className="bg-white p-4.5 rounded-2xl border border-slate-100 shadow-2xs text-left">
+          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">Equipamentos Clínicos</span>
+          <p className="text-lg font-black text-purple-600">{products.filter(p => p.product_type === 'equipamento').length}</p>
+          <span className="text-[9.5px] text-slate-400 font-medium">Cadeiras, Autoclaves, etc.</span>
+        </div>
+        <div className="bg-white p-4.5 rounded-2xl border border-slate-100 shadow-2xs text-left">
+          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">Peças e Insumos</span>
+          <p className="text-lg font-black text-slate-850">{products.filter(p => p.product_type === 'peca' || p.product_type === 'insumo').length}</p>
+          <span className="text-[9.5px] text-slate-400 font-medium">Itens de reposição</span>
+        </div>
+        <div className="bg-white p-4.5 rounded-2xl border border-slate-100 shadow-2xs text-left">
+          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">Estoque Crítico</span>
+          <p className="text-lg font-black text-rose-600">{products.filter(p => p.stock_quantity === 0).length}</p>
+          <span className="text-[9.5px] text-rose-600/80 font-bold">Sem unidades em estoque</span>
+        </div>
+      </div>
+
       {/* Listado */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-6 space-y-4">
+      <div className="bg-white rounded-3xl border border-slate-100 shadow-xs p-6 space-y-5">
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between pb-2 border-b border-slate-50">
-          <h3 className="font-bold text-sm text-brand-dark flex items-center gap-1.5">
+          <h3 className="font-extrabold text-sm text-slate-800 flex items-center gap-1.5 text-left">
             Produtos no Portfólio ({filteredProducts.length})
           </h3>
           
@@ -274,7 +299,7 @@ export default function AdminProdutosPage() {
               placeholder="Buscar SKU, nome, categoria..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-1.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:border-brand-clinical bg-slate-50/50"
+              className="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 bg-slate-50/40 transition-all text-slate-700 font-sans"
             />
           </div>
         </div>
@@ -284,84 +309,140 @@ export default function AdminProdutosPage() {
             Carregando catálogo de produtos...
           </div>
         ) : filteredProducts.length === 0 ? (
-          <div className="text-center py-12 text-slate-400 font-medium text-xs border-2 border-dashed border-slate-100 rounded-xl">
+          <div className="text-center py-12 text-slate-400 font-medium text-xs border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/10">
             Nenhum produto cadastrado ou encontrado.
           </div>
         ) : (
-          <div className="overflow-x-auto no-scrollbar">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="text-slate-400 font-bold border-b border-slate-100">
-                  <th className="pb-3">SKU</th>
-                  <th className="pb-3 px-2">Produto</th>
-                  <th className="pb-3 px-2">Categoria</th>
-                  <th className="pb-3 px-2">Tipo</th>
-                  <th className="pb-3 px-2 text-right">Preço Unitário</th>
-                  <th className="pb-3 px-2 text-center">Estoque</th>
-                  <th className="pb-3 text-center">Status</th>
-                  <th className="pb-3 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {filteredProducts.map((prod) => (
-                  <tr key={prod.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="py-4 font-mono font-bold text-slate-500">
-                      {prod.sku || '—'}
-                    </td>
-                    <td className="py-4 px-2 font-bold text-brand-dark">
-                      <div>{prod.name}</div>
-                      {prod.description && (
-                        <div className="text-[10px] text-slate-400 font-normal font-sans line-clamp-1 max-w-xs">
-                          {prod.description}
-                        </div>
-                      )}
-                    </td>
-                    <td className="py-4 px-2 text-slate-500 font-semibold">
-                      {prod.category?.name || 'Sem Categoria'}
-                    </td>
-                    <td className="py-4 px-2">
-                      <span className="text-[10px] font-bold text-slate-600 capitalize">
-                        {prod.product_type}
-                      </span>
-                    </td>
-                    <td className="py-4 px-2 text-right font-extrabold text-brand-dark">
-                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(prod.price)}
-                    </td>
-                    <td className="py-4 px-2 text-center font-bold text-slate-800">
-                      {prod.stock_quantity} un
-                    </td>
-                    <td className="py-4 text-center">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        prod.is_active 
-                          ? 'bg-success-bg text-success-text' 
-                          : 'bg-slate-100 text-slate-500'
-                      }`}>
-                        {prod.is_active ? 'Ativo' : 'Inativo'}
-                      </span>
-                    </td>
-                    <td className="py-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => openModal(prod)}
-                          className="p-1.5 text-slate-400 hover:text-brand-clinical rounded-md hover:bg-slate-100 transition-colors"
-                          title="Editar Produto"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(prod.id)}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 rounded-md hover:bg-slate-100 transition-colors"
-                          title="Excluir Produto"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
+          <>
+            {/* Tabela para Desktop */}
+            <div className="hidden md:block overflow-x-auto no-scrollbar">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="text-slate-400 font-bold border-b border-slate-100">
+                    <th className="pb-3 pr-2 pl-2">SKU</th>
+                    <th className="pb-3 px-2">Produto</th>
+                    <th className="pb-3 px-2">Categoria</th>
+                    <th className="pb-3 px-2">Tipo</th>
+                    <th className="pb-3 px-2 text-right">Preço Unitário</th>
+                    <th className="pb-3 px-2 text-center">Estoque</th>
+                    <th className="pb-3 text-center">Status</th>
+                    <th className="pb-3 pr-2 text-right">Ações</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {filteredProducts.map((prod) => (
+                    <tr key={prod.id} className="hover:bg-slate-55/30 transition-all duration-150">
+                      <td className="py-4 pr-2 pl-2 font-mono font-black text-slate-450 text-[10px]">
+                        {prod.sku || '—'}
+                      </td>
+                      <td className="py-4 px-2 text-left">
+                        <div className="font-extrabold text-slate-800 text-xs">{prod.name}</div>
+                        {prod.description && (
+                          <div className="text-[10px] text-slate-400 font-medium font-sans line-clamp-1 max-w-xs leading-normal">
+                            {prod.description}
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-4 px-2 text-slate-500 font-bold">
+                        {prod.category?.name || 'Sem Categoria'}
+                      </td>
+                      <td className="py-4 px-2">
+                        <span className="text-[9.5px] font-extrabold text-slate-600 capitalize bg-slate-100/80 px-2 py-0.5 rounded-md border border-slate-200/50">
+                          {prod.product_type}
+                        </span>
+                      </td>
+                      <td className="py-4 px-2 text-right font-black text-slate-900">
+                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(prod.price)}
+                      </td>
+                      <td className="py-4 px-2 text-center">
+                        <span className={`font-black text-xs ${prod.stock_quantity === 0 ? 'text-rose-600 animate-pulse' : 'text-slate-800'}`}>
+                          {prod.stock_quantity} un
+                        </span>
+                      </td>
+                      <td className="py-4 text-center">
+                        <span className={`text-[9.5px] font-extrabold px-2.5 py-0.5 rounded-full border uppercase tracking-wider shadow-2xs ${
+                          prod.is_active 
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                            : 'bg-slate-100 text-slate-500 border-slate-200'
+                        }`}>
+                          {prod.is_active ? 'Ativo' : 'Inativo'}
+                        </span>
+                      </td>
+                      <td className="py-4 pr-2 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => openModal(prod)}
+                            className="p-1.5 text-slate-400 hover:text-brand-clinical rounded-lg hover:bg-slate-50 transition-colors"
+                            title="Editar Produto"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(prod.id)}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-50 transition-colors"
+                            title="Excluir Produto"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Cards para Mobile */}
+            <div className="grid grid-cols-1 gap-4 md:hidden">
+              {filteredProducts.map((prod) => (
+                <div 
+                  key={prod.id}
+                  className="bg-slate-50/20 border border-slate-100/80 rounded-2xl p-4.5 space-y-4 text-left shadow-2xs hover:shadow-xs transition-shadow duration-300"
+                >
+                  <div className="flex justify-between items-start gap-2">
+                    <div>
+                      <span className="text-[9px] font-mono font-black text-slate-400 block">{prod.sku || 'Sem SKU'}</span>
+                      <h4 className="font-extrabold text-slate-850 text-xs leading-snug">{prod.name}</h4>
+                      {prod.category?.name && (
+                        <p className="text-[9.5px] text-slate-450 font-bold">{prod.category.name}</p>
+                      )}
+                    </div>
+                    <span className={`text-[8.5px] font-black px-2.5 py-0.5 rounded-full border uppercase tracking-wider shadow-2xs flex-shrink-0 ${
+                      prod.is_active 
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                        : 'bg-slate-100 text-slate-500 border-slate-200'
+                    }`}>
+                      {prod.is_active ? 'Ativo' : 'Inativo'}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center text-xs border-t border-slate-50/80 pt-3 font-bold text-slate-600">
+                    <div>
+                      Preço: <span className="text-slate-850 font-black">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(prod.price)}</span>
+                    </div>
+                    <div>
+                      Estoque: <span className={`font-black ${prod.stock_quantity === 0 ? 'text-rose-600 animate-pulse' : 'text-slate-850'}`}>{prod.stock_quantity} un</span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-2 border-t border-slate-50/80 pt-3">
+                    <button
+                      onClick={() => openModal(prod)}
+                      className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-black text-slate-700 transition-all flex items-center gap-1 shadow-2xs hover:scale-[1.01]"
+                    >
+                      <Edit2 className="w-3 h-3 text-slate-450" /> Editar
+                    </button>
+                    <button
+                      onClick={() => handleDelete(prod.id)}
+                      className="px-3.5 py-2 bg-rose-50/50 hover:bg-rose-100 border border-rose-100 rounded-xl text-[10px] font-black text-rose-700 transition-all flex items-center gap-1 shadow-2xs hover:scale-[1.01]"
+                    >
+                      <Trash2 className="w-3 h-3 text-rose-455" /> Excluir
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 

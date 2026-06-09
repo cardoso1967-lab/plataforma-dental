@@ -58,33 +58,40 @@ export default async function ClienteSuportePage() {
   ];
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto text-left">
-      <div className="space-y-1">
-        <h1 className="text-2xl font-extrabold text-brand-dark tracking-tight flex items-center gap-2">
-          <Clock className="w-7 h-7 text-brand-clinical" />
-          Suporte Técnico
-        </h1>
-        <p className="text-xs text-slate-500 font-medium">
-          Acompanhe suas solicitações de reparo e abra novos chamados para seus equipamentos odontológicos.
-        </p>
+    <div className="space-y-8 max-w-4xl mx-auto text-left animate-in fade-in duration-300">
+      {/* Header Premium */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
+        <div className="space-y-1 text-left">
+          <h1 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2.5">
+            <div className="p-2 bg-sky-50 text-brand-clinical rounded-2xl shadow-2xs">
+              <Clock className="w-6 h-6 animate-pulse" />
+            </div>
+            Suporte Técnico
+          </h1>
+          <p className="text-xs text-slate-500 font-medium">
+            Acompanhe suas solicitações de reparo e abra novos chamados para seus equipamentos odontológicos.
+          </p>
+        </div>
       </div>
 
       {/* OS ativas */}
-      <div className="space-y-4">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+      <div className="space-y-4.5">
+        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">
           Acompanhamento de Chamados e Visitas ({openOS?.length || 0})
         </h3>
         
         {!openOS || openOS.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-slate-100 p-8 text-center shadow-xs space-y-3">
-            <Clock className="w-10 h-10 text-slate-300 mx-auto" />
-            <div>
-              <p className="text-xs font-extrabold text-brand-dark">Nenhum chamado aberto</p>
-              <p className="text-[10px] text-slate-400 mt-0.5">Reporte falhas no formulário abaixo para acionar a equipe técnica.</p>
+          <div className="bg-white rounded-3xl border border-slate-100 p-10 text-center shadow-xs space-y-4 hover:border-slate-200 transition-all duration-300">
+            <div className="w-12 h-12 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center mx-auto shadow-2xs">
+              <Clock className="w-6 h-6 text-slate-350" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs font-black text-slate-800">Nenhum chamado aberto</p>
+              <p className="text-[10px] text-slate-400 mt-0.5 max-w-xs mx-auto leading-normal">Reporte falhas no formulário abaixo para acionar a equipe técnica.</p>
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-5">
             {openOS.map((os) => {
               const statusStyle = statusConfig[os.status] || {
                 label: os.status,
@@ -99,42 +106,42 @@ export default async function ClienteSuportePage() {
               return (
                 <div 
                   key={os.id} 
-                  className="bg-white border border-slate-100 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all space-y-4 relative overflow-hidden text-left"
+                  className="bg-white border border-slate-100/80 rounded-3xl p-6 shadow-2xs hover:shadow-xs hover:border-slate-200 transition-all duration-300 space-y-5 relative overflow-hidden text-left"
                 >
                   {/* Encabezado OS */}
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <div>
-                      <span className="text-[10px] font-mono font-bold text-slate-400">
-                        OS: #{os.id.slice(0, 8).toUpperCase()} | Abertura: {new Date(os.created_at).toLocaleDateString('pt-BR')}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-50">
+                    <div className="text-left">
+                      <span className="text-[9.5px] font-mono font-black text-brand-clinical tracking-wider block">
+                        OS: #{os.id.slice(0, 8).toUpperCase()} • Abertura: {new Date(os.created_at).toLocaleDateString('pt-BR')}
                       </span>
-                      <h4 className="font-extrabold text-brand-dark text-base">
+                      <h4 className="font-extrabold text-slate-800 text-sm mt-0.5">
                         {(os.client_equipment as any)?.name || 'Equipamento Geral'}
                       </h4>
                       {os.description && (
-                        <p className="text-[11px] text-slate-400 font-medium italic mt-0.5 max-w-2xl line-clamp-1">
+                        <p className="text-[10.5px] text-slate-450 font-semibold italic mt-1 max-w-2xl line-clamp-2 leading-relaxed">
                           "{os.description}"
                         </p>
                       )}
                     </div>
                     
                     <div className="flex items-center self-start sm:self-center">
-                      <span className={`text-[9px] font-extrabold px-2.5 py-1 rounded-full border flex items-center gap-1.5 uppercase tracking-wider ${statusStyle.bg}`}>
+                      <span className={`text-[9px] font-black px-3 py-1 rounded-full border flex items-center gap-1.5 uppercase tracking-wider shadow-3xs ${statusStyle.bg}`}>
                         <Clock className="w-3.5 h-3.5" />
                         {statusStyle.label}
                       </span>
                     </div>
                   </div>
 
-                  {/* Visualizador Gráfico de Progreso (Timeline) */}
+                  {/* Visualizador Gráfico de Progreso (Timeline) Premium */}
                   {!isCancelado && (
-                    <div className="bg-slate-50/50 rounded-xl p-4 border border-slate-100/50 mt-2">
+                    <div className="bg-slate-50/40 rounded-2xl p-5 border border-slate-100/50 mt-2">
                       <div className="relative">
                         {/* Barra de fondo */}
-                        <div className="absolute top-2.5 left-0 right-0 h-1 bg-slate-200 rounded-full" />
+                        <div className="absolute top-3 left-0 right-0 h-1 bg-slate-200 rounded-full" />
                         
                         {/* Barra de progreso activa */}
                         <div 
-                          className="absolute top-2.5 left-0 h-1 bg-brand-clinical rounded-full transition-all duration-500" 
+                          className="absolute top-3 left-0 h-1 bg-brand-clinical rounded-full transition-all duration-550" 
                           style={{ width: `${Math.max(0, ((currentStep - 1) / 4) * 100)}%` }}
                         />
                         
@@ -145,23 +152,23 @@ export default async function ClienteSuportePage() {
                             const isCurrent = currentStep === st.num;
                             
                             return (
-                              <div key={st.num} className="flex flex-col items-center space-y-2">
-                                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all z-10 ${
+                              <div key={st.num} className="flex flex-col items-center space-y-2.5">
+                                <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all z-10 shadow-3xs ${
                                   isDone 
-                                    ? 'bg-brand-clinical border-brand-clinical text-white shadow-xs' 
-                                    : 'bg-white border-slate-200 text-slate-300'
-                                } ${isCurrent ? 'ring-4 ring-sky-100 animate-pulse scale-105' : ''}`}>
+                                    ? 'bg-brand-clinical border-brand-clinical text-white' 
+                                    : 'bg-white border-slate-200 text-slate-350'
+                                } ${isCurrent ? 'ring-4 ring-sky-100 scale-105 font-black' : ''}`}>
                                   {isDone && st.num < currentStep ? (
-                                    <CheckCircle2 className="w-4 h-4 text-white" />
+                                    <CheckCircle2 className="w-4.5 h-4.5 text-white" />
                                   ) : (
                                     <span className="text-[10px] font-bold">{st.num}</span>
                                   )}
                                 </div>
-                                <span className={`text-[9px] font-bold tracking-tight ${
+                                <span className={`text-[9px] font-black tracking-tight ${
                                   isCurrent 
-                                    ? 'text-brand-clinical font-black' 
+                                    ? 'text-brand-clinical' 
                                     : isDone 
-                                      ? 'text-slate-800' 
+                                      ? 'text-slate-700' 
                                       : 'text-slate-400'
                                 }`}>
                                   {st.name}
@@ -175,7 +182,7 @@ export default async function ClienteSuportePage() {
                   )}
 
                   {isCancelado && (
-                    <div className="bg-rose-50 text-rose-800 text-[11px] font-semibold p-3.5 rounded-xl border border-rose-100 flex items-center gap-2">
+                    <div className="bg-rose-50 text-rose-800 text-[10.5px] font-bold p-4 rounded-2xl border border-rose-100 flex items-center gap-2">
                       <ShieldAlert className="w-4.5 h-4.5 text-rose-500 flex-shrink-0" />
                       <span>Este chamado foi cancelado. Entre em contato com a administração caso julgue necessário.</span>
                     </div>
@@ -188,8 +195,8 @@ export default async function ClienteSuportePage() {
       </div>
 
       {/* Formulário de Abertura */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs">
-        <h3 className="text-sm font-extrabold text-brand-dark uppercase tracking-wider mb-4">
+      <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-xs text-left">
+        <h3 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider mb-4 pl-1">
           Solicitar Nova Assistência Técnica
         </h3>
         <SupportForm 

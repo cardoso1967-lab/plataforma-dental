@@ -29,13 +29,15 @@ Acompanhamento de tarefas por fase para o projeto Plataforma Dental.
 
 ---
 
-## Fase 4 — Refinamento Visual Premium e UX Operacional (Concluída — Homologada con sucesso)
+## Fase 4 e 4.1 — Refinamento Visual Premium, UX Operacional e Correções Técnicas (Concluída)
+- [x] **Correção Técnico**: Resolvido o erro `column customers_1.phone does not exist` que impedia o carregamento de `/tecnico/dashboard`, `/tecnico/servicos` e `/tecnico/agenda`.
+- [x] **Migração 004**: Criada a migração `004_add_customer_contact_fields.sql` adicionando com segurança (`ADD COLUMN IF NOT EXISTS`) os campos `contact_name`, `email`, `phone`, `whatsapp` e `notes` à tabela `customers`.
 - [x] **Dashboard Admin**: Indicadores e cards de métricas integrados em tempo real ao Supabase (OS sem técnico, urgentes, visitas de hoje, orçamentos pendentes).
-- [x] **Agenda Kanban e Lista**: Refinamento de layout das colunas e cards de OS, filtros colapsáveis e visualização mobile adaptada a cards táctiles.
+- [x] **Agenda Kanban e Lista**: Refinamento de layout das colunas e cards de OS, filtros colapsáveis e visualização mobile adaptada a cards táctiles. Correção completa de lints e estruturas JSX.
 - [x] **Formulários e CRUDs**: Homologação visual de inputs, modales com efeito cristal/glassmorphism e botões com spinner `RefreshCw`.
 - [x] **Portal Técnico**: Roteiro e agenda operacional 100% dinâmicos integrados com o Supabase e otimizados para smartphones, com botões de ação e alteração de status em campo.
 - [x] **Portal Cliente**: Refinamento estético das abas de compras e equipamentos, e adição do visualizador gráfico de progresso (Timeline) para acompanhamento das Ordens de Serviço.
-- [x] **Responsividade e Compilação**: Verificação de layout sem scroll horizontal inadequado e homologação de build de produção Next.js 100% livre de erros.
+- [x] **Responsividade e Compilação**: Verificação de layout sem scroll horizontal inadequado e homologação de build de produção Next.js 100% livre de erros (através de `cmd /c npm run build`).
 
 ---
 

@@ -63,15 +63,20 @@ export default async function ClienteDashboardPage() {
   } : null;
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-8 max-w-4xl mx-auto text-left animate-in fade-in duration-300">
       {/* Welcome Block Premium */}
-      <div className="bg-gradient-to-r from-slate-900 to-sky-950 text-white rounded-3xl p-6 md:p-8 shadow-sm relative overflow-hidden">
-        <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-10 pointer-events-none hidden sm:block">
-          <Stethoscope className="w-full h-full text-white scale-125" />
+      <div className="bg-gradient-to-br from-slate-900 via-sky-950 to-slate-950 text-white rounded-3xl p-6 md:p-8 shadow-lg relative overflow-hidden border border-slate-800">
+        <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-[0.03] pointer-events-none hidden sm:block">
+          <Stethoscope className="w-full h-full text-white scale-150 rotate-12" />
         </div>
-        <div className="space-y-2 relative z-10 max-w-xl text-left">
-          <span className="text-[10px] font-bold text-sky-400 uppercase tracking-widest block">Portal do Cliente</span>
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
+        <div className="absolute -left-12 -top-12 w-48 h-48 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-brand-clinical/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="space-y-2.5 relative z-10 max-w-xl">
+          <span className="text-[10px] font-extrabold text-sky-400 uppercase tracking-widest bg-sky-500/15 px-2.5 py-1 rounded-full border border-sky-500/20 inline-block font-sans">
+            Portal do Cliente
+          </span>
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight bg-gradient-to-r from-white to-slate-105 bg-clip-text text-transparent">
             Olá, {profile.name}
           </h1>
           <p className="text-xs text-slate-300 font-medium leading-relaxed">
@@ -82,29 +87,29 @@ export default async function ClienteDashboardPage() {
 
       {/* Assistência Técnica em Andamento */}
       <div className="space-y-3.5">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider text-left">
+        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">
           Assistência Técnica em Andamento
         </h3>
         {activeOS ? (
-          <div className="hover:scale-[1.005] transition-all duration-200">
+          <div className="hover:scale-[1.008] hover:shadow-md transition-all duration-300">
             <ServiceOrderCard {...activeOS} />
           </div>
         ) : (
-          <div className="bg-white rounded-2xl border border-slate-100 p-8 text-center shadow-xs flex flex-col items-center justify-center space-y-4">
-            <div className="w-12 h-12 bg-sky-50 text-brand-clinical rounded-full flex items-center justify-center">
+          <div className="bg-white rounded-3xl border border-slate-100 p-8 text-center shadow-xs flex flex-col items-center justify-center space-y-4 hover:border-slate-200 transition-all duration-300">
+            <div className="w-12 h-12 bg-sky-50 text-brand-clinical rounded-2xl flex items-center justify-center shadow-2xs border border-sky-100/40">
               <Compass className="w-6 h-6 animate-pulse" />
             </div>
             <div className="space-y-1">
-              <p className="text-xs font-extrabold text-brand-dark">Tudo sob controle por aqui</p>
-              <p className="text-[10px] text-slate-400 font-medium max-w-xs mx-auto">
+              <p className="text-xs font-black text-slate-800">Tudo sob controle por aqui</p>
+              <p className="text-[10px] text-slate-400 font-semibold max-w-xs mx-auto leading-normal">
                 Nenhum chamado de manutenção ativo. Seus equipamentos clínicos estão funcionando perfeitamente.
               </p>
             </div>
             <Link 
               href="/cliente/suporte"
-              className="inline-flex items-center gap-1.5 bg-brand-clinical hover:bg-sky-700 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl transition-all shadow-sm hover:scale-[1.01]"
+              className="inline-flex items-center gap-1.5 bg-brand-clinical hover:bg-sky-700 text-white font-extrabold text-xs px-4.5 py-2.5 rounded-xl transition-all shadow-sm hover:scale-[1.02] active:scale-[0.98]"
             >
-              <Plus className="w-4 h-4" /> Solicitar Nova Visita Técnica
+              <Plus className="w-4 h-4" /> Solicitar Suporte Técnico
             </Link>
           </div>
         )}
@@ -112,7 +117,7 @@ export default async function ClienteDashboardPage() {
 
       {/* Grid de Resumo */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="hover:scale-[1.01] transition-all duration-300">
+        <div className="hover:scale-[1.01] hover:shadow-md transition-all duration-300 rounded-3xl">
           <StatusCard
             title="Último Pedido"
             value={lastOrder 
@@ -124,7 +129,7 @@ export default async function ClienteDashboardPage() {
             variant="light"
           />
         </div>
-        <div className="hover:scale-[1.01] transition-all duration-300">
+        <div className="hover:scale-[1.01] hover:shadow-md transition-all duration-300 rounded-3xl">
           <StatusCard
             title="Equipamentos Registrados"
             value={equipmentsCount !== null ? `${equipmentsCount} instalado(s)` : '0 instalados'}
@@ -136,42 +141,42 @@ export default async function ClienteDashboardPage() {
       </div>
 
       {/* Ações Rápidas */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-5 space-y-4 shadow-xs">
-        <h3 className="text-xs font-bold text-brand-dark uppercase tracking-wider text-left">
+      <div className="bg-white rounded-3xl border border-slate-100 p-6 space-y-4 shadow-xs">
+        <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider pl-1">
           Ações Rápidas do Consultório
         </h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-left">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Link 
             href="/cliente/suporte" 
-            className="flex items-center justify-between p-4 border border-slate-100 hover:border-brand-clinical hover:bg-sky-50/20 rounded-xl text-xs font-bold text-slate-800 transition-all active:scale-[0.99] group shadow-2xs"
+            className="flex items-center justify-between p-4.5 border border-slate-100 hover:border-brand-clinical hover:bg-sky-50/10 rounded-2xl text-xs font-bold text-slate-800 transition-all duration-300 hover:scale-[1.01] hover:shadow-sm active:scale-[0.99] group shadow-2xs"
           >
-            <span className="flex items-center gap-3">
-              <span className="w-8 h-8 bg-sky-50 text-brand-clinical rounded-lg flex items-center justify-center group-hover:bg-brand-clinical group-hover:text-white transition-colors">
+            <span className="flex items-center gap-3.5">
+              <span className="w-9 h-9 bg-sky-50 text-brand-clinical rounded-xl flex items-center justify-center group-hover:bg-brand-clinical group-hover:text-white transition-all duration-300 shadow-2xs border border-sky-100/30">
                 <Wrench className="w-4.5 h-4.5" />
               </span>
               <div>
-                <p className="text-brand-dark font-extrabold">Solicitar Suporte Técnico</p>
+                <p className="text-slate-800 font-extrabold text-left">Solicitar Suporte Técnico</p>
                 <p className="text-[10px] text-slate-400 font-medium">Reportar problemas e agendar visitas</p>
               </div>
             </span>
-            <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-brand-clinical group-hover:translate-x-0.5 transition-all" />
+            <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-brand-clinical group-hover:translate-x-0.5 transition-all duration-300" />
           </Link>
 
           <Link 
             href="/cliente/pedidos" 
-            className="flex items-center justify-between p-4 border border-slate-100 hover:border-brand-clinical hover:bg-sky-50/20 rounded-xl text-xs font-bold text-slate-800 transition-all active:scale-[0.99] group shadow-2xs"
+            className="flex items-center justify-between p-4.5 border border-slate-100 hover:border-brand-clinical hover:bg-sky-50/10 rounded-2xl text-xs font-bold text-slate-800 transition-all duration-300 hover:scale-[1.01] hover:shadow-sm active:scale-[0.99] group shadow-2xs"
           >
-            <span className="flex items-center gap-3">
-              <span className="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+            <span className="flex items-center gap-3.5">
+              <span className="w-9 h-9 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300 shadow-2xs border border-emerald-100/30">
                 <ShoppingBag className="w-4.5 h-4.5" />
               </span>
               <div>
-                <p className="text-brand-dark font-extrabold">Meus Pedidos de Venda</p>
+                <p className="text-slate-800 font-extrabold text-left">Meus Pedidos de Venda</p>
                 <p className="text-[10px] text-slate-400 font-medium">Acompanhar compras e faturamento</p>
               </div>
             </span>
-            <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-brand-clinical group-hover:translate-x-0.5 transition-all" />
+            <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-brand-clinical group-hover:translate-x-0.5 transition-all duration-300" />
           </Link>
         </div>
       </div>

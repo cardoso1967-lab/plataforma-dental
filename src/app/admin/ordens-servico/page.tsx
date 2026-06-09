@@ -11,6 +11,7 @@ import { useAuth } from '@/components/AuthProvider';
 interface Customer {
   id: string;
   company_name: string;
+  trade_name?: string | null;
 }
 
 interface ClientEquipment {
@@ -106,7 +107,7 @@ export default function AdminOrdensServicoPage() {
         .from('service_orders')
         .select(`
           *,
-          customer:customers(id, company_name),
+          customer:customers(id, company_name, trade_name),
           equipment:client_equipment(id, customer_id, name, brand, model),
           technician:technicians(
             id,
@@ -328,12 +329,14 @@ export default function AdminOrdensServicoPage() {
   });
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-extrabold text-brand-dark tracking-tight flex items-center gap-2">
-            <Wrench className="w-7 h-7 text-brand-clinical" />
+    <div className="space-y-8 animate-in fade-in duration-300">
+      {/* Header Premium */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
+        <div className="space-y-1 text-left">
+          <h1 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2.5">
+            <div className="p-2 bg-sky-50 text-brand-clinical rounded-2xl shadow-2xs">
+              <Wrench className="w-6 h-6 animate-pulse" />
+            </div>
             Ordens de Serviço (OS)
           </h1>
           <p className="text-xs text-slate-500 font-medium">
@@ -342,16 +345,45 @@ export default function AdminOrdensServicoPage() {
         </div>
         <button
           onClick={() => openModal()}
-          className="bg-brand-clinical hover:bg-sky-700 text-white text-xs font-bold px-4 py-2.5 rounded-lg transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+          className="bg-brand-clinical hover:bg-sky-700 hover:shadow-md text-white text-xs font-bold px-4.5 py-2.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm hover:scale-[1.02] active:scale-[0.98] self-start md:self-center"
         >
           <Plus className="w-4 h-4" /> Nova OS
         </button>
       </div>
 
+      {/* Métricas rápidas de OS */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-2xs text-left">
+          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">Total de OS</span>
+          <p className="text-lg font-black text-slate-800">{serviceOrders.length}</p>
+          <span className="text-[9.5px] text-slate-400 font-medium">Histórico acumulado</span>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-2xs text-left">
+          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">Em Triagem</span>
+          <p className="text-lg font-black text-brand-clinical">{serviceOrders.filter(os => os.status === 'aberta' || os.status === 'em_analise').length}</p>
+          <span className="text-[9.5px] text-slate-400 font-medium">Novos chamados</span>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-2xs text-left">
+          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">Em Campo</span>
+          <p className="text-lg font-black text-indigo-650">{serviceOrders.filter(os => os.status === 'em_atendimento').length}</p>
+          <span className="text-[9.5px] text-indigo-600 font-semibold">Técnico em visita</span>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-2xs text-left">
+          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">Sem Técnico</span>
+          <p className="text-lg font-black text-rose-600">{serviceOrders.filter(os => !os.technician_id && os.status !== 'concluida' && os.status !== 'cancelada').length}</p>
+          <span className="text-[9.5px] text-rose-500 font-semibold">Aguardando alocação</span>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-2xs text-left col-span-2 lg:col-span-1">
+          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">Concluídas</span>
+          <p className="text-lg font-black text-emerald-600">{serviceOrders.filter(os => os.status === 'concluida').length}</p>
+          <span className="text-[9.5px] text-emerald-600 font-bold">Encerradas com sucesso</span>
+        </div>
+      </div>
+
       {/* Fila de Ordens de Serviço */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-6 space-y-4">
+      <div className="bg-white rounded-3xl border border-slate-100 shadow-xs p-6 space-y-5">
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between pb-2 border-b border-slate-50">
-          <h3 className="font-bold text-sm text-brand-dark flex items-center gap-1.5">
+          <h3 className="font-extrabold text-sm text-slate-800 flex items-center gap-1.5 text-left">
             Fila de Atendimento ({filteredOS.length})
           </h3>
           
@@ -363,7 +395,7 @@ export default function AdminOrdensServicoPage() {
               placeholder="Buscar por código, cliente, equipamento..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-1.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:border-brand-clinical bg-slate-50/50"
+              className="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 bg-slate-50/40 transition-all text-slate-700 font-sans"
             />
           </div>
         </div>
@@ -373,107 +405,182 @@ export default function AdminOrdensServicoPage() {
             Carregando ordens de serviço...
           </div>
         ) : filteredOS.length === 0 ? (
-          <div className="text-center py-12 text-slate-400 font-medium text-xs border-2 border-dashed border-slate-100 rounded-xl">
+          <div className="text-center py-12 text-slate-400 font-medium text-xs border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/10">
             Nenhuma ordem de serviço cadastrada ou encontrada.
           </div>
         ) : (
-          <div className="overflow-x-auto no-scrollbar">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="text-slate-400 font-bold border-b border-slate-100">
-                  <th className="pb-3">Código</th>
-                  <th className="pb-3 px-2">Cliente</th>
-                  <th className="pb-3 px-2">Equipamento</th>
-                  <th className="pb-3 px-2">Técnico Designado</th>
-                  <th className="pb-3 px-2">Agendamento</th>
-                  <th className="pb-3 px-2 text-center">Prioridade</th>
-                  <th className="pb-3 px-2 text-center">Status</th>
-                  <th className="pb-3 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {filteredOS.map((os) => (
-                  <tr key={os.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="py-4 font-mono font-bold text-brand-clinical">
-                      #{os.id.substring(0, 8).toUpperCase()}
-                    </td>
-                    <td className="py-4 px-2 font-bold text-brand-dark">
-                      {os.customer?.company_name || 'Cliente removido'}
-                    </td>
-                    <td className="py-4 px-2 font-semibold text-slate-700">
-                      {os.equipment ? (
-                        <div>
-                          <div>{os.equipment.name}</div>
-                          {(os.equipment.brand || os.equipment.model) && (
-                            <span className="text-[9px] text-slate-400 font-normal">
-                              {os.equipment.brand} {os.equipment.model}
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-slate-400 italic text-[10px]">Sem equipamento</span>
-                      )}
-                    </td>
-                    <td className="py-4 px-2">
-                      {os.technician?.profile ? (
-                        <span className="flex items-center gap-1 font-semibold text-slate-700">
-                          <User className="w-3.5 h-3.5 text-brand-clinical flex-shrink-0" />
-                          {os.technician.profile.name}
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1 font-medium text-slate-400 italic">
-                          <AlertCircle className="w-3.5 h-3.5 text-slate-300 flex-shrink-0" />
-                          Não designado
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-4 px-2">
-                      {os.scheduled_date ? (
-                        <span className="flex items-center gap-1 font-semibold text-slate-600">
-                          <Clock className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                          {new Date(os.scheduled_date).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
-                        </span>
-                      ) : (
-                        <span className="text-slate-400 italic font-medium">Não agendada</span>
-                      )}
-                    </td>
-                    <td className="py-4 px-2 text-center">
-                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md ${
-                        priorityMap[os.priority as keyof typeof priorityMap]?.class || 'bg-slate-100 text-slate-500'
-                      }`}>
-                        {priorityMap[os.priority as keyof typeof priorityMap]?.label || os.priority}
-                      </span>
-                    </td>
-                    <td className="py-4 px-2 text-center">
-                      <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
-                        statusMap[os.status]?.class || 'bg-slate-100 text-slate-500'
-                      }`}>
-                        {statusMap[os.status]?.label || os.status}
-                      </span>
-                    </td>
-                    <td className="py-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => openModal(os)}
-                          className="p-1.5 text-slate-400 hover:text-brand-clinical rounded-md hover:bg-slate-100 transition-colors"
-                          title="Editar OS"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(os.id)}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 rounded-md hover:bg-slate-100 transition-colors"
-                          title="Remover OS"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
+          <>
+            {/* Tabela para Desktop */}
+            <div className="hidden lg:block overflow-x-auto no-scrollbar">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="text-slate-400 font-bold border-b border-slate-100">
+                    <th className="pb-3 pr-2 pl-2">Código</th>
+                    <th className="pb-3 px-2">Cliente / Consultório</th>
+                    <th className="pb-3 px-2">Equipamento</th>
+                    <th className="pb-3 px-2">Técnico Designado</th>
+                    <th className="pb-3 px-2">Data e Hora</th>
+                    <th className="pb-3 px-2 text-center">Prioridade</th>
+                    <th className="pb-3 px-2 text-center">Status</th>
+                    <th className="pb-3 pr-2 text-right">Ações</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {filteredOS.map((os) => (
+                    <tr key={os.id} className="hover:bg-slate-50/30 transition-all duration-150">
+                      <td className="py-4 pr-2 pl-2 font-mono font-black text-slate-450 text-[10px]">
+                        #{os.id.substring(0, 8).toUpperCase()}
+                      </td>
+                      <td className="py-4 px-2 text-left">
+                        <div className="font-extrabold text-slate-800 text-xs">{os.customer?.company_name || 'Cliente removido'}</div>
+                        {os.customer?.trade_name && (
+                          <div className="text-[9.5px] text-slate-400 font-semibold font-sans">{os.customer.trade_name}</div>
+                        )}
+                      </td>
+                      <td className="py-4 px-2 text-left">
+                        {os.equipment ? (
+                          <div>
+                            <div className="font-bold text-slate-700">{os.equipment.name}</div>
+                            {(os.equipment.brand || os.equipment.model) && (
+                              <span className="text-[9px] text-slate-400 font-semibold bg-slate-150 px-1.5 py-0.2 rounded border border-slate-200/40">
+                                {os.equipment.brand} {os.equipment.model}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 italic text-[10px] font-semibold">Sem equipamento</span>
+                        )}
+                      </td>
+                      <td className="py-4 px-2 text-left">
+                        {os.technician?.profile ? (
+                          <span className="flex items-center gap-1 font-extrabold text-slate-700">
+                            <div className="w-5 h-5 rounded-full bg-sky-50 border border-sky-100 flex items-center justify-center font-black text-[9px] text-brand-clinical flex-shrink-0">
+                              {os.technician.profile.name.substring(0, 1).toUpperCase()}
+                            </div>
+                            {os.technician.profile.name}
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 font-bold text-rose-500 italic bg-rose-50 px-2 py-0.5 rounded-md border border-rose-100/50 inline-flex">
+                            <AlertCircle className="w-3 h-3 text-rose-500 flex-shrink-0 animate-pulse" />
+                            Não designado
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-4 px-2 text-left">
+                        {os.scheduled_date ? (
+                          <span className="flex items-center gap-1 font-bold text-slate-600">
+                            <Clock className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                            {new Date(os.scheduled_date).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 italic font-bold">Não agendada</span>
+                        )}
+                      </td>
+                      <td className="py-4 px-2 text-center">
+                        <span className={`text-[9.5px] font-extrabold px-2 py-0.5 rounded-md border uppercase tracking-wider ${
+                          priorityMap[os.priority as keyof typeof priorityMap]?.class || 'bg-slate-100 text-slate-500 border-slate-200'
+                        }`}>
+                          {priorityMap[os.priority as keyof typeof priorityMap]?.label || os.priority}
+                        </span>
+                      </td>
+                      <td className="py-4 px-2 text-center">
+                        <span className={`text-[9.5px] font-extrabold px-2.5 py-0.5 rounded-full border uppercase tracking-wider shadow-2xs ${
+                          statusMap[os.status]?.class || 'bg-slate-100 text-slate-500 border-slate-200'
+                        }`}>
+                          {statusMap[os.status]?.label || os.status}
+                        </span>
+                      </td>
+                      <td className="py-4 pr-2 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => openModal(os)}
+                            className="p-1.5 text-slate-400 hover:text-brand-clinical rounded-lg hover:bg-slate-50 transition-colors"
+                            title="Editar OS"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(os.id)}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-50 transition-colors"
+                            title="Remover OS"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Cards para Mobile y Tablet */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:hidden">
+              {filteredOS.map((os) => (
+                <div 
+                  key={os.id}
+                  className="bg-slate-50/20 border border-slate-100/80 rounded-2xl p-4.5 space-y-4 text-left shadow-2xs hover:shadow-xs transition-shadow duration-300"
+                >
+                  <div className="flex justify-between items-start gap-2">
+                    <div>
+                      <span className="text-[9px] font-mono font-black text-slate-450 block">#{os.id.substring(0, 8).toUpperCase()}</span>
+                      <h4 className="font-extrabold text-slate-850 text-xs leading-snug">{os.customer?.company_name}</h4>
+                      {os.equipment && (
+                        <p className="text-[10px] text-brand-clinical font-extrabold mt-0.5">{os.equipment.name}</p>
+                      )}
+                    </div>
+                    <span className={`text-[8.5px] font-black px-2.5 py-0.5 rounded-full border uppercase tracking-wider shadow-2xs flex-shrink-0 ${
+                      statusMap[os.status]?.class || 'bg-slate-100 text-slate-500 border-slate-200'
+                    }`}>
+                      {statusMap[os.status]?.label || os.status}
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5 text-[11px] font-bold text-slate-600 border-t border-slate-50/80 pt-3">
+                    <div className="flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Técnico: </span>
+                      <span className="text-slate-800">
+                        {os.technician?.profile?.name || 'Não designado'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Agenda: </span>
+                      <span className="text-slate-800">
+                        {os.scheduled_date ? new Date(os.scheduled_date).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'Não agendada'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center border-t border-slate-50/80 pt-3">
+                    <span className={`text-[8.5px] font-black px-2 py-0.5 rounded-md border uppercase tracking-wider ${
+                      priorityMap[os.priority as keyof typeof priorityMap]?.class || 'bg-slate-100 text-slate-500 border-slate-200'
+                    }`}>
+                      {priorityMap[os.priority as keyof typeof priorityMap]?.label || os.priority}
+                    </span>
+                    
+                    <div className="flex gap-1.5">
+                      <button
+                        onClick={() => openModal(os)}
+                        className="p-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-black text-slate-700 transition-all shadow-2xs hover:scale-[1.01]"
+                        title="Editar OS"
+                      >
+                        <Edit2 className="w-3 h-3 text-slate-450" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(os.id)}
+                        className="p-1.5 bg-rose-50/50 hover:bg-rose-100 border border-rose-100 rounded-xl text-[10px] font-black text-rose-700 transition-all shadow-2xs hover:scale-[1.01]"
+                        title="Excluir OS"
+                      >
+                        <Trash2 className="w-3 h-3 text-rose-455" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 

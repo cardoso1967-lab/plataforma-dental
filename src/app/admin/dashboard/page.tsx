@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { StatusCard } from '@/components/ui/StatusCard';
 import { 
   TrendingUp, Wrench, Users, ShieldCheck, AlertCircle, 
-  Clock, Calendar, FileText, ArrowRight, UserPlus, ClipboardList, Info
+  Clock, Calendar, FileText, ArrowRight, UserPlus, ClipboardList, Info, Package
 } from 'lucide-react';
 import Link from 'next/link';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
@@ -148,115 +148,204 @@ export default function AdminDashboardPage() {
   }, []);
 
   return (
-    <div className="space-y-8">
-      {/* Welcome & Info */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-extrabold text-brand-dark tracking-tight">
-            Painel Operacional
-          </h1>
-          <p className="text-xs text-slate-500 font-medium">
-            Monitore as vendas, ordens de serviço e atendimentos técnicos da Plataforma Dental.
-          </p>
+    <div className="space-y-8 max-w-7xl mx-auto text-left animate-in fade-in duration-300">
+      {/* Cabeçalho Executivo Premium */}
+      <div className="bg-gradient-to-br from-slate-900 via-sky-950 to-slate-950 text-white rounded-3xl p-6 md:p-8 shadow-lg relative overflow-hidden border border-slate-800">
+        <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-[0.03] pointer-events-none hidden md:block">
+          <Wrench className="w-full h-full text-white scale-150 rotate-12" />
         </div>
-        <div className="flex gap-2">
-          <Link 
-            href="/admin/agenda"
-            className="bg-brand-clinical hover:bg-sky-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
-          >
-            <Calendar className="w-4 h-4" /> Agenda Kanban
-          </Link>
-          <Link 
-            href="/admin/ordens-servico"
-            className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
-          >
-            <Wrench className="w-4 h-4" /> Criar OS
-          </Link>
+        <div className="absolute -left-12 -top-12 w-48 h-48 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-brand-clinical/10 rounded-full blur-3xl pointer-events-none"></div>
+        
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 relative z-10">
+          <div className="space-y-2">
+            <span className="text-[10px] font-extrabold text-sky-400 uppercase tracking-widest bg-sky-500/10 px-2.5 py-1 rounded-full border border-sky-500/20 inline-block">
+              Painel Administrativo Executivo
+            </span>
+            <h1 className="text-2xl md:text-3xl font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-sky-100 bg-clip-text text-transparent">
+              Visão Geral do Negócio
+            </h1>
+            <p className="text-xs text-slate-300 font-medium leading-relaxed max-w-2xl">
+              Monitore a saúde financeira, o andamento das ordens de serviço críticas e o desempenho operacional dos técnicos em tempo real.
+            </p>
+          </div>
+          <div className="bg-white/5 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 text-left md:text-right self-start md:self-center shadow-inner">
+            <span className="text-[9px] text-sky-300 font-extrabold block uppercase tracking-wider">Hoje é</span>
+            <span className="text-xs font-extrabold text-white">
+              {new Date().toLocaleDateString('pt-BR', { dateStyle: 'full' })}
+            </span>
+          </div>
         </div>
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-32 bg-white rounded-2xl border border-slate-100 animate-pulse" />
-          ))}
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-32 bg-white rounded-2xl border border-slate-100 animate-pulse" />
+            ))}
+          </div>
         </div>
       ) : (
         <>
-          {/* Grid de Métricas Principales */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatusCard
-              title="Faturamento Mensal"
-              value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(metrics.billingMonthly)}
-              description="Aprovados ou faturados este mês"
-              icon={<TrendingUp className="w-5 h-5" />}
-              variant="clinical"
-            />
-            <StatusCard
-              title="OS em Andamento"
-              value={`${metrics.activeOS} chamados`}
-              description={`${metrics.noTechOS} sem técnico atribuído`}
-              icon={<Wrench className="w-5 h-5" />}
-              variant="alert"
-            />
-            <StatusCard
-              title="Técnicos Ativos"
-              value={`${metrics.activeTechs} credenciados`}
-              description="Disponíveis para visitas"
-              icon={<ShieldCheck className="w-5 h-5" />}
-              variant="success"
-            />
-            <StatusCard
-              title="Novos Clientes"
-              value={`${metrics.totalCustomers} cadastrados`}
-              description="Total na plataforma"
-              icon={<Users className="w-5 h-5" />}
-              variant="light"
-            />
+          {/* Área de Ações Rápidas Premium */}
+          <div className="space-y-3.5">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">
+              Ações Rápidas Operacionais
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Link 
+                href="/admin/ordens-servico" 
+                className="bg-white hover:bg-slate-50/50 border border-slate-100/80 p-5 rounded-2xl flex items-center gap-4 transition-all duration-300 shadow-xs hover:shadow-md hover:-translate-y-0.5 active:scale-[0.99] group"
+              >
+                <div className="w-11 h-11 rounded-xl bg-sky-50/80 text-brand-clinical flex items-center justify-center group-hover:bg-brand-clinical group-hover:text-white transition-all duration-300 shadow-2xs">
+                  <Wrench className="w-5 h-5" />
+                </div>
+                <div className="text-left">
+                  <p className="text-xs font-extrabold text-slate-800">Criar Nova OS</p>
+                  <p className="text-[10px] text-slate-400 font-medium leading-normal">Cadastrar chamado técnico</p>
+                </div>
+              </Link>
+
+              <Link 
+                href="/admin/clientes" 
+                className="bg-white hover:bg-slate-50/50 border border-slate-100/80 p-5 rounded-2xl flex items-center gap-4 transition-all duration-300 shadow-xs hover:shadow-md hover:-translate-y-0.5 active:scale-[0.99] group"
+              >
+                <div className="w-11 h-11 rounded-xl bg-emerald-50/80 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300 shadow-2xs">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div className="text-left">
+                  <p className="text-xs font-extrabold text-slate-800">Novo Cliente</p>
+                  <p className="text-[10px] text-slate-400 font-medium leading-normal">Registrar clínica ou dentista</p>
+                </div>
+              </Link>
+
+              <Link 
+                href="/admin/produtos" 
+                className="bg-white hover:bg-slate-50/50 border border-slate-100/80 p-5 rounded-2xl flex items-center gap-4 transition-all duration-300 shadow-xs hover:shadow-md hover:-translate-y-0.5 active:scale-[0.99] group"
+              >
+                <div className="w-11 h-11 rounded-xl bg-purple-50/80 text-purple-600 flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition-all duration-300 shadow-2xs">
+                  <Package className="w-5 h-5" />
+                </div>
+                <div className="text-left">
+                  <p className="text-xs font-extrabold text-slate-800">Novo Produto</p>
+                  <p className="text-[10px] text-slate-400 font-medium leading-normal">Adicionar item ao catálogo</p>
+                </div>
+              </Link>
+
+              <Link 
+                href="/admin/agenda" 
+                className="bg-white hover:bg-slate-50/50 border border-slate-100/80 p-5 rounded-2xl flex items-center gap-4 transition-all duration-300 shadow-xs hover:shadow-md hover:-translate-y-0.5 active:scale-[0.99] group"
+              >
+                <div className="w-11 h-11 rounded-xl bg-indigo-50/80 text-indigo-600 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 shadow-2xs">
+                  <Calendar className="w-5 h-5" />
+                </div>
+                <div className="text-left">
+                  <p className="text-xs font-extrabold text-slate-800">Agenda Kanban</p>
+                  <p className="text-[10px] text-slate-400 font-medium leading-normal">Quadro geral de status</p>
+                </div>
+              </Link>
+            </div>
           </div>
 
-          {/* Grid de Métricas Operacionales Especializadas */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white rounded-2xl p-5 border border-slate-100 flex items-center justify-between shadow-xs hover:shadow-md transition-shadow">
-              <div className="space-y-1">
-                <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block">Sem Técnico</span>
-                <h3 className="text-lg font-black text-amber-600">{metrics.noTechOS} chamados</h3>
-                <p className="text-[9px] text-slate-400 font-medium">Aguardando delegação</p>
+          {/* Grid de Indicadores Principais Premium */}
+          <div className="space-y-3.5 pt-2">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">
+              Indicadores de Desempenho SaaS
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-white rounded-2xl border border-slate-100/80 p-5 flex items-center justify-between shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group">
+                <div className="space-y-1">
+                  <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block">Receita Mensal</span>
+                  <h3 className="text-lg font-black text-slate-900 tracking-tight">
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(metrics.billingMonthly)}
+                  </h3>
+                  <p className="text-[9px] text-emerald-600 font-extrabold flex items-center gap-0.5">
+                    <TrendingUp className="w-3 h-3" /> Faturamento deste mês
+                  </p>
+                </div>
+                <div className="w-11 h-11 rounded-xl bg-sky-50 text-brand-clinical flex items-center justify-center group-hover:bg-brand-clinical group-hover:text-white transition-colors duration-300">
+                  <TrendingUp className="w-5 h-5" />
+                </div>
               </div>
-              <div className="bg-amber-50 text-amber-600 p-2.5 rounded-lg">
-                <UserPlus className="w-4 h-4" />
+
+              <div className="bg-white rounded-2xl border border-slate-100/80 p-5 flex items-center justify-between shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group">
+                <div className="space-y-1">
+                  <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block">Atendimentos Ativos</span>
+                  <h3 className="text-lg font-black text-slate-900 tracking-tight">{metrics.activeOS} chamados</h3>
+                  <p className="text-[9px] text-amber-600 font-extrabold">{metrics.noTechOS} aguardando técnico</p>
+                </div>
+                <div className="w-11 h-11 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center group-hover:bg-orange-600 group-hover:text-white transition-colors duration-300">
+                  <Wrench className="w-5 h-5" />
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-slate-100/80 p-5 flex items-center justify-between shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group">
+                <div className="space-y-1">
+                  <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block">Equipe de Campo</span>
+                  <h3 className="text-lg font-black text-slate-900 tracking-tight">{metrics.activeTechs} técnicos</h3>
+                  <p className="text-[9px] text-emerald-600 font-extrabold">Operando em campo</p>
+                </div>
+                <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-slate-100/80 p-5 flex items-center justify-between shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group">
+                <div className="space-y-1">
+                  <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block">Clientes Cadastrados</span>
+                  <h3 className="text-lg font-black text-slate-900 tracking-tight">{metrics.totalCustomers} clínicas</h3>
+                  <p className="text-[9px] text-slate-500 font-extrabold">Consultórios credenciados</p>
+                </div>
+                <div className="w-11 h-11 rounded-xl bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-slate-600 group-hover:text-white transition-colors duration-300">
+                  <Users className="w-5 h-5" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Grid de Alertas Críticos Premium */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
+            <div className="bg-amber-50/40 hover:bg-amber-50/60 rounded-2xl p-5 border border-amber-100/80 flex items-center justify-between shadow-2xs transition-all duration-300">
+              <div className="space-y-1 text-left">
+                <span className="text-[9px] font-extrabold text-amber-500 uppercase tracking-widest block">Sem Técnico Designado</span>
+                <h3 className="text-lg font-black text-amber-700">{metrics.noTechOS} chamados</h3>
+                <p className="text-[9px] text-amber-600/80 font-bold">Pendente delegação de equipe</p>
+              </div>
+              <div className="bg-amber-100 text-amber-700 p-2.5 rounded-xl shadow-2xs">
+                <UserPlus className="w-4 h-4 animate-bounce" />
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-5 border border-slate-100 flex items-center justify-between shadow-xs hover:shadow-md transition-shadow">
-              <div className="space-y-1">
-                <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block">Urgências Ativas</span>
-                <h3 className="text-lg font-black text-rose-600">{metrics.urgentOSCount} chamados</h3>
-                <p className="text-[9px] text-slate-400 font-medium">Atenção prioritária</p>
+            <div className="bg-rose-50/40 hover:bg-rose-50/60 rounded-2xl p-5 border border-rose-100/80 flex items-center justify-between shadow-2xs transition-all duration-300">
+              <div className="space-y-1 text-left">
+                <span className="text-[9px] font-extrabold text-rose-500 uppercase tracking-widest block">Chamados Urgentes</span>
+                <h3 className="text-lg font-black text-rose-700">{metrics.urgentOSCount} chamados</h3>
+                <p className="text-[9px] text-rose-600/80 font-bold">Requer atenção operacional imediata</p>
               </div>
-              <div className="bg-rose-50 text-rose-600 p-2.5 rounded-lg">
-                <ShieldCheck className="w-4 h-4 text-rose-600 animate-pulse" />
+              <div className="bg-rose-100 text-rose-700 p-2.5 rounded-xl shadow-2xs">
+                <AlertCircle className="w-4 h-4 text-rose-600 animate-pulse" />
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-5 border border-slate-100 flex items-center justify-between shadow-xs hover:shadow-md transition-shadow">
-              <div className="space-y-1">
-                <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block">Visitas de Hoje</span>
-                <h3 className="text-lg font-black text-slate-900">{metrics.todayVisits} agendas</h3>
-                <p className="text-[9px] text-slate-400 font-medium">Manutenção em campo</p>
+            <div className="bg-slate-50/50 hover:bg-slate-50 rounded-2xl p-5 border border-slate-200/60 flex items-center justify-between shadow-2xs transition-all duration-300">
+              <div className="space-y-1 text-left">
+                <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-widest block">Visitas Agendadas Hoje</span>
+                <h3 className="text-lg font-black text-slate-800">{metrics.todayVisits} visitas</h3>
+                <p className="text-[9px] text-slate-600/80 font-bold">Roteiro operacional ativo</p>
               </div>
-              <div className="bg-slate-50 text-slate-600 p-2.5 rounded-lg">
+              <div className="bg-slate-100 text-slate-600 p-2.5 rounded-xl shadow-2xs">
                 <Calendar className="w-4 h-4" />
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-5 border border-slate-100 flex items-center justify-between shadow-xs hover:shadow-md transition-shadow">
-              <div className="space-y-1">
-                <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block">Orçamentos Pendentes</span>
-                <h3 className="text-lg font-black text-indigo-600">{metrics.pendingQuotes} propostas</h3>
-                <p className="text-[9px] text-slate-400 font-medium">Aguardando aprovação</p>
+            <div className="bg-indigo-50/40 hover:bg-indigo-50/60 rounded-2xl p-5 border border-indigo-100/80 flex items-center justify-between shadow-2xs transition-all duration-300">
+              <div className="space-y-1 text-left">
+                <span className="text-[9px] font-extrabold text-indigo-500 uppercase tracking-widest block">Orçamentos Aguardando</span>
+                <h3 className="text-lg font-black text-indigo-700">{metrics.pendingQuotes} propostas</h3>
+                <p className="text-[9px] text-indigo-600/80 font-bold">Propostas comerciais pendentes</p>
               </div>
-              <div className="bg-indigo-50 text-indigo-600 p-2.5 rounded-lg">
+              <div className="bg-indigo-100 text-indigo-700 p-2.5 rounded-xl shadow-2xs">
                 <FileText className="w-4 h-4" />
               </div>
             </div>
@@ -264,52 +353,54 @@ export default function AdminDashboardPage() {
         </>
       )}
 
-      {/* Section Tables */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        
-        {/* Ultimos pedidos de venda */}
-        <div className="bg-white rounded-2xl border border-slate-100 p-5 space-y-4 shadow-sm">
-          <div className="flex justify-between items-center border-b border-slate-50 pb-3">
-            <h3 className="font-bold text-sm text-brand-dark">Últimos Pedidos de Venda</h3>
+      {/* Seções de Tablas y Listados Premium */}
+      <div className="grid lg:grid-cols-2 gap-6 pt-2">
+        {/* Últimos Pedidos de Venda */}
+        <div className="bg-white rounded-3xl border border-slate-100/80 p-6 space-y-5 shadow-xs">
+          <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+            <div className="space-y-0.5 text-left">
+              <h3 className="font-extrabold text-sm text-slate-800">Últimos Pedidos de Venda</h3>
+              <p className="text-[10px] text-slate-400 font-semibold">Monitoramento de vendas recentes no mês</p>
+            </div>
             <Link 
               href="/admin/pedidos-venda"
-              className="text-[10px] text-brand-clinical font-bold hover:underline flex items-center gap-0.5"
+              className="text-[10px] text-brand-clinical font-extrabold hover:underline flex items-center gap-0.5 bg-sky-50/80 hover:bg-sky-50 px-3 py-1.5 rounded-xl border border-sky-100 transition-colors"
             >
-              Ver todos <ArrowRight className="w-3 h-3" />
+              Ver todos <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
           <div className="overflow-x-auto no-scrollbar">
             {recentSales.length === 0 ? (
-              <div className="text-center py-8 text-slate-400 text-xs italic">
+              <div className="text-center py-12 text-slate-400 text-xs italic font-semibold border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/10">
                 Nenhum pedido de venda recente.
               </div>
             ) : (
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="text-slate-400 font-bold border-b border-slate-100">
-                    <th className="pb-2">Pedido</th>
-                    <th className="pb-2">Cliente</th>
-                    <th className="pb-2 text-right">Valor</th>
-                    <th className="pb-2 text-center">Status</th>
+                  <tr className="text-slate-400 font-extrabold border-b border-slate-100 bg-slate-50/30 rounded-xl">
+                    <th className="pb-3 pt-2 pl-3">ID Pedido</th>
+                    <th className="pb-3 pt-2 px-2">Cliente / Razão</th>
+                    <th className="pb-3 pt-2 text-right">Valor Total</th>
+                    <th className="pb-3 pt-2 text-center pr-3">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {recentSales.map((order) => (
-                    <tr key={order.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="py-3 font-bold text-brand-clinical">
+                    <tr key={order.id} className="hover:bg-slate-50/30 transition-all duration-200">
+                      <td className="py-4 pl-3 font-mono font-bold text-brand-clinical">
                         #{order.id.substring(0, 8).toUpperCase()}
                       </td>
-                      <td className="py-3 font-semibold text-slate-700">
+                      <td className="py-4 px-2 font-bold text-slate-700">
                         {order.customer?.company_name || 'Cliente'}
                       </td>
-                      <td className="py-3 text-right font-bold text-brand-dark">
+                      <td className="py-4 text-right font-black text-slate-900">
                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(order.total_amount)}
                       </td>
-                      <td className="py-3 text-center">
-                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                          order.status === 'aprovado' ? 'bg-success-bg text-success-text' :
-                          order.status === 'faturado' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'
+                      <td className="py-4 text-center pr-3">
+                        <span className={`text-[9px] font-extrabold px-3 py-1 rounded-full border uppercase tracking-wider shadow-2xs ${
+                          order.status === 'aprovado' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                          order.status === 'faturado' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-amber-50 text-amber-700 border-amber-200'
                         }`}>
                           {order.status}
                         </span>
@@ -322,59 +413,61 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* OS críticas */}
-        <div className="bg-white rounded-2xl border border-slate-100 p-5 space-y-4 shadow-sm">
-          <div className="flex justify-between items-center border-b border-slate-50 pb-3">
-            <h3 className="font-bold text-sm text-brand-dark flex items-center gap-1.5">
-              <AlertCircle className="w-4.5 h-4.5 text-rose-500 animate-pulse" />
-              OS Críticas Pendentes ({criticalOS.length})
-            </h3>
+        {/* OS Críticas Pendentes */}
+        <div className="bg-white rounded-3xl border border-slate-100/80 p-6 space-y-5 shadow-xs">
+          <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+            <div className="space-y-0.5 text-left">
+              <h3 className="font-extrabold text-sm text-slate-800 flex items-center gap-1.5">
+                <AlertCircle className="w-4 h-4 text-rose-500 animate-pulse" />
+                OS Críticas Pendentes ({criticalOS.length})
+              </h3>
+              <p className="text-[10px] text-slate-400 font-semibold">Chamados de emergência sob monitoramento</p>
+            </div>
             <Link 
               href="/admin/ordens-servico"
-              className="text-[10px] text-brand-clinical font-bold hover:underline flex items-center gap-0.5"
+              className="text-[10px] text-brand-clinical font-extrabold hover:underline flex items-center gap-0.5 bg-sky-50/80 hover:bg-sky-50 px-3 py-1.5 rounded-xl border border-sky-100 transition-colors"
             >
-              Ver fila <ArrowRight className="w-3 h-3" />
+              Ver fila <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          <div className="space-y-2.5">
+          <div className="space-y-3.5">
             {criticalOS.length === 0 ? (
-              <div className="text-center py-8 text-slate-400 text-xs italic">
+              <div className="text-center py-12 text-slate-400 text-xs italic font-semibold border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/10">
                 Nenhuma OS crítica pendente no momento.
               </div>
             ) : (
               criticalOS.map((os) => (
                 <div 
                   key={os.id} 
-                  className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 hover:bg-slate-50/30 transition-colors bg-slate-50/20"
+                  className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50/20 transition-all duration-300 bg-slate-50/10 shadow-2xs hover:shadow-xs"
                 >
-                  <div className="space-y-1 text-left">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-xs text-brand-dark">
+                  <div className="space-y-1.5 text-left">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-extrabold text-xs text-slate-800">
                         {os.equipment?.name || 'Equipamento'}
                       </span>
-                      <span className={`text-[8px] font-bold px-1.5 py-0.2 rounded-md ${
-                        os.priority === 'urgente' ? 'bg-rose-50 text-rose-700 border border-rose-200 animate-pulse' : 'bg-orange-50 text-orange-700'
+                      <span className={`text-[8px] font-black px-2 py-0.5 rounded-md border uppercase tracking-wider ${
+                        os.priority === 'urgente' ? 'bg-rose-500 text-white border-rose-600 animate-pulse' : 'bg-orange-50 text-orange-700 border-orange-200'
                       }`}>
                         {os.priority}
                       </span>
                     </div>
                     <p className="text-[10px] text-slate-400 font-semibold">
-                      {os.customer?.company_name} | #{os.id.substring(0, 8).toUpperCase()}
+                      {os.customer?.company_name} • <span className="font-mono text-brand-clinical font-bold">#{os.id.substring(0, 8).toUpperCase()}</span>
                     </p>
                   </div>
                   
-                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md ${
-                    os.status === 'aberta' ? 'bg-blue-50 text-blue-700' : 'bg-sky-50 text-sky-700'
+                  <span className={`text-[9px] font-extrabold px-3 py-1 rounded-full border uppercase tracking-wider shadow-2xs ${
+                    os.status === 'aberta' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-sky-50 text-sky-700 border-sky-200'
                   }`}>
-                    {os.status === 'aberta' ? 'Aberta' : 'Em Atendimento'}
+                    {os.status === 'aberta' ? 'Aberta' : 'Em Campo'}
                   </span>
                 </div>
               ))
             )}
           </div>
         </div>
-
       </div>
     </div>
   );

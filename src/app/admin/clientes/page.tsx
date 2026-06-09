@@ -23,6 +23,11 @@ interface Customer {
   address_city: string | null;
   address_state: string | null;
   address_zip: string | null;
+  contact_name: string | null;
+  email: string | null;
+  phone: string | null;
+  whatsapp: string | null;
+  notes: string | null;
   created_at: string;
   profile?: {
     name: string;
@@ -83,6 +88,11 @@ export default function AdminClientesPage() {
     address_city: '',
     address_state: '',
     address_zip: '',
+    contact_name: '',
+    email: '',
+    phone: '',
+    whatsapp: '',
+    notes: '',
   });
 
   // Estados del formulario de equipo
@@ -174,6 +184,11 @@ export default function AdminClientesPage() {
         address_city: customer.address_city || '',
         address_state: customer.address_state || '',
         address_zip: customer.address_zip || '',
+        contact_name: customer.contact_name || '',
+        email: customer.email || '',
+        phone: customer.phone || '',
+        whatsapp: customer.whatsapp || '',
+        notes: customer.notes || '',
       });
     } else {
       setFormCustomer({
@@ -189,6 +204,11 @@ export default function AdminClientesPage() {
         address_city: '',
         address_state: '',
         address_zip: '',
+        contact_name: '',
+        email: '',
+        phone: '',
+        whatsapp: '',
+        notes: '',
       });
     }
     setIsCustomerModalOpen(true);
@@ -214,6 +234,11 @@ export default function AdminClientesPage() {
         address_city: formCustomer.address_city || null,
         address_state: formCustomer.address_state || null,
         address_zip: formCustomer.address_zip || null,
+        contact_name: formCustomer.contact_name || null,
+        email: formCustomer.email || null,
+        phone: formCustomer.phone || null,
+        whatsapp: formCustomer.whatsapp || null,
+        notes: formCustomer.notes || null,
       };
 
       if (editingCustomer) {
@@ -392,12 +417,14 @@ export default function AdminClientesPage() {
   );
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-extrabold text-brand-dark tracking-tight flex items-center gap-2">
-            <Users className="w-7 h-7 text-brand-clinical" />
+    <div className="space-y-8 animate-in fade-in duration-300">
+      {/* Header Premium */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
+        <div className="space-y-1 text-left">
+          <h1 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2.5">
+            <div className="p-2 bg-sky-50 text-brand-clinical rounded-2xl shadow-2xs">
+              <Users className="w-6 h-6" />
+            </div>
             Gestão de Clientes
           </h1>
           <p className="text-xs text-slate-500 font-medium">
@@ -406,19 +433,43 @@ export default function AdminClientesPage() {
         </div>
         <button
           onClick={() => openCustomerModal()}
-          className="bg-brand-clinical hover:bg-sky-700 text-white text-xs font-bold px-4 py-2.5 rounded-lg transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+          className="bg-brand-clinical hover:bg-sky-700 hover:shadow-md text-white text-xs font-bold px-4.5 py-2.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm hover:scale-[1.02] active:scale-[0.98] self-start md:self-center"
         >
           <Plus className="w-4 h-4" /> Novo Cliente
         </button>
+      </div>
+
+      {/* Métricas rápidas de clientes */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white p-4.5 rounded-2xl border border-slate-100 shadow-2xs text-left">
+          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">Total de Clientes</span>
+          <p className="text-lg font-black text-slate-800">{customers.length}</p>
+          <span className="text-[9.5px] text-slate-400 font-medium">Clínicas e Dentistas</span>
+        </div>
+        <div className="bg-white p-4.5 rounded-2xl border border-slate-100 shadow-2xs text-left">
+          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">Equipamentos Ativos</span>
+          <p className="text-lg font-black text-slate-800">{equipments.length}</p>
+          <span className="text-[9.5px] text-brand-clinical font-semibold">Sob manutenção</span>
+        </div>
+        <div className="bg-white p-4.5 rounded-2xl border border-slate-100 shadow-2xs text-left">
+          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">Contas Associadas</span>
+          <p className="text-lg font-black text-emerald-600">{customers.filter(c => c.profile_id).length}</p>
+          <span className="text-[9.5px] text-slate-400 font-medium font-sans">Acesso ao portal liberado</span>
+        </div>
+        <div className="bg-white p-4.5 rounded-2xl border border-slate-100 shadow-2xs text-left">
+          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">Sem Conta</span>
+          <p className="text-lg font-black text-amber-600">{customers.filter(c => !c.profile_id).length}</p>
+          <span className="text-[9.5px] text-slate-400 font-medium font-sans">Pendente vinculação</span>
+        </div>
       </div>
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* Lista de Clientes */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-6 space-y-4">
-            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-              <h3 className="font-bold text-sm text-brand-dark flex items-center gap-1.5">
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-xs p-6 space-y-5">
+            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between pb-2 border-b border-slate-50">
+              <h3 className="font-extrabold text-sm text-slate-800 flex items-center gap-1.5 text-left">
                 Clientes Cadastrados ({filteredCustomers.length})
               </h3>
               
@@ -430,7 +481,7 @@ export default function AdminClientesPage() {
                   placeholder="Buscar cliente, CNPJ, responsável..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-4 py-1.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:border-brand-clinical bg-slate-50/50"
+                  className="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 bg-slate-50/40 transition-all text-slate-700 font-sans"
                 />
               </div>
             </div>
@@ -440,7 +491,7 @@ export default function AdminClientesPage() {
                 Carregando clientes...
               </div>
             ) : filteredCustomers.length === 0 ? (
-              <div className="text-center py-12 text-slate-400 font-medium text-xs border-2 border-dashed border-slate-100 rounded-xl">
+              <div className="text-center py-12 text-slate-400 font-medium text-xs border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/10">
                 Nenhum cliente cadastrado ou encontrado.
               </div>
             ) : (
@@ -448,64 +499,85 @@ export default function AdminClientesPage() {
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="text-slate-400 font-bold border-b border-slate-100">
-                      <th className="pb-3 pr-2">Razão Social / Nome</th>
+                      <th className="pb-3 pr-2 pl-2">Razão Social / Nome</th>
                       <th className="pb-3 px-2">Documento</th>
-                      <th className="pb-3 px-2">Contato</th>
+                      <th className="pb-3 px-2">Contato Responsável</th>
                       <th className="pb-3 px-2">Cidade/UF</th>
-                      <th className="pb-3 pl-2 text-right">Ações</th>
+                      <th className="pb-3 pr-2 text-right">Ações</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
                     {filteredCustomers.map((client) => {
                       const isSelected = selectedCustomer?.id === client.id;
+                      const initials = client.company_name.substring(0, 2).toUpperCase();
+                      
+                      const colors = [
+                        'bg-sky-50 text-brand-clinical border-sky-105',
+                        'bg-emerald-50 text-emerald-600 border-emerald-105',
+                        'bg-indigo-50 text-indigo-600 border-indigo-105',
+                        'bg-purple-50 text-purple-600 border-purple-105',
+                        'bg-amber-50 text-amber-600 border-amber-105',
+                      ];
+                      const colorIndex = initials.charCodeAt(0) % colors.length;
+                      const colorClass = colors[colorIndex];
+
                       return (
                         <tr 
                           key={client.id} 
                           onClick={() => setSelectedCustomer(client)}
-                          className={`hover:bg-slate-50/50 transition-colors cursor-pointer ${
-                            isSelected ? 'bg-sky-50/30 font-semibold border-l-2 border-brand-clinical' : ''
+                          className={`hover:bg-slate-50/30 transition-all duration-150 cursor-pointer ${
+                            isSelected ? 'bg-sky-50/20 font-semibold border-l-2 border-brand-clinical shadow-2xs' : ''
                           }`}
                         >
-                          <td className="py-4 pr-2 font-bold text-brand-dark">
-                            <div>{client.company_name}</div>
-                            {client.trade_name && (
-                              <div className="text-[10px] text-slate-400 font-normal font-sans">
-                                {client.trade_name}
+                          <td className="py-4 pr-2 pl-2 text-left">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-8 h-8 rounded-xl border flex items-center justify-center font-bold text-[10px] ${colorClass} flex-shrink-0`}>
+                                {initials}
                               </div>
-                            )}
+                              <div>
+                                <div className="font-extrabold text-slate-800 text-xs line-clamp-1">{client.company_name}</div>
+                                {client.trade_name && (
+                                  <div className="text-[10px] text-slate-400 font-medium font-sans line-clamp-1">
+                                    {client.trade_name}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
                           </td>
-                          <td className="py-4 px-2 text-slate-500 font-semibold">
+                          <td className="py-4 px-2 text-slate-500 font-bold font-mono">
                             {client.cnpj || client.cpf || '—'}
                           </td>
-                          <td className="py-4 px-2">
+                          <td className="py-4 px-2 text-left">
                             {client.profile ? (
                               <div className="space-y-0.5">
-                                <div className="font-semibold text-slate-700">{client.profile.name}</div>
+                                <div className="font-bold text-slate-700 text-xs">{client.profile.name}</div>
                                 {client.profile.phone && (
-                                  <div className="text-[10px] text-slate-400 flex items-center gap-0.5 font-normal">
+                                  <div className="text-[10px] text-slate-400 flex items-center gap-0.5 font-semibold">
                                     <Phone className="w-2.5 h-2.5" /> {client.profile.phone}
                                   </div>
                                 )}
                               </div>
                             ) : (
-                              <span className="text-[10px] text-slate-400 italic font-medium">Sem conta associada</span>
+                              <span className="text-[10px] text-slate-400 italic font-semibold bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">
+                                Sem conta associada
+                              </span>
                             )}
                           </td>
-                          <td className="py-4 px-2 text-slate-500 font-medium">
+                          <td className="py-4 px-2 text-slate-500 font-semibold">
                             {client.address_city ? `${client.address_city} - ${client.address_state || ''}` : '—'}
                           </td>
-                          <td className="py-4 pl-2 text-right" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center justify-end gap-1.5">
+                          <td className="py-4 pr-2 text-right" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-end gap-1">
                               <button
                                 onClick={() => openCustomerModal(client)}
-                                className="p-1.5 text-slate-400 hover:text-brand-clinical rounded-md hover:bg-slate-100 transition-colors"
+                                className="p-1.5 text-slate-400 hover:text-brand-clinical rounded-lg hover:bg-slate-50 transition-colors"
                                 title="Editar Cliente"
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
                               </button>
                               <button
                                 onClick={() => handleDeleteCustomer(client.id)}
-                                className="p-1.5 text-slate-400 hover:text-rose-600 rounded-md hover:bg-slate-100 transition-colors"
+                                className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-50 transition-colors"
                                 title="Excluir Cliente"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -526,53 +598,53 @@ export default function AdminClientesPage() {
         {/* Ficha Detalhada e Equipamentos */}
         <div className="lg:col-span-1">
           {selectedCustomer ? (
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden space-y-0">
-              {/* Header Ficha */}
-              <div className="bg-slate-900 text-white p-5 space-y-2 relative">
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden space-y-0 animate-in fade-in zoom-in-95 duration-200">
+              {/* Header Ficha Premium */}
+              <div className="bg-gradient-to-r from-slate-900 to-sky-950 text-white p-5 space-y-2 relative text-left">
                 <button
                   onClick={() => setSelectedCustomer(null)}
-                  className="absolute right-4 top-4 text-slate-400 hover:text-white"
+                  className="absolute right-4 top-4 text-slate-400 hover:text-white bg-white/10 hover:bg-white/20 p-1.5 rounded-lg transition-colors"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
                 <div className="flex items-center gap-2">
-                  <div className="bg-brand-clinical text-white p-1.5 rounded-lg">
+                  <div className="bg-brand-clinical/20 text-sky-400 p-1.5 rounded-lg border border-sky-400/20">
                     <Building2 className="w-4 h-4" />
                   </div>
-                  <span className="text-[10px] font-bold tracking-wider text-sky-400 uppercase">Ficha do Cliente</span>
+                  <span className="text-[10px] font-extrabold tracking-wider text-sky-400 uppercase">Ficha do Cliente</span>
                 </div>
                 <h2 className="font-extrabold text-sm leading-tight pr-6">{selectedCustomer.company_name}</h2>
-                <p className="text-[10px] text-slate-300">{selectedCustomer.trade_name || 'Sem nome fantasia'}</p>
+                <p className="text-[10px] text-slate-300 font-medium">{selectedCustomer.trade_name || 'Sem nome fantasia'}</p>
               </div>
 
               {/* Endereço e Dados Básicos */}
-              <div className="p-5 border-b border-slate-50 space-y-3">
-                <h4 className="font-bold text-xs text-brand-dark uppercase tracking-wider">Dados e Endereço</h4>
+              <div className="p-5 border-b border-slate-50 space-y-4 text-left">
+                <h4 className="font-extrabold text-[10px] text-slate-400 uppercase tracking-widest font-sans">Dados e Endereço</h4>
                 
-                <div className="grid grid-cols-2 gap-3 text-[11px] font-semibold text-slate-600">
+                <div className="grid grid-cols-2 gap-4 text-[11px] font-bold text-slate-700">
                   <div>
-                    <span className="text-[9px] font-bold text-slate-400 block uppercase">Documento</span>
-                    <span>{selectedCustomer.cnpj || selectedCustomer.cpf || '—'}</span>
+                    <span className="text-[9px] font-extrabold text-slate-400 block uppercase tracking-wider mb-0.5">Documento</span>
+                    <span className="font-mono">{selectedCustomer.cnpj || selectedCustomer.cpf || '—'}</span>
                   </div>
                   <div>
-                    <span className="text-[9px] font-bold text-slate-400 block uppercase">Telefone</span>
-                    <span>{selectedCustomer.profile?.phone || '—'}</span>
+                    <span className="text-[9px] font-extrabold text-slate-400 block uppercase tracking-wider mb-0.5">Telefone</span>
+                    <span>{selectedCustomer.phone || selectedCustomer.profile?.phone || '—'}</span>
                   </div>
                 </div>
 
-                <div className="pt-2 flex gap-1.5 text-[11px] font-semibold text-slate-600">
+                <div className="pt-2 flex gap-2 text-[11px] font-bold text-slate-700 border-t border-slate-50/50">
                   <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                  <div>
+                  <div className="space-y-0.5 leading-normal">
                     <span>
                       {selectedCustomer.address_street || '—'}
                       {selectedCustomer.address_number ? `, ${selectedCustomer.address_number}` : ''}
                     </span>
                     {selectedCustomer.address_complement && (
-                      <span className="block text-slate-400 font-normal text-[10px]">
+                      <span className="block text-slate-400 font-semibold text-[10px]">
                         {selectedCustomer.address_complement}
                       </span>
                     )}
-                    <span className="block text-slate-400 text-[10px]">
+                    <span className="block text-slate-400 font-semibold text-[10px]">
                       {selectedCustomer.address_neighborhood ? `${selectedCustomer.address_neighborhood}, ` : ''}
                       {selectedCustomer.address_city ? `${selectedCustomer.address_city} - ` : ''}
                       {selectedCustomer.address_state || ''}
@@ -582,22 +654,22 @@ export default function AdminClientesPage() {
               </div>
 
               {/* Equipamentos */}
-              <div className="p-5 space-y-4">
+              <div className="p-5 space-y-4 text-left">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-xs text-brand-dark uppercase tracking-wider flex items-center gap-1.5">
+                  <h4 className="font-extrabold text-[10px] text-slate-400 uppercase tracking-widest flex items-center gap-1.5 font-sans">
                     <Stethoscope className="w-4 h-4 text-brand-clinical" />
                     Equipamentos ({selectedCustomerEquipments.length})
                   </h4>
                   <button
                     onClick={() => openEquipmentModal()}
-                    className="text-[10px] font-bold text-brand-clinical hover:text-sky-700 bg-sky-50 px-2.5 py-1.5 rounded-md transition-colors"
+                    className="text-[10px] font-extrabold text-brand-clinical hover:text-sky-700 bg-sky-50 hover:bg-sky-100/70 px-3 py-1.5 rounded-xl border border-sky-100 transition-colors"
                   >
                     + Adicionar
                   </button>
                 </div>
 
                 {selectedCustomerEquipments.length === 0 ? (
-                  <div className="text-center py-6 text-slate-400 text-[10px] font-medium border border-dashed border-slate-100 rounded-lg">
+                  <div className="text-center py-8 text-slate-400 text-[10px] font-semibold border border-dashed border-slate-100 rounded-2xl bg-slate-50/5">
                     Nenhum equipamento cadastrado para este cliente.
                   </div>
                 ) : (
@@ -605,35 +677,35 @@ export default function AdminClientesPage() {
                     {selectedCustomerEquipments.map((equip) => (
                       <div 
                         key={equip.id} 
-                        className="border border-slate-100 rounded-xl p-3 bg-slate-50/30 hover:bg-slate-50 transition-colors flex justify-between items-start gap-2"
+                        className="border border-slate-100/80 rounded-2xl p-3 bg-slate-50/20 hover:bg-slate-50/60 transition-all duration-200 flex justify-between items-start gap-2 group shadow-2xs hover:shadow-xs animate-in fade-in duration-200"
                       >
-                        <div className="space-y-1">
-                          <h5 className="font-bold text-xs text-brand-dark">{equip.name}</h5>
-                          <div className="text-[10px] font-semibold text-slate-500 space-y-0.5">
+                        <div className="space-y-1 text-left">
+                          <h5 className="font-extrabold text-xs text-slate-800">{equip.name}</h5>
+                          <div className="text-[10px] font-bold text-slate-500 space-y-0.5">
                             <p>Marca: {equip.brand || '—'} | Modelo: {equip.model || '—'}</p>
                             {equip.serial_number && <p className="font-mono text-[9px] text-slate-400">N/S: {equip.serial_number}</p>}
                             {equip.installation_date && (
-                              <p className="flex items-center gap-0.5 text-slate-400 text-[9px]">
+                              <p className="flex items-center gap-0.5 text-slate-400 text-[9px] font-semibold pt-0.5">
                                 <Calendar className="w-2.5 h-2.5" /> Instalação: {new Date(equip.installation_date).toLocaleDateString('pt-BR')}
                               </p>
                             )}
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-0.5 opacity-60 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => openEquipmentModal(equip)}
-                            className="p-1 text-slate-400 hover:text-brand-clinical hover:bg-white rounded transition-colors"
+                            className="p-1.5 text-slate-400 hover:text-brand-clinical hover:bg-white rounded-lg border border-transparent hover:border-slate-100 transition-all shadow-2xs"
                             title="Editar equipamento"
                           >
-                            <Edit2 className="w-3 h-3" />
+                            <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleDeleteEquipment(equip.id)}
-                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-white rounded transition-colors"
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-white rounded-lg border border-transparent hover:border-slate-100 transition-all shadow-2xs"
                             title="Excluir equipamento"
                           >
-                            <Trash2 className="w-3 h-3" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </div>
@@ -643,10 +715,10 @@ export default function AdminClientesPage() {
               </div>
             </div>
           ) : (
-            <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center text-slate-400 space-y-2">
-              <Building2 className="w-8 h-8 mx-auto text-slate-300" />
-              <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400">Nenhum cliente selecionado</h4>
-              <p className="text-[10px] font-medium text-slate-400 font-sans max-w-xs mx-auto">
+            <div className="bg-slate-50/40 border border-dashed border-slate-200 rounded-3xl p-8 text-center text-slate-400 space-y-2.5 shadow-2xs">
+              <Building2 className="w-8 h-8 mx-auto text-slate-355" />
+              <h4 className="font-extrabold text-[10px] uppercase tracking-wider text-slate-400">Nenhum cliente selecionado</h4>
+              <p className="text-[10px] font-semibold text-slate-400 font-sans max-w-xs mx-auto leading-relaxed">
                 Selecione um cliente na tabela ao lado para visualizar informações de contato, endereço e gerenciar equipamentos vinculados.
               </p>
             </div>
@@ -738,6 +810,66 @@ export default function AdminClientesPage() {
                     <p className="text-[9px] text-slate-400 font-medium font-sans">
                       Apenas contas registradas na plataforma com o perfil &quot;cliente&quot; que ainda não estão vinculadas a outros clientes aparecem aqui.
                     </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Seção Dados de Contato */}
+              <div className="space-y-4 pt-4 border-t border-slate-100">
+                <h4 className="font-bold text-xs text-brand-clinical uppercase tracking-wider">Informações de Contato Operacional</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Nome do Contato Principal</label>
+                    <input
+                      type="text"
+                      value={formCustomer.contact_name}
+                      onChange={(e) => setFormCustomer({ ...formCustomer, contact_name: e.target.value })}
+                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
+                      placeholder="Ex: Dra. Sandra Melo"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">E-mail de Contato</label>
+                    <input
+                      type="email"
+                      value={formCustomer.email}
+                      onChange={(e) => setFormCustomer({ ...formCustomer, email: e.target.value })}
+                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
+                      placeholder="Ex: sandra@clinica.com"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Telefone de Contato</label>
+                    <input
+                      type="text"
+                      value={formCustomer.phone}
+                      onChange={(e) => setFormCustomer({ ...formCustomer, phone: e.target.value })}
+                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
+                      placeholder="Ex: (11) 98888-7777"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">WhatsApp</label>
+                    <input
+                      type="text"
+                      value={formCustomer.whatsapp}
+                      onChange={(e) => setFormCustomer({ ...formCustomer, whatsapp: e.target.value })}
+                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
+                      placeholder="Ex: (11) 98888-7777"
+                    />
+                  </div>
+
+                  <div className="space-y-1 sm:col-span-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Anotações Internas (Horários de atendimento, etc.)</label>
+                    <textarea
+                      value={formCustomer.notes}
+                      onChange={(e) => setFormCustomer({ ...formCustomer, notes: e.target.value })}
+                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 min-h-[60px]"
+                      placeholder="Ex: Consultório fecha às sextas à tarde..."
+                    />
                   </div>
                 </div>
               </div>

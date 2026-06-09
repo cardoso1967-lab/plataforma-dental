@@ -86,4 +86,26 @@ A Fase 4 foi validada com sucesso, certificando as melhorias de design, experiê
 6. **Responsividade Geral**: Todas as interfaces foram auditadas para eliminar scrolls horizontais indesejados no mobile/tablet.
 7. **Compilação de Produção**: O comando `npm run build` foi executado com sucesso localmente, concluindo a compilação e TypeScript de todas as rotas (incluindo portais do técnico e cliente) de forma limpa e livre de erros.
 
+---
 
+## Validação da Fase 4.1 — Correções Técnicas e Build de Produção
+
+A Fase 4.1 resolveu as inconsistências da versão anterior com os seguintes resultados de testes e homologação:
+
+1. **Correção de Erro no Portal Técnico**:
+   - O erro `column customers_1.phone does not exist` que aparecia em `/tecnico/dashboard`, `/tecnico/servicos` e `/tecnico/agenda` foi totalmente corrigido.
+   - O problema ocorria porque o banco de dados Supabase na tabela `customers` não continha o campo `phone` (ele existia em `profiles`), e a API REST do Supabase falhava nas consultas de junção (joins).
+2. **Criação da Migração 004**:
+   - Criado com sucesso o script SQL `supabase/migrations/004_add_customer_contact_fields.sql`.
+   - A migração utiliza estritamente `ADD COLUMN IF NOT EXISTS` para adicionar à tabela `customers` as seguintes colunas de suporte: `contact_name` (text), `email` (text), `phone` (text), `whatsapp` (text) e `notes` (text).
+   - O usuário deve rodar e aplicar essa migração local/remota no Supabase antes de acessar o navegador para que o banco contenha os novos campos.
+3. **Auditoria de Consultas e Colunas do Sistema**:
+   - Auditadas todas as consultas com joins que acessam `customers`.
+   - Ajustada a consulta no painel de Ordens de Serviço (`/admin/ordens-servico`) para puxar o campo opcional `trade_name` que estava faltando nas definições da interface e no select do Supabase, restabelecendo compatibilidade estrita com o compilador.
+   - Confirmado que os campos e tabelas chave (`customers`, `technicians`, `client_equipment`, `service_orders`, `appointments`, `products`) estão em conformidade e sem colunas inexistentes no código frontend.
+4. **Resolução de Erros Sintáticos e Compilação Total (Build)**:
+   - Corrigidos erros de JSX/sintaxe causados por chaves/tags mal fechadas nas páginas de produtos (`/admin/produtos`) e agenda Kanban (`/admin/agenda`).
+   - Importado o ícone `Package` ausente em `dashboard/page.tsx`.
+   - Executado o build de produção (`cmd /c npm run build`) com sucesso absoluto, validando os tipos do TypeScript e a otimização de todas as páginas estáticas e dinâmicas da Plataforma Dental.
+5. **Estética Clínico-SaaS Premium**:
+   - Validada a responsividade e a identidade visual moderna em todos os dashboards e portais (Admin, Técnico e Cliente) de forma limpa, garantindo a ausência de Dev Overlay ou logs de erros no console.
