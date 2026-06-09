@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { 
   Calendar, User, Clock, MapPin, Grid, List, Filter, 
   ChevronRight, Wrench, RefreshCw, X, AlertCircle, 
-  ArrowRight, ShieldCheck, Tag, FileText, UserPlus, SlidersHorizontal, Info
+  ArrowRight, ShieldCheck, Tag, FileText, UserPlus, SlidersHorizontal, Info, ClipboardList
 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
@@ -598,8 +598,12 @@ export default function AdminAgendaPage() {
                         })}
 
                         {ordersInCol.length === 0 && (
-                          <div className="text-center py-12 text-[10px] text-slate-450 italic font-semibold border border-dashed border-slate-200 rounded-2xl bg-slate-50/10">
-                            Arraste chamados aqui
+                          <div className="flex flex-col items-center justify-center py-10 px-3 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50/20 shadow-3xs min-h-[160px]">
+                            <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-400 flex items-center justify-center mb-2">
+                              <ClipboardList className="w-4 h-4" />
+                            </div>
+                            <span className="text-[9.5px] text-slate-400 font-bold leading-normal">Sem chamados</span>
+                            <span className="text-[8.5px] text-slate-400 font-medium max-w-[150px] leading-normal mt-0.5">Arraste chamados aqui</span>
                           </div>
                         )}
                       </div>

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { 
   Wrench, User, Calendar, Clock, AlertTriangle, 
-  CheckCircle2, Search, X, Check, Eye, RefreshCw, MapPin, Phone 
+  CheckCircle2, Search, X, Check, Eye, RefreshCw, MapPin, Phone, ClipboardList
 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
@@ -259,8 +259,14 @@ export default function TecnicoServicosPage() {
       {/* Lista de OS adaptada a cards táctiles */}
       <div className="space-y-4">
         {filteredServices.length === 0 ? (
-          <div className="text-center py-16 text-slate-400 font-semibold text-xs border-2 border-dashed border-slate-100 rounded-2xl bg-white p-6">
-            Nenhum chamado encontrado para este filtro.
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50/20 shadow-3xs">
+            <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-450 flex items-center justify-center mb-3">
+              <ClipboardList className="w-5 h-5 text-slate-400" />
+            </div>
+            <h4 className="font-extrabold text-xs text-slate-800 mb-1">Nenhum chamado encontrado</h4>
+            <p className="text-[10px] text-slate-400 font-medium max-w-[250px] leading-normal">
+              Não existem ordens de serviço correspondentes a este filtro ou pesquisa em seu portfólio de campo.
+            </p>
           </div>
         ) : (
           filteredServices.map((os) => (

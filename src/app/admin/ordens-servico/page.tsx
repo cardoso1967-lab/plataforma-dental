@@ -405,8 +405,20 @@ export default function AdminOrdensServicoPage() {
             Carregando ordens de serviço...
           </div>
         ) : filteredOS.length === 0 ? (
-          <div className="text-center py-12 text-slate-400 font-medium text-xs border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/10">
-            Nenhuma ordem de serviço cadastrada ou encontrada.
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50/20 shadow-3xs">
+            <div className="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center mb-4 border border-sky-100/50">
+              <ClipboardList className="w-6 h-6" />
+            </div>
+            <h4 className="font-extrabold text-slate-800 text-sm mb-1.5">Fila de Ordens de Serviço Vazia</h4>
+            <p className="text-xs text-slate-400 font-medium max-w-sm leading-relaxed mb-4">
+              Nenhuma ordem de serviço foi registrada ou atende aos filtros atuais. Crie uma nova OS para iniciar as atividades operacionais.
+            </p>
+            <button
+              onClick={() => openModal()}
+              className="bg-brand-clinical hover:bg-sky-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all duration-200 shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+            >
+              Criar Nova OS
+            </button>
           </div>
         ) : (
           <>

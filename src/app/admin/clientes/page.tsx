@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { 
   Users, Mail, Phone, MapPin, Search, Plus, Edit2, 
   Trash2, Stethoscope, ChevronRight, X, Building2, 
-  Layers, Calendar, ClipboardList, Info, CheckCircle, RefreshCw
+  Layers, Calendar, ClipboardList, Info, CheckCircle, RefreshCw, UserPlus
 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
@@ -491,8 +491,20 @@ export default function AdminClientesPage() {
                 Carregando clientes...
               </div>
             ) : filteredCustomers.length === 0 ? (
-              <div className="text-center py-12 text-slate-400 font-medium text-xs border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/10">
-                Nenhum cliente cadastrado ou encontrado.
+              <div className="flex flex-col items-center justify-center py-12 px-4 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50/20 shadow-3xs">
+                <div className="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center mb-4 border border-sky-100/50">
+                  <UserPlus className="w-6 h-6" />
+                </div>
+                <h4 className="font-extrabold text-slate-800 text-sm mb-1.5">Nenhum cliente registrado</h4>
+                <p className="text-xs text-slate-400 font-medium max-w-sm leading-relaxed mb-4">
+                  Cadastre o seu primeiro cliente (clínica odontológica ou cirurgião-dentista) para gerenciar chamados operacionais e equipamentos.
+                </p>
+                <button
+                  onClick={() => openCustomerModal()}
+                  className="bg-brand-clinical hover:bg-sky-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all duration-200 shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  Cadastrar Cliente
+                </button>
               </div>
             ) : (
               <div className="overflow-x-auto no-scrollbar">
@@ -669,8 +681,14 @@ export default function AdminClientesPage() {
                 </div>
 
                 {selectedCustomerEquipments.length === 0 ? (
-                  <div className="text-center py-8 text-slate-400 text-[10px] font-semibold border border-dashed border-slate-100 rounded-2xl bg-slate-50/5">
-                    Nenhum equipamento cadastrado para este cliente.
+                  <div className="flex flex-col items-center justify-center py-8 px-4 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50/20 shadow-3xs">
+                    <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-400 flex items-center justify-center mb-2">
+                      <Stethoscope className="w-4 h-4" />
+                    </div>
+                    <h5 className="font-extrabold text-[11px] text-slate-800 mb-0.5">Sem equipamentos</h5>
+                    <p className="text-[10px] text-slate-400 font-medium max-w-xs leading-normal">
+                      Nenhum equipamento foi cadastrado para esta clínica ainda.
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1 no-scrollbar">
@@ -715,11 +733,13 @@ export default function AdminClientesPage() {
               </div>
             </div>
           ) : (
-            <div className="bg-slate-50/40 border border-dashed border-slate-200 rounded-3xl p-8 text-center text-slate-400 space-y-2.5 shadow-2xs">
-              <Building2 className="w-8 h-8 mx-auto text-slate-355" />
-              <h4 className="font-extrabold text-[10px] uppercase tracking-wider text-slate-400">Nenhum cliente selecionado</h4>
-              <p className="text-[10px] font-semibold text-slate-400 font-sans max-w-xs mx-auto leading-relaxed">
-                Selecione um cliente na tabela ao lado para visualizar informações de contato, endereço e gerenciar equipamentos vinculados.
+            <div className="flex flex-col items-center justify-center py-16 px-6 text-center border border-dashed border-slate-200 rounded-3xl bg-slate-50/20 shadow-3xs min-h-[350px]">
+              <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mb-4">
+                <Building2 className="w-6 h-6" />
+              </div>
+              <h4 className="font-extrabold text-xs text-slate-800 mb-1.5">Ficha de Cliente Vazia</h4>
+              <p className="text-[11px] text-slate-400 font-medium max-w-xs leading-relaxed">
+                Selecione uma clínica na tabela ao lado para visualizar os dados de endereço, detalhes de contato e gerenciar a lista de equipamentos instalados.
               </p>
             </div>
           )}

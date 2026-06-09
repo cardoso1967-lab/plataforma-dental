@@ -309,8 +309,20 @@ export default function AdminProdutosPage() {
             Carregando catálogo de produtos...
           </div>
         ) : filteredProducts.length === 0 ? (
-          <div className="text-center py-12 text-slate-400 font-medium text-xs border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/10">
-            Nenhum produto cadastrado ou encontrado.
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50/20 shadow-3xs">
+            <div className="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center mb-4 border border-sky-100/50">
+              <Package className="w-6 h-6" />
+            </div>
+            <h4 className="font-extrabold text-slate-800 text-sm mb-1.5">Catálogo de Produtos Vazio</h4>
+            <p className="text-xs text-slate-400 font-medium max-w-sm leading-relaxed mb-4">
+              Cadastre o seu primeiro produto (equipamentos odontológicos, peças de reposição ou insumos) para disponibilizá-los na plataforma.
+            </p>
+            <button
+              onClick={() => openModal()}
+              className="bg-brand-clinical hover:bg-sky-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all duration-200 shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+            >
+              Cadastrar Produto
+            </button>
           </div>
         ) : (
           <>

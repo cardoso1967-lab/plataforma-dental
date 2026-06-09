@@ -81,14 +81,14 @@ export default async function ClienteSuportePage() {
         </h3>
         
         {!openOS || openOS.length === 0 ? (
-          <div className="bg-white rounded-3xl border border-slate-100 p-10 text-center shadow-xs space-y-4 hover:border-slate-200 transition-all duration-300">
-            <div className="w-12 h-12 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center mx-auto shadow-2xs">
-              <Clock className="w-6 h-6 text-slate-350" />
+          <div className="flex flex-col items-center justify-center py-16 px-6 text-center border border-dashed border-slate-200 rounded-3xl bg-slate-50/20 shadow-3xs">
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mb-4 border border-slate-200/50">
+              <Clipboard className="w-6 h-6" />
             </div>
-            <div className="space-y-1">
-              <p className="text-xs font-black text-slate-800">Nenhum chamado aberto</p>
-              <p className="text-[10px] text-slate-400 mt-0.5 max-w-xs mx-auto leading-normal">Reporte falhas no formulário abaixo para acionar a equipe técnica.</p>
-            </div>
+            <h4 className="font-extrabold text-slate-800 text-sm mb-1.5">Nenhum chamado aberto</h4>
+            <p className="text-xs text-slate-400 font-medium max-w-sm leading-relaxed">
+              Todos os seus chamados de manutenção e visitas preventivas estão concluídos. Use o formulário abaixo para abrir uma nova solicitação caso tenha algum problema técnico.
+            </p>
           </div>
         ) : (
           <div className="space-y-5">

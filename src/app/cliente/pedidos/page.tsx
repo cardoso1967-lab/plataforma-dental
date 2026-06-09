@@ -1,6 +1,7 @@
 import React from 'react';
 import { ShoppingBag, Calendar, AlertCircle, Package, Receipt } from 'lucide-react';
 import { getCustomerSession } from '@/lib/customer-data';
+import Link from 'next/link';
 
 export default async function ClientePedidosPage() {
   const { supabase, customer } = await getCustomerSession();
@@ -56,16 +57,20 @@ export default async function ClientePedidosPage() {
       </div>
 
       {!myOrders || myOrders.length === 0 ? (
-        <div className="bg-white rounded-3xl border border-slate-100 p-10 text-center shadow-xs space-y-4 hover:border-slate-200 transition-all duration-300">
-          <div className="w-12 h-12 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center mx-auto shadow-2xs">
-            <ShoppingBag className="w-6 h-6 text-slate-350" />
+        <div className="flex flex-col items-center justify-center py-16 px-6 text-center border border-dashed border-slate-200 rounded-3xl bg-slate-50/20 shadow-3xs">
+          <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mb-4 border border-slate-200/50">
+            <ShoppingBag className="w-6 h-6" />
           </div>
-          <div className="space-y-1">
-            <p className="text-xs font-black text-slate-800">Nenhum pedido de compra realizado</p>
-            <p className="text-[10px] text-slate-400 max-w-xs mx-auto leading-normal">
-              Quando você adquirir novos equipamentos e insumos com nossa equipe, eles aparecerão detalhados aqui.
-            </p>
-          </div>
+          <h4 className="font-extrabold text-slate-800 text-sm mb-1.5">Nenhum pedido de compra</h4>
+          <p className="text-xs text-slate-400 font-medium max-w-sm leading-relaxed mb-6">
+            Você não possui pedidos de compra registrados nesta conta. Entre em contato com nosso departamento comercial para adquirir novos equipamentos odontológicos e suprimentos.
+          </p>
+          <Link 
+            href="/cliente/suporte"
+            className="inline-flex items-center gap-1.5 bg-brand-clinical hover:bg-sky-700 text-white font-extrabold text-xs px-4.5 py-2.5 rounded-xl transition-all shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+          >
+            Falar com Vendas / Suporte
+          </Link>
         </div>
       ) : (
         <div className="space-y-5">

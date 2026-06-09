@@ -336,13 +336,13 @@ export default function TecnicoDashboardPage() {
           </div>
         </div>
       ) : (
-        <div className="text-center py-12 px-6 border-2 border-dashed border-slate-200 rounded-2xl bg-white space-y-3">
-          <div className="w-12 h-12 bg-sky-50 text-brand-clinical rounded-full flex items-center justify-center mx-auto">
+        <div className="flex flex-col items-center justify-center py-10 px-6 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50/20 shadow-3xs">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4 border border-emerald-100/50">
             <CheckCircle2 className="w-6 h-6" />
           </div>
-          <h3 className="font-extrabold text-sm text-brand-dark">Sem chamados pendentes</h3>
-          <p className="text-xs text-slate-400 font-medium">
-            Ótimo trabalho! Você não possui nenhuma ordem de serviço pendente ou designada no momento.
+          <h3 className="font-extrabold text-sm text-slate-800">Sem chamados ativos</h3>
+          <p className="text-xs text-slate-400 font-medium max-w-xs leading-normal">
+            Ótimo trabalho! Você completou todos os chamados ativos. Não há nenhuma ordem de serviço pendente ou designada no momento.
           </p>
         </div>
       )}

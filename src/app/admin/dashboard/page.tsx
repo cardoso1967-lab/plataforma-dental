@@ -163,10 +163,10 @@ export default function AdminDashboardPage() {
               Painel Administrativo Executivo
             </span>
             <h1 className="text-2xl md:text-3xl font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-sky-100 bg-clip-text text-transparent">
-              Visão Geral do Negócio
+              Olá, {profile?.name || 'Administrador'}
             </h1>
             <p className="text-xs text-slate-300 font-medium leading-relaxed max-w-2xl">
-              Monitore a saúde financeira, o andamento das ordens de serviço críticas e o desempenho operacional dos técnicos em tempo real.
+              Bem-vindo ao seu painel executivo. Acompanhe a saúde financeira, o andamento das ordens de serviço críticas e o desempenho operacional dos técnicos em tempo real.
             </p>
           </div>
           <div className="bg-white/5 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 text-left md:text-right self-start md:self-center shadow-inner">
@@ -372,8 +372,14 @@ export default function AdminDashboardPage() {
 
           <div className="overflow-x-auto no-scrollbar">
             {recentSales.length === 0 ? (
-              <div className="text-center py-12 text-slate-400 text-xs italic font-semibold border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/10">
-                Nenhum pedido de venda recente.
+              <div className="flex flex-col items-center justify-center py-10 px-4 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50/20 shadow-3xs">
+                <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-450 flex items-center justify-center mb-3">
+                  <FileText className="w-5 h-5 text-slate-400" />
+                </div>
+                <h4 className="font-extrabold text-xs text-slate-800 mb-1">Nenhum pedido de venda recente</h4>
+                <p className="text-[10px] text-slate-400 font-medium max-w-xs leading-normal">
+                  Quando novas ordens de venda forem faturadas ou aprovadas no sistema, elas aparecerão listadas nesta seção.
+                </p>
               </div>
             ) : (
               <table className="w-full text-left text-xs border-collapse">
@@ -433,8 +439,14 @@ export default function AdminDashboardPage() {
 
           <div className="space-y-3.5">
             {criticalOS.length === 0 ? (
-              <div className="text-center py-12 text-slate-400 text-xs italic font-semibold border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/10">
-                Nenhuma OS crítica pendente no momento.
+              <div className="flex flex-col items-center justify-center py-10 px-4 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50/20 shadow-3xs">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3 border border-emerald-100/50">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <h4 className="font-extrabold text-xs text-slate-800 mb-1">Tudo sob controle</h4>
+                <p className="text-[10px] text-slate-400 font-medium max-w-xs leading-normal">
+                  Não existem ordens de serviço de prioridade alta ou urgente pendentes no momento. A operação está estável.
+                </p>
               </div>
             ) : (
               criticalOS.map((os) => (

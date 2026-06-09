@@ -150,19 +150,19 @@ export default function TecnicoAgendaPage() {
       {/* Roteiro */}
       <div className="space-y-4">
         {todaySchedule.length === 0 ? (
-          <div className="text-center py-16 px-6 border-2 border-dashed border-slate-200 rounded-2xl bg-white space-y-4">
-            <div className="w-12 h-12 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mx-auto">
-              <Calendar className="w-6 h-6" />
+          <div className="flex flex-col items-center justify-center py-12 px-6 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50/20 shadow-3xs">
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-450 flex items-center justify-center mb-4 border border-slate-200/50">
+              <Calendar className="w-6 h-6 text-slate-400" />
             </div>
-            <h3 className="font-extrabold text-sm text-brand-dark">Nenhuma visita hoje</h3>
-            <p className="text-xs text-slate-400 font-medium">
-              Você não possui nenhum atendimento agendado para o dia de hoje.
+            <h3 className="font-extrabold text-sm text-slate-800 mb-1">Nenhuma visita hoje</h3>
+            <p className="text-xs text-slate-400 font-medium max-w-xs leading-normal mb-6">
+              Você não possui atendimentos agendados ou visitas na sua rota para a data de hoje.
             </p>
             <Link
               href="/tecnico/servicos"
-              className="inline-flex items-center gap-1.5 bg-brand-clinical hover:bg-sky-700 text-white text-xs font-extrabold px-5 py-2.5 rounded-xl shadow-xs transition-colors"
+              className="inline-flex items-center gap-1.5 bg-brand-clinical hover:bg-sky-700 text-white text-xs font-extrabold px-4.5 py-2.5 rounded-xl shadow-xs transition-colors"
             >
-              Ver Todas as Minhas OS <ChevronRight className="w-4.5 h-4.5" />
+              Ver Todas as Minhas OS <ChevronRight className="w-4.5 h-4.5 animate-pulse" />
             </Link>
           </div>
         ) : (
