@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { 
   Users, Mail, Phone, MapPin, Search, Plus, Edit2, 
   Trash2, Stethoscope, ChevronRight, X, Building2, 
-  Layers, Calendar, ClipboardList, Info, CheckCircle
+  Layers, Calendar, ClipboardList, Info, CheckCircle, RefreshCw
 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
@@ -656,77 +656,77 @@ export default function AdminClientesPage() {
 
       {/* Modal Cliente */}
       {isCustomerModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <h3 className="font-extrabold text-sm text-brand-dark flex items-center gap-1.5">
-                <Building2 className="w-5 h-5 text-brand-clinical" />
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 transition-all">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <h3 className="font-extrabold text-sm text-brand-dark flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-brand-clinical animate-pulse" />
                 {editingCustomer ? 'Editar Cliente' : 'Novo Cliente'}
               </h3>
               <button
                 onClick={() => setIsCustomerModalOpen(false)}
-                className="p-1 rounded-md text-slate-400 hover:bg-slate-200"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveCustomer} className="p-6 space-y-6 flex-1">
+            <form onSubmit={handleSaveCustomer} className="p-6 space-y-6 flex-1 text-left">
               {/* Seção Dados Principais */}
               <div className="space-y-4">
                 <h4 className="font-bold text-xs text-brand-clinical uppercase tracking-wider">Informações Principais</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">Razão Social / Nome completo *</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Razão Social / Nome completo *</label>
                     <input
                       type="text"
                       required
                       value={formCustomer.company_name}
                       onChange={(e) => setFormCustomer({ ...formCustomer, company_name: e.target.value })}
-                      className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical"
+                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
                       placeholder="Ex: Clínica Sorriso Lindo Ltda"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">Nome Fantasia</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Nome Fantasia</label>
                     <input
                       type="text"
                       value={formCustomer.trade_name}
                       onChange={(e) => setFormCustomer({ ...formCustomer, trade_name: e.target.value })}
-                      className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical"
+                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
                       placeholder="Ex: Sorriso Lindo"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">CNPJ (apenas números)</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">CNPJ (apenas números)</label>
                     <input
                       type="text"
                       value={formCustomer.cnpj}
                       onChange={(e) => setFormCustomer({ ...formCustomer, cnpj: e.target.value })}
-                      className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical"
+                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
                       placeholder="Ex: 12345678000190"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">CPF (se for pessoa física)</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">CPF (se for pessoa física)</label>
                     <input
                       type="text"
                       value={formCustomer.cpf}
                       onChange={(e) => setFormCustomer({ ...formCustomer, cpf: e.target.value })}
-                      className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical"
+                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
                       placeholder="Ex: 12345678900"
                     />
                   </div>
 
                   <div className="space-y-1 sm:col-span-2">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">Vincular Conta de Usuário (Opcional)</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Vincular Conta de Usuário (Opcional)</label>
                     <select
                       value={formCustomer.profile_id}
                       onChange={(e) => setFormCustomer({ ...formCustomer, profile_id: e.target.value })}
-                      className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical bg-white"
+                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-white font-semibold"
                     >
                       <option value="">Nenhuma conta associada (Criar sem perfil)</option>
                       {getFreeProfiles().map((p) => (
@@ -747,78 +747,78 @@ export default function AdminClientesPage() {
                 <h4 className="font-bold text-xs text-brand-clinical uppercase tracking-wider">Endereço de Atendimento</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="sm:col-span-2 space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">Rua / Avenida</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Rua / Avenida</label>
                     <input
                       type="text"
                       value={formCustomer.address_street}
                       onChange={(e) => setFormCustomer({ ...formCustomer, address_street: e.target.value })}
-                      className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical"
+                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
                       placeholder="Ex: Av. Paulista"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">Número</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Número</label>
                     <input
                       type="text"
                       value={formCustomer.address_number}
                       onChange={(e) => setFormCustomer({ ...formCustomer, address_number: e.target.value })}
-                      className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical"
+                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
                       placeholder="Ex: 1000"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">Complemento</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Complemento</label>
                     <input
                       type="text"
                       value={formCustomer.address_complement}
                       onChange={(e) => setFormCustomer({ ...formCustomer, address_complement: e.target.value })}
-                      className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical"
+                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
                       placeholder="Ex: Sala 42"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">Bairro</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Bairro</label>
                     <input
                       type="text"
                       value={formCustomer.address_neighborhood}
                       onChange={(e) => setFormCustomer({ ...formCustomer, address_neighborhood: e.target.value })}
-                      className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical"
+                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
                       placeholder="Ex: Bela Vista"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">CEP</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">CEP</label>
                     <input
                       type="text"
                       value={formCustomer.address_zip}
                       onChange={(e) => setFormCustomer({ ...formCustomer, address_zip: e.target.value })}
-                      className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical"
+                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
                       placeholder="Ex: 01311100"
                     />
                   </div>
 
                   <div className="sm:col-span-2 space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">Cidade</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Cidade</label>
                     <input
                       type="text"
                       value={formCustomer.address_city}
                       onChange={(e) => setFormCustomer({ ...formCustomer, address_city: e.target.value })}
-                      className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical"
+                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
                       placeholder="Ex: São Paulo"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">Estado (UF)</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Estado (UF)</label>
                     <input
                       type="text"
                       value={formCustomer.address_state}
                       onChange={(e) => setFormCustomer({ ...formCustomer, address_state: e.target.value })}
-                      className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical"
+                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
                       placeholder="Ex: SP"
                       maxLength={2}
                     />
@@ -831,16 +831,20 @@ export default function AdminClientesPage() {
                 <button
                   type="button"
                   onClick={() => setIsCustomerModalOpen(false)}
-                  className="bg-transparent hover:bg-slate-100 text-slate-600 font-bold text-xs px-4 py-2.5 rounded-lg border border-slate-200 transition-colors"
+                  className="bg-transparent hover:bg-slate-100 text-slate-600 font-bold text-xs px-4 py-2.5 rounded-xl border border-slate-200 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-brand-clinical hover:bg-sky-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg transition-colors shadow-sm disabled:opacity-50"
+                  className="bg-brand-clinical hover:bg-sky-700 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl transition-all shadow-sm disabled:opacity-50 min-w-[120px]"
                 >
-                  {loading ? 'Salvando...' : 'Salvar Cliente'}
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-1">
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Salvando...
+                    </span>
+                  ) : 'Salvar Cliente'}
                 </button>
               </div>
             </form>
@@ -850,97 +854,97 @@ export default function AdminClientesPage() {
 
       {/* Modal Equipamento */}
       {isEquipmentModalOpen && selectedCustomer && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-100 flex flex-col overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 transition-all">
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-100 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
               <h3 className="font-extrabold text-sm text-brand-dark flex items-center gap-1.5">
-                <Stethoscope className="w-5 h-5 text-brand-clinical" />
+                <Stethoscope className="w-5 h-5 text-brand-clinical animate-pulse" />
                 {editingEquipment ? 'Editar Equipamento' : 'Adicionar Equipamento'}
               </h3>
               <button
                 onClick={() => setIsEquipmentModalOpen(false)}
-                className="p-1 rounded-md text-slate-400 hover:bg-slate-200"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveEquipment} className="p-6 space-y-4">
+            <form onSubmit={handleSaveEquipment} className="p-6 space-y-4 text-left">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-500 uppercase">Nome do Equipamento *</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Nome do Equipamento *</label>
                 <input
                   type="text"
                   required
                   value={formEquipment.name}
                   onChange={(e) => setFormEquipment({ ...formEquipment, name: e.target.value })}
-                  className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical"
+                  className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
                   placeholder="Ex: Cadeira Odontológica, Autoclave, Raio-X"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Marca</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Marca</label>
                   <input
                     type="text"
                     value={formEquipment.brand}
                     onChange={(e) => setFormEquipment({ ...formEquipment, brand: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical"
+                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
                     placeholder="Ex: Olsen, Dabi Atlante"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Modelo</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Modelo</label>
                   <input
                     type="text"
                     value={formEquipment.model}
                     onChange={(e) => setFormEquipment({ ...formEquipment, model: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical"
+                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
                     placeholder="Ex: Premium S500"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-500 uppercase">Número de Série (N/S)</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Número de Série (N/S)</label>
                 <input
                   type="text"
                   value={formEquipment.serial_number}
                   onChange={(e) => setFormEquipment({ ...formEquipment, serial_number: e.target.value })}
-                  className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical font-mono"
+                  className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 font-mono"
                   placeholder="Ex: SN-987654321"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Data de Instalação</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Data de Instalação</label>
                   <input
                     type="date"
                     value={formEquipment.installation_date}
                     onChange={(e) => setFormEquipment({ ...formEquipment, installation_date: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical"
+                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Última Manutenção</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Última Manutenção</label>
                   <input
                     type="date"
                     value={formEquipment.last_maintenance_date}
                     onChange={(e) => setFormEquipment({ ...formEquipment, last_maintenance_date: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical"
+                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-500 uppercase">Observações técnicas</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Observações técnicas</label>
                 <textarea
                   value={formEquipment.notes}
                   onChange={(e) => setFormEquipment({ ...formEquipment, notes: e.target.value })}
-                  className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical min-h-[80px]"
+                  className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 min-h-[80px]"
                   placeholder="Histórico técnico, problemas recorrentes..."
                 />
               </div>
@@ -950,16 +954,20 @@ export default function AdminClientesPage() {
                 <button
                   type="button"
                   onClick={() => setIsEquipmentModalOpen(false)}
-                  className="bg-transparent hover:bg-slate-100 text-slate-600 font-bold text-xs px-4 py-2.5 rounded-lg border border-slate-200 transition-colors"
+                  className="bg-transparent hover:bg-slate-100 text-slate-600 font-bold text-xs px-4 py-2.5 rounded-xl border border-slate-200 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-brand-clinical hover:bg-sky-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg transition-colors shadow-sm disabled:opacity-50"
+                  className="bg-brand-clinical hover:bg-sky-700 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl transition-all shadow-sm disabled:opacity-50 min-w-[120px]"
                 >
-                  {loading ? 'Salvando...' : 'Salvar Equipamento'}
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-1">
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Salvando...
+                    </span>
+                  ) : 'Salvar Equipamento'}
                 </button>
               </div>
             </form>

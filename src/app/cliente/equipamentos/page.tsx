@@ -1,5 +1,5 @@
 import React from 'react';
-import { Wrench, Calendar, Tag, AlertCircle } from 'lucide-react';
+import { Wrench, Calendar, Tag, AlertCircle, Shield, Settings } from 'lucide-react';
 import { getCustomerSession } from '@/lib/customer-data';
 
 export default async function ClienteEquipamentosPage() {
@@ -17,62 +17,83 @@ export default async function ClienteEquipamentosPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-4xl mx-auto text-left">
       <div className="space-y-1">
-        <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">
+        <h1 className="text-2xl font-extrabold text-brand-dark tracking-tight flex items-center gap-2">
+          <Settings className="w-7 h-7 text-brand-clinical" />
           Meus Equipamentos
         </h1>
         <p className="text-xs text-slate-500 font-medium">
-          Lista de equipamentos ativos instalados no seu consultório para controle de manutenção.
+          Relação de equipamentos ativos e cadastrados no seu consultório para controle de manutenções preventivas e corretivas.
         </p>
       </div>
 
       {!myEquipments || myEquipments.length === 0 ? (
-        <div className="bg-white rounded-xl border border-slate-100 p-8 text-center shadow-xs">
-          <AlertCircle className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-          <p className="text-xs font-semibold text-slate-500">Nenhum equipamento registrado.</p>
-          <p className="text-[10px] text-slate-400 mt-0.5">Seus novos equipamentos aparecerão aqui assim que instalados.</p>
+        <div className="bg-white rounded-2xl border border-slate-100 p-10 text-center shadow-xs space-y-4">
+          <div className="w-12 h-12 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mx-auto">
+            <Wrench className="w-6 h-6" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs font-extrabold text-brand-dark">Nenhum equipamento registrado</p>
+            <p className="text-[10px] text-slate-400 max-w-xs mx-auto">
+              Seus equipamentos cadastrados aparecerão aqui. Fale com seu administrador para registrar novas instalações.
+            </p>
+          </div>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {myEquipments.map((eq) => (
             <div 
               key={eq.id}
-              className="bg-white border border-slate-100 rounded-xl p-4 shadow-xs space-y-3 hover:shadow-md transition-shadow"
+              className="bg-white border border-slate-100 rounded-2xl p-5 shadow-xs space-y-4 hover:shadow-md hover:scale-[1.01] transition-all duration-300 relative overflow-hidden"
             >
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold text-sky-500 uppercase tracking-wider block">
-                  {eq.brand || 'Marca não informada'}
+              {/* Decoración superior sutil */}
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-400 to-brand-clinical" />
+
+              <div className="space-y-1 pt-1">
+                <span className="text-[9px] font-extrabold text-brand-clinical uppercase tracking-widest block">
+                  {eq.brand || 'Fabricante não informado'}
                 </span>
-                <h4 className="font-extrabold text-slate-900 text-sm leading-snug">
+                <h4 className="font-extrabold text-brand-dark text-base leading-snug">
                   {eq.name}
                 </h4>
                 {eq.model && (
-                  <p className="text-[10px] text-slate-400 font-medium">Modelo: {eq.model}</p>
+                  <p className="text-[11px] text-slate-400 font-semibold">Modelo: {eq.model}</p>
                 )}
               </div>
 
-              <div className="space-y-2 text-xs font-semibold text-slate-500 pt-2 border-t border-slate-50">
-                <p className="flex items-center gap-1.5">
-                  <Tag className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Nº de Série: <strong className="text-slate-800">{eq.serial_number || 'N/A'}</strong></span>
-                </p>
-                <p className="flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Instalação: <strong className="text-slate-800">
+              <div className="space-y-2 text-xs font-semibold text-slate-500 pt-3 border-t border-slate-100">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="flex items-center gap-1.5 text-slate-400">
+                    <Tag className="w-3.5 h-3.5" />
+                    Nº de Série
+                  </span>
+                  <span className="font-mono text-slate-700 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">{eq.serial_number || 'N/A'}</span>
+                </div>
+
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="flex items-center gap-1.5 text-slate-400">
+                    <Calendar className="w-3.5 h-3.5" />
+                    Instalação
+                  </span>
+                  <span className="text-slate-700">
                     {eq.installation_date 
                       ? new Date(eq.installation_date).toLocaleDateString('pt-BR') 
-                      : 'N/A'
+                      : 'Não informada'
                     }
-                  </strong></span>
-                </p>
+                  </span>
+                </div>
+
                 {eq.last_maintenance_date && (
-                  <p className="flex items-center gap-1.5">
-                    <Wrench className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Última Manutenção: <strong className="text-slate-800">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="flex items-center gap-1.5 text-slate-400">
+                      <Wrench className="w-3.5 h-3.5" />
+                      Última Manutenção
+                    </span>
+                    <span className="text-slate-700">
                       {new Date(eq.last_maintenance_date).toLocaleDateString('pt-BR')}
-                    </strong></span>
-                  </p>
+                    </span>
+                  </div>
                 )}
               </div>
             </div>

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { 
   UserCog, Plus, Mail, Phone, Search, Edit2, 
-  Trash2, X, ShieldCheck, CheckSquare, Square
+  Trash2, X, ShieldCheck, CheckSquare, Square, RefreshCw
 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
@@ -343,30 +343,30 @@ export default function AdminTecnicosPage() {
 
       {/* Modal Técnico */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-100 overflow-hidden flex flex-col">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <h3 className="font-extrabold text-sm text-brand-dark flex items-center gap-1.5">
-                <UserCog className="w-5 h-5 text-brand-clinical" />
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 transition-all">
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-100 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <h3 className="font-extrabold text-sm text-brand-dark flex items-center gap-2">
+                <UserCog className="w-5 h-5 text-brand-clinical animate-pulse" />
                 {editingTech ? 'Editar Técnico' : 'Novo Técnico'}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1 rounded-md text-slate-400 hover:bg-slate-200"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="p-6 space-y-5">
+            <form onSubmit={handleSave} className="p-6 space-y-5 text-left">
               {/* Vinculação perfil */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase">Perfil de Usuário *</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Perfil de Usuário *</label>
                 <select
                   required
                   value={formTech.profile_id}
                   onChange={(e) => setFormTech({ ...formTech, profile_id: e.target.value })}
-                  className="w-full border border-slate-200 rounded-lg p-2.5 text-xs focus:outline-none focus:border-brand-clinical bg-white"
+                  className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-white font-semibold"
                 >
                   <option value="">Selecione um perfil de técnico...</option>
                   {getFreeProfiles().map((p) => (
@@ -382,7 +382,7 @@ export default function AdminTecnicosPage() {
 
               {/* Especialidades */}
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase block">Especialidades Técnicas</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">Especialidades Técnicas</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {PREDEFINED_SPECIALTIES.map((spec) => {
                     const isSelected = formTech.specialties.includes(spec);
@@ -391,7 +391,7 @@ export default function AdminTecnicosPage() {
                         type="button"
                         key={spec}
                         onClick={() => toggleSpecialty(spec)}
-                        className={`flex items-center gap-2 p-2 rounded-lg text-left text-xs transition-colors border ${
+                        className={`flex items-center gap-2 p-2.5 rounded-xl text-left text-xs transition-colors border ${
                           isSelected 
                             ? 'bg-sky-50/50 border-brand-clinical text-brand-clinical font-semibold' 
                             : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
@@ -428,16 +428,20 @@ export default function AdminTecnicosPage() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="bg-transparent hover:bg-slate-100 text-slate-600 font-bold text-xs px-4 py-2.5 rounded-lg border border-slate-200 transition-colors"
+                  className="bg-transparent hover:bg-slate-100 text-slate-600 font-bold text-xs px-4 py-2.5 rounded-xl border border-slate-200 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-brand-clinical hover:bg-sky-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg transition-colors shadow-sm disabled:opacity-50"
+                  className="bg-brand-clinical hover:bg-sky-700 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl transition-all shadow-sm disabled:opacity-50 min-w-[120px]"
                 >
-                  {loading ? 'Salvando...' : 'Salvar Técnico'}
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-1">
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Salvando...
+                    </span>
+                  ) : 'Salvar Técnico'}
                 </button>
               </div>
             </form>

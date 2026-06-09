@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingBag, Calendar, AlertCircle } from 'lucide-react';
+import { ShoppingBag, Calendar, AlertCircle, Package, Receipt } from 'lucide-react';
 import { getCustomerSession } from '@/lib/customer-data';
 
 export default async function ClientePedidosPage() {
@@ -39,21 +39,28 @@ export default async function ClientePedidosPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-4xl mx-auto text-left">
       <div className="space-y-1">
-        <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">
+        <h1 className="text-2xl font-extrabold text-brand-dark tracking-tight flex items-center gap-2">
+          <ShoppingBag className="w-7 h-7 text-brand-clinical" />
           Meus Pedidos de Compra
         </h1>
         <p className="text-xs text-slate-500 font-medium">
-          Acompanhe o status de entrega e faturamento de seus equipamentos adquiridos.
+          Acompanhe o faturamento, entrega e status dos equipamentos e suprimentos adquiridos para seu consultório.
         </p>
       </div>
 
       {!myOrders || myOrders.length === 0 ? (
-        <div className="bg-white rounded-xl border border-slate-100 p-8 text-center shadow-xs">
-          <AlertCircle className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-          <p className="text-xs font-semibold text-slate-500">Nenhum pedido de compra realizado.</p>
-          <p className="text-[10px] text-slate-400 mt-0.5">Seus novos pedidos de compra aparecerão aqui.</p>
+        <div className="bg-white rounded-2xl border border-slate-100 p-10 text-center shadow-xs space-y-4">
+          <div className="w-12 h-12 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mx-auto">
+            <ShoppingBag className="w-6 h-6" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs font-extrabold text-brand-dark">Nenhum pedido de compra realizado</p>
+            <p className="text-[10px] text-slate-400 max-w-xs mx-auto">
+              Quando você adquirir novos equipamentos e insumos com nossa equipe, eles aparecerão detalhados aqui.
+            </p>
+          </div>
         </div>
       ) : (
         <div className="space-y-4">
@@ -73,43 +80,57 @@ export default async function ClientePedidosPage() {
             return (
               <div 
                 key={order.id}
-                className="bg-white border border-slate-100 rounded-xl p-5 shadow-xs space-y-4 hover:shadow-md transition-shadow"
+                className="bg-white border border-slate-100 rounded-2xl p-5 shadow-xs space-y-4 hover:shadow-md hover:scale-[1.005] transition-all duration-300 relative overflow-hidden"
               >
-                <div className="flex justify-between items-start">
-                  <div className="space-y-0.5">
-                    <span className="text-[10px] font-bold text-sky-500 uppercase tracking-widest block">
-                      Pedido #{order.id.slice(0, 8).toUpperCase()}
+                {/* Decoración superior sutil */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-400 to-brand-clinical" />
+
+                <div className="flex justify-between items-start pt-1">
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-mono font-bold text-slate-400 block">
+                      PEDIDO: #{order.id.slice(0, 8).toUpperCase()}
                     </span>
-                    <p className="text-[10px] font-semibold text-slate-400 flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5" />
-                      Compra: {new Date(order.created_at).toLocaleDateString('pt-BR')}
+                    <p className="text-[10px] font-semibold text-slate-500 flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                      {new Date(order.created_at).toLocaleDateString('pt-BR', { dateStyle: 'long' })}
                     </p>
                   </div>
-                  <span className={`text-[10px] font-bold px-2.5 py-1 rounded-md border ${statusStyle.bg}`}>
+                  <span className={`text-[9px] font-extrabold px-2.5 py-1 rounded-full border uppercase tracking-wider ${statusStyle.bg}`}>
                     {statusStyle.label}
                   </span>
                 </div>
 
-                <div className="space-y-1.5 pt-1">
-                  <h4 className="font-extrabold text-slate-800 text-sm leading-snug">
-                    {itemsSummary || order.notes || 'Equipamento Odontológico'}
+                {/* Listado de items del pedido */}
+                <div className="space-y-2 pt-2 border-t border-slate-100">
+                  <h4 className="font-extrabold text-brand-dark text-sm leading-snug flex items-center gap-1.5">
+                    <Package className="w-4 h-4 text-brand-clinical" />
+                    Produtos Adquiridos
                   </h4>
-                  {items.length > 0 && (
-                    <ul className="text-[10px] text-slate-400 space-y-0.5 list-disc pl-4 font-medium">
+                  {items.length > 0 ? (
+                    <ul className="space-y-2 font-medium text-xs text-slate-600 pl-1">
                       {items.map((item: any) => (
-                        <li key={item.id}>
-                          {item.quantity}x {item.products?.name} (
-                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(item.unit_price))} cada
-                          )
+                        <li key={item.id} className="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl border border-slate-100/50">
+                          <span>
+                            {item.quantity}x <strong className="text-slate-800 font-bold">{item.products?.name}</strong>
+                          </span>
+                          <span className="font-mono text-slate-500 text-[11px]">
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(item.unit_price))} cada
+                          </span>
                         </li>
                       ))}
                     </ul>
+                  ) : (
+                    <p className="text-xs text-slate-500 italic pl-1">{order.notes || 'Equipamento Odontológico'}</p>
                   )}
                 </div>
 
-                <div className="border-t border-slate-50 pt-3 flex items-center justify-between text-xs font-bold">
-                  <span className="text-slate-400 font-semibold">Valor Total:</span>
-                  <span className="text-slate-800 text-sm">
+                {/* Total de la orden */}
+                <div className="border-t border-slate-100 pt-3.5 flex items-center justify-between text-xs font-bold bg-slate-50/50 -mx-5 -mb-5 p-5 rounded-b-2xl">
+                  <span className="text-slate-500 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                    <Receipt className="w-4 h-4 text-slate-400" />
+                    Valor Total do Pedido
+                  </span>
+                  <span className="text-brand-dark font-extrabold text-base">
                     {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(order.total_amount))}
                   </span>
                 </div>

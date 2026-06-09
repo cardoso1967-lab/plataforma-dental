@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { 
   Package, Plus, Search, Edit2, Trash2, 
-  X, Tag, DollarSign, Archive, Layers
+  X, Tag, DollarSign, Archive, Layers, RefreshCw
 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
@@ -367,41 +367,41 @@ export default function AdminProdutosPage() {
 
       {/* Modal Produto */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-100 overflow-hidden flex flex-col">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 transition-all">
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-100 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
               <h3 className="font-extrabold text-sm text-brand-dark flex items-center gap-1.5">
                 <Package className="w-5 h-5 text-brand-clinical" />
                 {editingProduct ? 'Editar Produto' : 'Novo Produto'}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1 rounded-md text-slate-400 hover:bg-slate-200"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="p-6 space-y-4">
+            <form onSubmit={handleSave} className="p-6 space-y-4 text-left">
               <div className="grid grid-cols-3 gap-4">
                 <div className="col-span-1 space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Código SKU</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Código SKU</label>
                   <input
                     type="text"
                     value={formProduct.sku}
                     onChange={(e) => setFormProduct({ ...formProduct, sku: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical font-mono"
+                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 font-mono"
                     placeholder="CAD-S500"
                   />
                 </div>
                 <div className="col-span-2 space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Nome do Produto *</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Nome do Produto *</label>
                   <input
                     type="text"
                     required
                     value={formProduct.name}
                     onChange={(e) => setFormProduct({ ...formProduct, name: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical"
+                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
                     placeholder="Ex: Cadeira Odontológica Premium"
                   />
                 </div>
@@ -409,11 +409,11 @@ export default function AdminProdutosPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Tipo de Produto *</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Tipo de Produto *</label>
                   <select
                     value={formProduct.product_type}
                     onChange={(e) => setFormProduct({ ...formProduct, product_type: e.target.value as Product['product_type'] })}
-                    className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical bg-white"
+                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 bg-white"
                   >
                     <option value="equipamento">Equipamento</option>
                     <option value="peca">Peça</option>
@@ -422,11 +422,11 @@ export default function AdminProdutosPage() {
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Categoria</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Categoria</label>
                   <select
                     value={formProduct.category_id}
                     onChange={(e) => setFormProduct({ ...formProduct, category_id: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical bg-white"
+                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 bg-white"
                   >
                     <option value="">Nenhuma Categoria</option>
                     {categories.map((c) => (
@@ -440,38 +440,38 @@ export default function AdminProdutosPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Preço de Venda (R$) *</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Preço de Venda (R$) *</label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">R$</span>
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">R$</span>
                     <input
                       type="number"
                       step="0.01"
                       required
                       value={formProduct.price}
                       onChange={(e) => setFormProduct({ ...formProduct, price: e.target.value })}
-                      className="w-full pl-8 border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical font-semibold"
+                      className="w-full pl-9 border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 font-semibold"
                       placeholder="0,00"
                     />
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Estoque Disponível</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Estoque Disponível</label>
                   <input
                     type="number"
                     value={formProduct.stock_quantity}
                     onChange={(e) => setFormProduct({ ...formProduct, stock_quantity: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical font-semibold"
+                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 font-semibold"
                     placeholder="0"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-500 uppercase">Descrição do Produto</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Descrição do Produto</label>
                 <textarea
                   value={formProduct.description}
                   onChange={(e) => setFormProduct({ ...formProduct, description: e.target.value })}
-                  className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical min-h-[90px]"
+                  className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 min-h-[90px]"
                   placeholder="Detalhamento técnico, voltagem, garantias e demais especificações..."
                 />
               </div>
@@ -482,28 +482,32 @@ export default function AdminProdutosPage() {
                   id="prod_active"
                   checked={formProduct.is_active}
                   onChange={(e) => setFormProduct({ ...formProduct, is_active: e.target.checked })}
-                  className="w-4 h-4 border border-slate-200 rounded text-brand-clinical focus:ring-brand-clinical"
+                  className="w-4 h-4 border border-slate-200 rounded-xl text-brand-clinical focus:ring-brand-clinical cursor-pointer"
                 />
-                <label htmlFor="prod_active" className="text-xs font-bold text-slate-700 cursor-pointer">
+                <label htmlFor="prod_active" className="text-xs font-bold text-slate-600 cursor-pointer select-none">
                   Produto Ativo (Visível no catálogo público)
                 </label>
               </div>
 
               {/* Botões Ação */}
-              <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 bg-slate-50 -mx-6 -mb-6 p-6">
+              <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 bg-slate-50 -mx-6 -mb-6 p-6 rounded-b-2xl">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="bg-transparent hover:bg-slate-100 text-slate-600 font-bold text-xs px-4 py-2.5 rounded-lg border border-slate-200 transition-colors"
+                  className="bg-transparent hover:bg-slate-100 text-slate-600 font-bold text-xs px-4 py-2.5 rounded-xl border border-slate-200 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-brand-clinical hover:bg-sky-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg transition-colors shadow-sm disabled:opacity-50"
+                  className="bg-brand-clinical hover:bg-sky-700 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl transition-all shadow-sm disabled:opacity-50 min-w-[120px]"
                 >
-                  {loading ? 'Salvando...' : 'Salvar Produto'}
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-1">
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Salvando...
+                    </span>
+                  ) : 'Salvar Produto'}
                 </button>
               </div>
             </form>

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { 
   Wrench, Plus, User, Calendar, Search, Edit2, 
-  Trash2, X, ClipboardList, AlertCircle, Clock, ShieldAlert
+  Trash2, X, ClipboardList, AlertCircle, Clock, ShieldAlert, RefreshCw
 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
@@ -479,30 +479,30 @@ export default function AdminOrdensServicoPage() {
 
       {/* Modal OS */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-slate-100 overflow-hidden flex flex-col">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 transition-all">
+          <div className="bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-slate-100 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
               <h3 className="font-extrabold text-sm text-brand-dark flex items-center gap-1.5">
-                <Wrench className="w-5 h-5 text-brand-clinical" />
+                <Wrench className="w-5 h-5 text-brand-clinical animate-pulse" />
                 {editingOS ? 'Editar Ordem de Serviço' : 'Nova Ordem de Serviço'}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1 rounded-md text-slate-400 hover:bg-slate-200"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="p-6 space-y-4">
+            <form onSubmit={handleSave} className="p-6 space-y-4 text-left">
               {/* Cliente */}
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-500 uppercase">Cliente *</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Cliente *</label>
                 <select
                   required
                   value={formOS.customer_id}
                   onChange={(e) => setFormOS({ ...formOS, customer_id: e.target.value, equipment_id: '' })}
-                  className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical bg-white"
+                  className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 bg-white"
                 >
                   <option value="">Selecione um cliente...</option>
                   {customers.map((c) => (
@@ -515,12 +515,12 @@ export default function AdminOrdensServicoPage() {
 
               {/* Equipamento */}
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-500 uppercase">Equipamento</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Equipamento</label>
                 <select
                   disabled={!formOS.customer_id}
                   value={formOS.equipment_id}
                   onChange={(e) => setFormOS({ ...formOS, equipment_id: e.target.value })}
-                  className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical bg-white disabled:bg-slate-50 disabled:text-slate-400"
+                  className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 bg-white disabled:bg-slate-50 disabled:text-slate-400"
                 >
                   <option value="">
                     {!formOS.customer_id 
@@ -537,11 +537,11 @@ export default function AdminOrdensServicoPage() {
 
               {/* Técnico */}
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-500 uppercase">Técnico Designado (Opcional)</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Técnico Designado (Opcional)</label>
                 <select
                   value={formOS.technician_id}
                   onChange={(e) => setFormOS({ ...formOS, technician_id: e.target.value })}
-                  className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical bg-white"
+                  className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 bg-white"
                 >
                   <option value="">Não atribuído (Aguardando designação)</option>
                   {technicians.map((t) => (
@@ -555,11 +555,11 @@ export default function AdminOrdensServicoPage() {
               <div className="grid grid-cols-2 gap-4">
                 {/* Prioridade */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Prioridade *</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Prioridade *</label>
                   <select
                     value={formOS.priority}
                     onChange={(e) => setFormOS({ ...formOS, priority: e.target.value as ServiceOrder['priority'] })}
-                    className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical bg-white"
+                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 bg-white"
                   >
                     <option value="baixa">Baixa</option>
                     <option value="media">Média</option>
@@ -570,46 +570,46 @@ export default function AdminOrdensServicoPage() {
 
                 {/* Fecha agendada */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Data/Hora Agendada</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Data/Hora Agendada</label>
                   <input
                     type="datetime-local"
                     value={formOS.scheduled_date}
                     onChange={(e) => setFormOS({ ...formOS, scheduled_date: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical font-medium"
+                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 font-medium"
                   />
                 </div>
               </div>
 
               {/* Detalhes problema */}
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-500 uppercase">Descrição do Problema *</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Descrição do Problema *</label>
                 <textarea
                   required
                   value={formOS.description}
                   onChange={(e) => setFormOS({ ...formOS, description: e.target.value })}
-                  className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical min-h-[70px]"
+                  className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 min-h-[70px]"
                   placeholder="Relato detalhado enviado pelo cliente..."
                 />
               </div>
 
               {/* Notas de triagem */}
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-500 uppercase">Observações de Triagem / Problemas Detectados</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Observações de Triagem / Problemas Detectados</label>
                 <textarea
                   value={formOS.reported_issues}
                   onChange={(e) => setFormOS({ ...formOS, reported_issues: e.target.value })}
-                  className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical min-h-[60px]"
+                  className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 min-h-[60px]"
                   placeholder="Notas internas do suporte técnico..."
                 />
               </div>
 
               {editingOS && (
                 <div className="space-y-1 pt-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase block">Status Atual</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">Status Atual</label>
                   <select
                     value={formOS.status}
                     onChange={(e) => setFormOS({ ...formOS, status: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-clinical bg-white font-bold"
+                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 bg-white font-bold"
                   >
                     {Object.entries(statusMap).map(([key, val]) => (
                       <option key={key} value={key}>
@@ -621,20 +621,24 @@ export default function AdminOrdensServicoPage() {
               )}
 
               {/* Botões Ação */}
-              <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 bg-slate-50 -mx-6 -mb-6 p-6">
+              <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 bg-slate-50 -mx-6 -mb-6 p-6 rounded-b-2xl">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="bg-transparent hover:bg-slate-100 text-slate-600 font-bold text-xs px-4 py-2.5 rounded-lg border border-slate-200 transition-colors"
+                  className="bg-transparent hover:bg-slate-100 text-slate-600 font-bold text-xs px-4 py-2.5 rounded-xl border border-slate-200 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-brand-clinical hover:bg-sky-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg transition-colors shadow-sm disabled:opacity-50"
+                  className="bg-brand-clinical hover:bg-sky-700 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl transition-all shadow-sm disabled:opacity-50 min-w-[120px]"
                 >
-                  {loading ? 'Salvando...' : 'Salvar Ordem de Serviço'}
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-1">
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Salvando...
+                    </span>
+                  ) : 'Salvar Ordem de Serviço'}
                 </button>
               </div>
             </form>
