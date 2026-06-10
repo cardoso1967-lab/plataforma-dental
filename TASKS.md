@@ -74,8 +74,9 @@ Acompanhamento de tarefas por fase para o projeto Plataforma Dental.
 ---
 
 ## Fase 5 — Assistência de Campo, Orçamentos e Mensageria (Próxima)
-- [/] **Deploy e Produção**: Publicação do protótipo no Vercel (Pendente de autenticação / Deploy em andamento).
+- [x] **Deploy e Produção**: Publicação do protótipo no Vercel concluída com sucesso (URL: https://plataforma-dental-pi.vercel.app).
 - [ ] **Orçamentos técnicos**: Fluxo para o técnico detalhar peças e o cliente aprovar pela plataforma.
 - [ ] **Histórico e Fotos**: Upload de imagens de defeito/conserto direto nas ordens de serviço.
 - [ ] **Mensageria (WhatsApp)**: Disparos automáticos pelo Z-API ao criar/atualizar OS e pedidos.
+
 

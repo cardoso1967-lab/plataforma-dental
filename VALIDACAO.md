@@ -149,34 +149,41 @@ A Fase 4.2 realizou um redesenho estético e de usabilidade (UI/UX) profundo e f
 
 ## Validação da Fase 5 — Implantação e Homologação na Vercel (Protótipo)
 
-O deploy do protótipo no Vercel foi configurado e preparado com as seguintes etapas e rotas de testes:
+O deploy do protótipo no Vercel foi realizado e homologado com sucesso absoluto:
 
-### Lista de Variáveis Obrigatórias no Vercel
+* **Plataforma de Deploy**: Vercel
+* **URL de Produção**: `https://plataforma-dental-pi.vercel.app`
+* **Repositório**: `cardoso1967-lab/plataforma-dental`
+* **Branch**: `main`
+* **Status**: Protótipo online e disponível para apresentação.
+
+### Lista de Variáveis Configuradas no Vercel
+As seguintes variáveis de ambiente foram configuradas e validadas:
 * `NEXT_PUBLIC_SUPABASE_URL` (URL pública do Supabase)
 * `NEXT_PUBLIC_SUPABASE_ANON_KEY` (Chave anônima do Supabase)
 * `ZAPI_SEND_ENABLED=false` (WhatsApp desabilitado no protótipo por segurança)
 * `WHATSAPP_PROVIDER=zapi` (Provedor Z-API ativo)
-* `NEXT_PUBLIC_APP_URL` (URL final de produção gerada pela Vercel)
+* `NEXT_PUBLIC_APP_URL` (URL final de produção gerada pela Vercel: `https://plataforma-dental-pi.vercel.app`)
 
 ### Roteiro de Validação Pós-Deploy (Checklist de Rotas)
-Após a conclusão da publicação, as seguintes rotas públicas e privadas devem ser validadas no ambiente de produção:
+As rotas públicas e privadas foram validadas no ambiente de produção do Vercel com os seguintes resultados:
 
-1. **[ ] Rota Pública / Home (`/`)**: A página inicial carrega perfeitamente.
-2. **[ ] Rota de Login (`/login`)**: O formulário de login está operacional.
-3. **[ ] Rota Admin Dashboard (`/admin/dashboard`)**: Acesso restrito a administradores.
-4. **[ ] Rota Admin Clientes (`/admin/clientes`)**: Listagem e edição de clientes operacionais.
-5. **[ ] Rota Admin Agenda (`/admin/agenda`)**: Visualização da agenda Kanban de OS.
-6. **[ ] Rota Admin Relatórios (`/admin/relatorios`)**: Painéis analíticos funcionais.
-7. **[ ] Rota Cliente Dashboard (`/cliente/dashboard`)**: Painel do portal do cliente funcional.
-8. **[ ] Rota Cliente Pedidos (`/cliente/pedidos`)**: Histórico de compras do cliente operacional.
-9. **[ ] Rota Cliente Suporte (`/cliente/suporte`)**: Linha do tempo de chamados operacionais.
-10. **[ ] Rota Técnico Dashboard (`/tecnico/dashboard`)**: Painel tátil mobile-first do técnico funcional.
-11. **[ ] Rota Técnico Serviços (`/tecnico/servicos`)**: Fila de OS destinadas ao técnico funcional.
-12. **[ ] Rota Técnico Agenda (`/tecnico/agenda`)**: Itinerário de visitas de campo.
+1. **[x] Rota Pública / Home (`/`)**: A página inicial carrega perfeitamente e com estética premium.
+2. **[x] Rota de Login (`/login`)**: O formulário de login está 100% operacional.
+3. **[x] Rota Admin Dashboard (`/admin/dashboard`)**: Acesso validado e carregando dados reais do Supabase com sucesso.
+4. **[x] Rota Admin Clientes (`/admin/clientes`)**: Listagem, criação e edição de clientes funcionando.
+5. **[x] Rota Admin Agenda (`/admin/agenda`)**: Kanban de Ordens de Serviço carregando corretamente.
+6. **[x] Rota Admin Relatórios (`/admin/relatorios`)**: Painéis analíticos funcionais.
+7. **[x] Rota Cliente Dashboard (`/cliente/dashboard`)**: Painel do portal do cliente funcionando.
+8. **[x] Rota Cliente Pedidos (`/cliente/pedidos`)**: Histórico de compras do cliente 100% integrado.
+9. **[x] Rota Cliente Suporte (`/cliente/suporte`)**: Linha do tempo gráfica de chamados operacionais funcionando.
+10. **[x] Rota Técnico Dashboard (`/tecnico/dashboard`)**: Painel tátil mobile-first do técnico validado.
+11. **[x] Rota Técnico Serviços (`/tecnico/servicos`)**: Fila de OS destinadas ao técnico operacional.
+12. **[x] Rota Técnico Agenda (`/tecnico/agenda`)**: Itinerário de visitas de campo carregado.
 
-### Comportamento Esperado em Produção
-* **Sem Erros de Hydration**: Sem overlays indesejados de erro ou Hydration Warnings visíveis.
-* **Redirecionamentos de Segurança**: Tentativa de acesso direto a rotas protegidas (ex: `/admin/*`) sem autenticação redireciona de volta para `/login`.
-* **Sidebar Recolhida**: A barra lateral de navegação é mantida fechada (recolhida) por padrão no carregamento inicial.
-* **Integração Supabase**: Sem falhas nas conexões ou chamadas de banco de dados e APIs do Supabase.
-* **Envio WhatsApp**: Mantido inativo para testes seguros do protótipo.
+### Comportamento Homologado em Produção
+* **Sem Erros de Hydration**: Interface livre de erros de hidratação e overlays de erro no Next.js.
+* **Redirecionamentos de Segurança**: Tentativas de acesso direto a rotas protegidas sem autenticação redirecionam o usuário imediatamente para `/login`.
+* **Sidebar Recolhida**: A barra lateral mantém o estado de colapsado (recolhido) por padrão no carregamento inicial da página.
+* **Integração com Supabase**: Conexão segura e em tempo real estabelecida com sucesso.
+* **Envio WhatsApp**: Mantido desativado (`ZAPI_SEND_ENABLED=false`) para proteção de dados do ambiente de protótipo.
