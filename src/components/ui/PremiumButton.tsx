@@ -44,7 +44,7 @@ export const PremiumButton: React.FC<PremiumButtonProps> = ({
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
-      className={`inline-flex items-center justify-center gap-1.5 font-bold text-xs px-4.5 py-2.5 rounded-xl transition-all duration-200 hover:scale-[1.015] active:scale-[0.985] cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:scale-100 ${getVariantStyles()} ${className}`}
+      className={`inline-flex items-center justify-center gap-1.5 font-bold text-[11px] md:text-xs px-4 py-2 rounded-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.985] cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:scale-100 ${getVariantStyles()} ${className}`}
     >
       {loading ? (
         <RefreshCw className="w-3.5 h-3.5 animate-spin" />

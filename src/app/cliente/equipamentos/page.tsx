@@ -19,7 +19,7 @@ export default async function ClienteEquipamentosPage() {
   }
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto text-left animate-in fade-in duration-300">
+    <div className="space-y-8 text-left animate-in fade-in duration-300">
       <PageHero
         title="Meus Equipamentos"
         description="Relação de equipamentos ativos e cadastrados no seu consultório para controle de manutenções preventivas e corretivas."

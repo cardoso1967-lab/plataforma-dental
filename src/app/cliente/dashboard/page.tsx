@@ -65,7 +65,7 @@ export default async function ClienteDashboardPage() {
   } : null;
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto text-left animate-in fade-in duration-300">
+    <div className="space-y-8 text-left animate-in fade-in duration-300">
       {/* Welcome Block Premium */}
       <PageHero
         title={`Olá, ${profile.name}`}

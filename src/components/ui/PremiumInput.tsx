@@ -31,7 +31,7 @@ export const PremiumInput: React.FC<PremiumInputProps> = ({
   className = '',
   rows = 3,
 }) => {
-  const baseInputStyles = "w-full border border-slate-200 hover:border-slate-300 rounded-xl px-3 py-2.5 text-xs text-slate-800 placeholder-slate-400 font-medium focus:outline-none focus:ring-4 focus:ring-sky-500/5 focus:border-sky-500 transition-all bg-white shadow-[0_1px_2px_rgba(0,0,0,0.01),inset_0_1px_0_rgba(255,255,255,0.8)] disabled:opacity-50 disabled:cursor-not-allowed";
+  const baseInputStyles = "w-full border border-slate-200 hover:border-slate-350 rounded-lg px-3 py-2 text-xs text-slate-800 placeholder-slate-400 font-medium focus:outline-none focus:ring-4 focus:ring-sky-500/5 focus:border-sky-500 transition-all bg-white shadow-[0_1px_2px_rgba(0,0,0,0.01),inset_0_1px_0_rgba(255,255,255,0.8)] disabled:opacity-50 disabled:cursor-not-allowed";
 
   return (
     <div className={`space-y-1.5 text-left ${className}`}>

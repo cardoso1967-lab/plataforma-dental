@@ -62,7 +62,7 @@ export default async function ClienteSuportePage() {
   ];
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto text-left animate-in fade-in duration-300">
+    <div className="space-y-8 text-left animate-in fade-in duration-300">
       {/* Header Premium */}
       <PageHero
         title="Suporte Técnico"

@@ -223,7 +223,7 @@ export default function TecnicoDashboardPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-md mx-auto text-left animate-in fade-in duration-300">
+    <div className="space-y-6 text-left animate-in fade-in duration-300">
       {/* Welcome Block */}
       <PageHero
         title={`Olá, ${profile?.name || 'Técnico'}`}

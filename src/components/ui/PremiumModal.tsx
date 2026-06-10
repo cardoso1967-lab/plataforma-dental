@@ -41,16 +41,16 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
 
       {/* Caja del modal premium */}
       <div
-        className={`bg-white rounded-3xl w-full ${getSizeStyles()} overflow-hidden shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.7)] border border-slate-200/80 relative z-10 transform transition-all duration-300 animate-in zoom-in-95`}
+        className={`bg-white rounded-2xl w-full ${getSizeStyles()} overflow-hidden shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.7)] border border-slate-200/80 relative z-10 transform transition-all duration-300 animate-in zoom-in-95`}
       >
         {/* Cabecera del modal */}
-        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-b from-slate-50 to-white">
+        <div className="px-6 py-4.5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-b from-slate-50 to-white">
           <h3 className="font-extrabold text-sm text-slate-800 tracking-tight leading-none text-left">
             {title}
           </h3>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-all border border-slate-250/30 hover:border-slate-350 cursor-pointer"
+            className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-all border border-slate-200/40 hover:border-slate-350 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>

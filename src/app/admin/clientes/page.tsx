@@ -507,102 +507,179 @@ export default function AdminClientesPage() {
                 onActionClick={() => openCustomerModal()}
               />
             ) : (
-              <div className="overflow-x-auto no-scrollbar">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="text-slate-400 font-bold border-b border-slate-100">
-                      <th className="pb-3 pr-2 pl-2">Razão Social / Nome</th>
-                      <th className="pb-3 px-2">Documento</th>
-                      <th className="pb-3 px-2">Contato Responsável</th>
-                      <th className="pb-3 px-2">Cidade/UF</th>
-                      <th className="pb-3 pr-2 text-right">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50">
-                    {filteredCustomers.map((client) => {
-                      const isSelected = selectedCustomer?.id === client.id;
-                      const initials = client.company_name.substring(0, 2).toUpperCase();
-                      
-                      const colors = [
-                        'bg-sky-50 text-brand-clinical border-sky-105',
-                        'bg-emerald-50 text-emerald-600 border-emerald-105',
-                        'bg-indigo-50 text-indigo-600 border-indigo-105',
-                        'bg-purple-50 text-purple-600 border-purple-105',
-                        'bg-amber-50 text-amber-600 border-amber-105',
-                      ];
-                      const colorIndex = initials.charCodeAt(0) % colors.length;
-                      const colorClass = colors[colorIndex];
+              <>
+                {/* Tabela para Desktop */}
+                <div className="hidden md:block overflow-x-auto no-scrollbar">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="text-slate-400 font-bold border-b border-slate-100">
+                        <th className="pb-3 pr-2 pl-2">Razão Social / Nome</th>
+                        <th className="pb-3 px-2">Documento</th>
+                        <th className="pb-3 px-2">Contato Responsável</th>
+                        <th className="pb-3 px-2">Cidade/UF</th>
+                        <th className="pb-3 pr-2 text-right">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {filteredCustomers.map((client) => {
+                        const isSelected = selectedCustomer?.id === client.id;
+                        const initials = client.company_name.substring(0, 2).toUpperCase();
+                        
+                        const colors = [
+                          'bg-sky-50 text-brand-clinical border-sky-100',
+                          'bg-emerald-50 text-emerald-600 border-emerald-100',
+                          'bg-indigo-50 text-indigo-600 border-indigo-100',
+                          'bg-purple-50 text-purple-600 border-purple-100',
+                          'bg-amber-50 text-amber-600 border-amber-100',
+                        ];
+                        const colorIndex = initials.charCodeAt(0) % colors.length;
+                        const colorClass = colors[colorIndex];
 
-                      return (
-                        <tr 
-                          key={client.id} 
-                          onClick={() => setSelectedCustomer(client)}
-                          className={`hover:bg-slate-50/30 transition-all duration-150 cursor-pointer ${
-                            isSelected ? 'bg-sky-50/20 font-semibold border-l-2 border-brand-clinical shadow-2xs' : ''
-                          }`}
-                        >
-                          <td className="py-4 pr-2 pl-2 text-left">
-                            <div className="flex items-center gap-3">
-                              <div className={`w-8 h-8 rounded-xl border flex items-center justify-center font-bold text-[10px] ${colorClass} flex-shrink-0`}>
-                                {initials}
+                        return (
+                          <tr 
+                            key={client.id} 
+                            onClick={() => setSelectedCustomer(client)}
+                            className={`hover:bg-slate-55/30 transition-all duration-150 cursor-pointer ${
+                              isSelected ? 'bg-sky-50/20 font-semibold border-l-2 border-brand-clinical shadow-2xs' : ''
+                            }`}
+                          >
+                            <td className="py-4 pr-2 pl-2 text-left">
+                              <div className="flex items-center gap-3">
+                                <div className={`w-8 h-8 rounded-xl border flex items-center justify-center font-bold text-[10px] ${colorClass} flex-shrink-0`}>
+                                  {initials}
+                                </div>
+                                <div>
+                                  <div className="font-extrabold text-slate-800 text-xs line-clamp-1">{client.company_name}</div>
+                                  {client.trade_name && (
+                                    <div className="text-[10px] text-slate-400 font-medium font-sans line-clamp-1">
+                                      {client.trade_name}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                              <div>
-                                <div className="font-extrabold text-slate-800 text-xs line-clamp-1">{client.company_name}</div>
-                                {client.trade_name && (
-                                  <div className="text-[10px] text-slate-400 font-medium font-sans line-clamp-1">
-                                    {client.trade_name}
-                                  </div>
-                                )}
+                            </td>
+                            <td className="py-4 px-2 text-slate-500 font-bold font-mono">
+                              {client.cnpj || client.cpf || '—'}
+                            </td>
+                            <td className="py-4 px-2 text-left">
+                              {client.profile ? (
+                                <div className="space-y-0.5">
+                                  <div className="font-bold text-slate-700 text-xs">{client.profile.name}</div>
+                                  {client.profile.phone && (
+                                    <div className="text-[10px] text-slate-400 flex items-center gap-0.5 font-semibold">
+                                      <Phone className="w-2.5 h-2.5" /> {client.profile.phone}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-[10px] text-slate-400 italic font-semibold bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">
+                                  Sem conta associada
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-4 px-2 text-slate-500 font-semibold">
+                              {client.address_city ? `${client.address_city} - ${client.address_state || ''}` : '—'}
+                            </td>
+                            <td className="py-4 pr-2 text-right" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex items-center justify-end gap-1">
+                                <button
+                                  onClick={() => openCustomerModal(client)}
+                                  className="p-1.5 text-slate-400 hover:text-brand-clinical rounded-lg hover:bg-slate-50 transition-colors"
+                                  title="Editar Cliente"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteCustomer(client.id)}
+                                  className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-50 transition-colors"
+                                  title="Excluir Cliente"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                                <ChevronRight className="w-4 h-4 text-slate-300" />
                               </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Cards para Mobile */}
+                <div className="grid grid-cols-1 gap-4 md:hidden">
+                  {filteredCustomers.map((client) => {
+                    const isSelected = selectedCustomer?.id === client.id;
+                    const initials = client.company_name.substring(0, 2).toUpperCase();
+                    
+                    const colors = [
+                      'bg-sky-50 text-brand-clinical border-sky-100',
+                      'bg-emerald-50 text-emerald-600 border-emerald-100',
+                      'bg-indigo-50 text-indigo-600 border-indigo-100',
+                      'bg-purple-50 text-purple-600 border-purple-100',
+                      'bg-amber-50 text-amber-600 border-amber-100',
+                    ];
+                    const colorIndex = initials.charCodeAt(0) % colors.length;
+                    const colorClass = colors[colorIndex];
+
+                    return (
+                      <div 
+                        key={client.id}
+                        onClick={() => setSelectedCustomer(client)}
+                        className={`bg-slate-50/20 border rounded-2xl p-4.5 space-y-4 text-left hover:shadow-xs transition-shadow duration-300 cursor-pointer ${
+                          isSelected ? 'border-brand-clinical ring-1 ring-sky-100/50' : 'border-slate-100'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-8 h-8 rounded-xl border flex items-center justify-center font-bold text-[10px] ${colorClass} flex-shrink-0`}>
+                              {initials}
                             </div>
-                          </td>
-                          <td className="py-4 px-2 text-slate-500 font-bold font-mono">
-                            {client.cnpj || client.cpf || '—'}
-                          </td>
-                          <td className="py-4 px-2 text-left">
-                            {client.profile ? (
-                              <div className="space-y-0.5">
-                                <div className="font-bold text-slate-700 text-xs">{client.profile.name}</div>
-                                {client.profile.phone && (
-                                  <div className="text-[10px] text-slate-400 flex items-center gap-0.5 font-semibold">
-                                    <Phone className="w-2.5 h-2.5" /> {client.profile.phone}
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-[10px] text-slate-400 italic font-semibold bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">
-                                Sem conta associada
-                              </span>
-                            )}
-                          </td>
-                          <td className="py-4 px-2 text-slate-500 font-semibold">
-                            {client.address_city ? `${client.address_city} - ${client.address_state || ''}` : '—'}
-                          </td>
-                          <td className="py-4 pr-2 text-right" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center justify-end gap-1">
-                              <button
-                                onClick={() => openCustomerModal(client)}
-                                className="p-1.5 text-slate-400 hover:text-brand-clinical rounded-lg hover:bg-slate-50 transition-colors"
-                                title="Editar Cliente"
-                              >
-                                <Edit2 className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteCustomer(client.id)}
-                                className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-50 transition-colors"
-                                title="Excluir Cliente"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                              <ChevronRight className="w-4 h-4 text-slate-300" />
+                            <div>
+                              <h4 className="font-extrabold text-slate-800 text-xs leading-snug">{client.company_name}</h4>
+                              {client.trade_name && (
+                                <p className="text-[9.5px] text-slate-400 font-bold leading-normal">{client.trade_name}</p>
+                              )}
                             </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5 text-[10.5px] font-semibold text-slate-600 border-t border-slate-100/80 pt-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-400">Documento:</span>
+                            <span className="font-mono font-bold text-slate-850">{client.cnpj || client.cpf || '—'}</span>
+                          </div>
+                          {client.profile && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-slate-400">Contato:</span>
+                              <span className="text-slate-800">{client.profile.name}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-400">Cidade/UF:</span>
+                            <span className="text-slate-850">{client.address_city ? `${client.address_city} - ${client.address_state || ''}` : '—'}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end gap-2 border-t border-slate-100/80 pt-3" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={() => openCustomerModal(client)}
+                            className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-black text-slate-700 transition-all flex items-center gap-1 shadow-2xs"
+                          >
+                            <Edit2 className="w-3 h-3 text-slate-450" /> Editar
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCustomer(client.id)}
+                            className="px-3.5 py-2 bg-rose-50/50 hover:bg-rose-100 border border-rose-100 rounded-xl text-[10px] font-black text-rose-700 transition-all flex items-center gap-1 shadow-2xs"
+                          >
+                            <Trash2 className="w-3 h-3 text-rose-455" /> Excluir
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
             )}
           </div>
         </div>
