@@ -25,15 +25,17 @@ export default async function ClienteEquipamentosPage() {
         description="Relação de equipamentos ativos e cadastrados no seu consultório para controle de manutenções preventivas e corretivas."
         badge="Equipamentos"
         icon={Settings}
+        variant="compact"
       />
 
       {!myEquipments || myEquipments.length === 0 ? (
         <EmptyState
           title="Nenhum equipamento registrado"
           description="Não há nenhum equipamento odontológico ativado em seu consultório ainda. Fale com seu administrador para registrar novas instalações."
-          icon={<Wrench className="w-6 h-6 text-sky-650" />}
+          icon={<Wrench className="w-6 h-6 text-sky-655" />}
           actionLabel="Falar com Administrador"
           actionHref="/cliente/suporte"
+          variant="panel"
         />
       ) : (
         <div className="grid gap-4.5 sm:grid-cols-2">

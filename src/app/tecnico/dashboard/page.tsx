@@ -230,6 +230,7 @@ export default function TecnicoDashboardPage() {
         description="Acesse sua rota de visitas e gerencie seus atendimentos odontológicos de hoje."
         badge="Painel do Técnico"
         icon={Calendar}
+        variant="compact"
       />
 
       {/* OS ativa designada */}
@@ -358,6 +359,7 @@ export default function TecnicoDashboardPage() {
           title="Sem chamados ativos"
           description="Ótimo trabalho! Você completou todos os chamados designados no momento."
           icon={<CheckCircle2 className="w-6 h-6 text-emerald-650" />}
+          variant="compact"
         />
       )}
 

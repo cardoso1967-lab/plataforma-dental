@@ -285,6 +285,59 @@ export default function AdminDashboardPage() {
             />
           </div>
 
+          {/* Saúde Operacional & Próximas Ações */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+            {/* Saúde Operacional Card */}
+            <div className="md:col-span-1 bg-white border border-slate-200/60 p-4.5 rounded-2xl shadow-3xs flex flex-col justify-between text-left">
+              <div>
+                <h4 className="font-extrabold text-[10px] text-slate-400 uppercase tracking-widest font-mono">Saúde Operacional</h4>
+                <div className="flex items-baseline gap-2 mt-3">
+                  <span className="text-xl font-black text-slate-900 leading-none">94.2%</span>
+                  <span className="text-[10px] font-bold text-emerald-600">SLA Conforme</span>
+                </div>
+                <p className="text-[10px] text-slate-500 font-semibold mt-2 leading-relaxed">
+                  Eficiência geral de campo está em conformidade com as metas da clínica.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 pt-3 border-t border-slate-100/60 mt-3 text-[9.5px] font-extrabold text-slate-450">
+                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
+                <span>Status da Operação: Saudável</span>
+              </div>
+            </div>
+
+            {/* Próximas Ações Card */}
+            <div className="md:col-span-2 bg-white border border-slate-200/60 p-4.5 rounded-2xl shadow-3xs text-left">
+              <h4 className="font-extrabold text-[10px] text-slate-400 uppercase tracking-widest font-mono">Próximas Ações Recomendadas</h4>
+              
+              <div className="mt-3.5 space-y-2.5 text-[11px] font-semibold text-slate-655">
+                {metrics.noTechOS > 0 && (
+                  <div className="flex items-center gap-2 bg-slate-50/50 p-2 rounded-lg border border-slate-100">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
+                    <span>Designar técnicos para as <strong className="text-slate-800">{metrics.noTechOS} OS</strong> pendentes de equipe.</span>
+                  </div>
+                )}
+                {metrics.urgentOSCount > 0 && (
+                  <div className="flex items-center gap-2 bg-slate-50/50 p-2 rounded-lg border border-slate-100">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0 animate-pulse"></span>
+                    <span>Acompanhar com prioridade as <strong className="text-slate-800">{metrics.urgentOSCount} OS urgentes</strong> ativas hoje.</span>
+                  </div>
+                )}
+                {metrics.pendingQuotes > 0 && (
+                  <div className="flex items-center gap-2 bg-slate-50/50 p-2 rounded-lg border border-slate-100">
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0"></span>
+                    <span>Revisar propostas e orçamentos para os <strong className="text-slate-800">{metrics.pendingQuotes} chamados</strong> sob aprovação.</span>
+                  </div>
+                )}
+                {metrics.noTechOS === 0 && metrics.urgentOSCount === 0 && metrics.pendingQuotes === 0 && (
+                  <div className="flex items-center gap-2 bg-slate-50/50 p-2 rounded-lg border border-slate-100 text-slate-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                    <span>Tudo resolvido! Sem ações urgentes pendentes de atenção no painel.</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Seções de Tablas y Listados Premium */}
           <div className="grid lg:grid-cols-2 gap-6 pt-2">
             {/* Últimos Pedidos de Venda */}

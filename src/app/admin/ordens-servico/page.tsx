@@ -343,6 +343,7 @@ export default function AdminOrdensServicoPage() {
         description="Abra ordens de serviço manualmente, designe técnicos responsáveis e agende visitas operacionais."
         badge="Central Operacional de Chamados"
         icon={Wrench}
+        variant="compact"
         rightElement={
           <PremiumButton
             onClick={() => openModal()}
@@ -422,6 +423,7 @@ export default function AdminOrdensServicoPage() {
             icon={<ClipboardList className="w-6 h-6 text-sky-600" />}
             actionLabel="Criar Nova OS"
             onActionClick={() => openModal()}
+            variant="panel"
           />
         ) : (
           <>

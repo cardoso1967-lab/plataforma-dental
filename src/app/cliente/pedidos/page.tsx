@@ -62,15 +62,17 @@ export default async function ClientePedidosPage() {
         description="Acompanhe o faturamento, entrega e status dos equipamentos e suprimentos adquiridos para seu consultório."
         badge="Compras"
         icon={ShoppingBag}
+        variant="compact"
       />
 
       {!myOrders || myOrders.length === 0 ? (
         <EmptyState
           title="Nenhum pedido de compra"
           description="Você não possui pedidos de compra registrados nesta conta. Entre em contato com nosso departamento comercial para adquirir novos equipamentos odontológicos."
-          icon={<ShoppingBag className="w-6 h-6 text-sky-650" />}
+          icon={<ShoppingBag className="w-6 h-6 text-sky-655" />}
           actionLabel="Falar com Vendas / Suporte"
           actionHref="/cliente/suporte"
+          variant="panel"
         />
       ) : (
         <div className="space-y-6">

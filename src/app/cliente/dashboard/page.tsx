@@ -72,6 +72,7 @@ export default async function ClienteDashboardPage() {
         description="Acompanhe a saúde dos seus equipamentos odontológicos, ordens de serviço em tempo real e faturamento de suas compras."
         badge="Portal do Cliente"
         icon={Stethoscope}
+        variant="compact"
       />
 
       {/* Assistência Técnica em Andamento */}
@@ -90,6 +91,7 @@ export default async function ClienteDashboardPage() {
             icon={<ClipboardList className="w-6 h-6 text-sky-600" />}
             actionLabel="Solicitar Suporte Técnico"
             actionHref="/cliente/suporte"
+            variant="compact"
           />
         )}
       </div>

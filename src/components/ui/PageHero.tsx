@@ -29,8 +29,8 @@ export const PageHero: React.FC<PageHeroProps> = ({
 
   return (
     <div 
-      className={`bg-gradient-to-br ${variantStyles[variant]} text-white rounded-2xl relative overflow-hidden border transition-all duration-300 animate-in fade-in duration-500 ${
-        isCompact ? 'p-4 md:py-4.5 md:px-6' : 'p-5 md:py-5.5 md:px-7'
+      className={`bg-gradient-to-br ${variantStyles[variant]} text-white rounded-2xl relative overflow-hidden border transition-all duration-300 animate-in fade-in duration-500 flex items-center ${
+        isCompact ? 'p-3.5 md:py-3.5 md:px-5 lg:h-[115px]' : 'p-4.5 md:py-4.5 md:px-6 lg:h-[140px]'
       }`}
     >
       {/* Elementos decorativos y luces cibernéticas */}
@@ -45,7 +45,7 @@ export const PageHero: React.FC<PageHeroProps> = ({
       {/* Patrón de grilla de fondo fino de alta gama */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-sky-900/5 via-transparent to-transparent opacity-60 pointer-events-none"></div>
 
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 relative z-10">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 relative z-10 w-full">
         <div className="space-y-2 text-left">
           {badge && (
             <span className="text-[9px] font-bold text-sky-400 uppercase tracking-widest bg-sky-500/10 px-3 py-0.5 rounded border border-sky-500/20 inline-block font-mono leading-none">

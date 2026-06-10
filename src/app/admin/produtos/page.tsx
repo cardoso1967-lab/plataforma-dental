@@ -252,6 +252,7 @@ export default function AdminProdutosPage() {
         description="Gerencie o catálogo de equipamentos odontológicos, consumíveis, peças e produtos gerais para comercialização."
         badge="Catálogo e Inventário"
         icon={Package}
+        variant="compact"
         rightElement={
           <PremiumButton
             onClick={() => openModal()}
@@ -323,6 +324,7 @@ export default function AdminProdutosPage() {
             icon={<Package className="w-6 h-6 text-sky-600" />}
             actionLabel="Cadastrar Produto"
             onActionClick={() => openModal()}
+            variant="panel"
           />
         ) : (
           <>

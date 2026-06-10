@@ -231,6 +231,7 @@ export default function TecnicoServicosPage() {
         description="Gerencie e atualize seus atendimentos técnicos diretamente em campo."
         badge="Serviços"
         icon={Wrench}
+        variant="compact"
       />
 
       {/* Buscador */}
@@ -269,6 +270,7 @@ export default function TecnicoServicosPage() {
             title="Nenhum chamado encontrado"
             description="Não existem ordens de serviço correspondentes a este filtro em seu portfólio de campo."
             icon={<ClipboardList className="w-5 h-5 text-slate-400" />}
+            variant="panel"
           />
         ) : (
           filteredServices.map((os) => (

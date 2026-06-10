@@ -28,7 +28,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
-      className={`flex-1 min-w-[280px] bg-slate-50/80 border border-slate-200/50 rounded-2xl p-4 space-y-4 transition-all duration-300 relative ${
+      className={`w-[300px] shrink-0 bg-slate-50/40 border border-slate-200/55 rounded-2xl p-3.5 space-y-3.5 transition-all duration-300 relative ${
         isOver ? 'bg-sky-50/40 border border-dashed border-sky-400 scale-[1.01] shadow-[0_8px_30px_rgb(0,0,0,0.04)]' : 'shadow-[0_2px_8px_rgba(0,0,0,0.02)]'
       }`}
     >

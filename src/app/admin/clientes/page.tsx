@@ -431,6 +431,7 @@ export default function AdminClientesPage() {
         description="Gerencie clínicas, consultórios, dentistas cadastrados e seus respectivos equipamentos odontológicos."
         badge="Administração de Clientes"
         icon={Users}
+        variant="compact"
         rightElement={
           <PremiumButton
             onClick={() => openCustomerModal()}
@@ -505,6 +506,7 @@ export default function AdminClientesPage() {
                 icon={<UserPlus className="w-6 h-6 text-sky-600" />}
                 actionLabel="Cadastrar Cliente"
                 onActionClick={() => openCustomerModal()}
+                variant="panel"
               />
             ) : (
               <>
@@ -764,6 +766,7 @@ export default function AdminClientesPage() {
                     icon={<Stethoscope className="w-5 h-5 text-slate-400" />}
                     actionLabel="Adicionar Equipamento"
                     onActionClick={() => openEquipmentModal()}
+                    variant="compact"
                   />
                 ) : (
                   <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1 no-scrollbar">
@@ -813,6 +816,7 @@ export default function AdminClientesPage() {
                 title="Selecione um Cliente"
                 description="Escolha uma clínica ou consultório listado na tabela ao lado para visualizar os detalhes completos, contatos operacionais e histórico de equipamentos instalados."
                 icon={<Building2 className="w-5 h-5 text-slate-400 stroke-[2]" />}
+                variant="compact"
               />
             </div>
           )}

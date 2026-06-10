@@ -149,6 +149,7 @@ export default function TecnicoAgendaPage() {
         description="Roteiro cronológico de visitas e manutenções preventivas designadas para hoje."
         badge="Agenda"
         icon={Calendar}
+        variant="compact"
       />
 
       {/* Roteiro */}
@@ -157,9 +158,10 @@ export default function TecnicoAgendaPage() {
           <EmptyState
             title="Nenhuma visita hoje"
             description="Você não possui atendimentos agendados ou visitas na sua rota para a data de hoje."
-            icon={<Calendar className="w-6 h-6 text-sky-650" />}
+            icon={<Calendar className="w-6 h-6 text-sky-655" />}
             actionLabel="Ver Todas as OS"
             actionHref="/tecnico/servicos"
+            variant="panel"
           />
         ) : (
           todaySchedule.map((item) => (

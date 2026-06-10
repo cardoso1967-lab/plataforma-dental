@@ -444,6 +444,43 @@ export default function AdminAgendaPage() {
         }
       />
 
+      {/* Resumo Operativo Compacto */}
+      {!loading && (
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 bg-white border border-slate-200/60 p-3.5 rounded-2xl shadow-3xs text-[11px] font-bold text-slate-700 text-left">
+          <div className="flex flex-col justify-center px-4 py-2 border-r border-slate-100 last:border-0">
+            <span className="text-[9px] uppercase tracking-wider text-slate-400 font-extrabold mb-1">Total de OS</span>
+            <span className="text-base font-black text-slate-900 leading-none">{serviceOrders.length}</span>
+          </div>
+          <div className="flex flex-col justify-center px-4 py-2 border-r border-slate-100 last:border-0">
+            <span className="text-[9px] uppercase tracking-wider text-rose-500 font-extrabold mb-1 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+              Urgentes
+            </span>
+            <span className="text-base font-black text-rose-600 leading-none">
+              {serviceOrders.filter(os => os.priority === 'urgente' && os.status !== 'concluida' && os.status !== 'cancelada').length}
+            </span>
+          </div>
+          <div className="flex flex-col justify-center px-4 py-2 border-r border-slate-100 last:border-0">
+            <span className="text-[9px] uppercase tracking-wider text-sky-500 font-extrabold mb-1">Em Campo</span>
+            <span className="text-base font-black text-sky-600 leading-none">
+              {serviceOrders.filter(os => os.status === 'em_atendimento').length}
+            </span>
+          </div>
+          <div className="flex flex-col justify-center px-4 py-2 border-r border-slate-100 last:border-0">
+            <span className="text-[9px] uppercase tracking-wider text-amber-500 font-extrabold mb-1">Aguardando Peça</span>
+            <span className="text-base font-black text-amber-600 leading-none">
+              {serviceOrders.filter(os => os.status === 'aguardando_peca').length}
+            </span>
+          </div>
+          <div className="flex flex-col justify-center px-4 py-2 last:border-0">
+            <span className="text-[9px] uppercase tracking-wider text-emerald-500 font-extrabold mb-1">Concluídas</span>
+            <span className="text-base font-black text-emerald-600 leading-none">
+              {serviceOrders.filter(os => os.status === 'concluida').length}
+            </span>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div className="text-center py-20 text-slate-400 font-medium text-xs">
           Carregando ordens de serviço...
@@ -511,6 +548,7 @@ export default function AdminAgendaPage() {
                           title="Sem chamados"
                           description="Arraste chamados aqui"
                           icon={<ClipboardList className="w-5 h-5" />}
+                          variant="compact"
                         />
                       )}
                     </KanbanColumn>

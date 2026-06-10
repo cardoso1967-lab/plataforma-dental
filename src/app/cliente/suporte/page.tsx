@@ -69,6 +69,7 @@ export default async function ClienteSuportePage() {
         description="Acompanhe suas solicitações de reparo em tempo real e abra novos chamados para seus equipamentos odontológicos."
         badge="Suporte"
         icon={Clock}
+        variant="compact"
       />
 
       {/* OS ativas */}
@@ -81,7 +82,8 @@ export default async function ClienteSuportePage() {
           <EmptyState
             title="Nenhum chamado aberto"
             description="Todos os seus chamados de manutenção e visitas preventivas estão concluídos. Use o formulário abaixo para abrir uma nova solicitação técnica."
-            icon={<Clipboard className="w-6 h-6 text-sky-650" />}
+            icon={<Clipboard className="w-6 h-6 text-sky-655" />}
+            variant="panel"
           />
         ) : (
           <div className="space-y-5">
