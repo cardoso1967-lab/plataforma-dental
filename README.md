@@ -73,3 +73,43 @@ Para garantir sincronia e evitar conflitos ao trabalhar no mesmo projeto usando 
    git commit -m "feat: descrição da alteração realizada"
    git push origin main
    ```
+
+## Implantação do Protótipo (Vercel)
+
+O protótipo da Plataforma Dental está preparado para ser implantado na plataforma **Vercel** para fins de homologação e demonstração sem necessidade de execução local.
+
+### Configuração de Variáveis de Ambiente no Vercel
+
+As seguintes variáveis de ambiente devem ser configuradas no painel do projeto no Vercel:
+
+* `NEXT_PUBLIC_SUPABASE_URL`: URL pública da sua instância do Supabase.
+* `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Chave anônima pública do Supabase.
+* `ZAPI_SEND_ENABLED`: Deve ser configurada como `false` (WhatsApp inativo por segurança neste protótipo).
+* `WHATSAPP_PROVIDER`: Definida como `zapi`.
+* `NEXT_PUBLIC_APP_URL`: A URL final de produção gerada pelo Vercel (ex: `https://plataforma-dental.vercel.app`).
+
+> [!IMPORTANT]
+> * Não adicione a chave administrativa `SUPABASE_SERVICE_ROLE_KEY` nas variáveis do Vercel.
+> * Após o primeiro deploy bem-sucedido, copie a URL gerada pelo Vercel, atualize a variável `NEXT_PUBLIC_APP_URL` com esse valor e realize um novo deploy para que os links e redirecionamentos funcionem de forma consistente.
+
+### Passos para Implantação Manual no Dashboard do Vercel
+
+Caso a autenticação automática via CLI não seja realizada:
+
+1. Acesse o dashboard do [Vercel](https://vercel.com).
+2. Clique em **Add New** > **Project** e importe o repositório Git: `cardoso1967-lab/plataforma-dental`.
+3. Escolha o preset de Framework: **Next.js**.
+4. Configure o diretório raiz (`Root Directory`) como a raiz do projeto.
+5. Comando de Build: `npm run build` (o comando de instalação e diretório de saída utilizam os padrões da Vercel).
+6. Expanda a seção **Environment Variables** e adicione as variáveis listadas acima.
+7. Clique em **Deploy**.
+8. Configure as URLs de redirecionamento no Supabase (conforme seção abaixo).
+
+### Configuração do Supabase Auth (Redirecionamentos)
+
+Após obter a URL final gerada pelo Vercel, acesse o painel do Supabase do seu projeto em **Authentication** > **URL Configuration** e configure:
+
+* **Site URL**: `https://<sua-url-do-vercel>.vercel.app`
+* **Redirect / Callback URL**: `https://<sua-url-do-vercel>.vercel.app/api/auth/callback`
+
+*(Nota: Caso um domínio personalizado seja configurado posteriormente utilizando Cloudflare DNS, configure também `https://seu-dominio-customizado.com` e `https://seu-dominio-customizado.com/api/auth/callback` no Supabase).*

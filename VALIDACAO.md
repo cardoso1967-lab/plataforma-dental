@@ -142,6 +142,41 @@ A Fase 4.2 realizou um redesenho estético e de usabilidade (UI/UX) profundo e f
    - Agenda e timeline do dia limpas e estruturadas com rotas geográficas ou endereços destacados em cards premium.
 
 6. **Compilação de Produção e Qualidade de Código**:
-   - Executada a compilação completa do projeto com `cmd /c npm run build`, terminando com sucesso sem warnings de lint ou erros do compilador.
-   - Validadas todas as rotas e tipos estáticos do TypeScript.
+    - Executada a compilação completa do projeto com `cmd /c npm run build`, terminando com sucesso sem warnings de lint ou erros do compilador.
+    - Validadas todas as rotas e tipos estáticos do TypeScript.
 
+---
+
+## Validação da Fase 5 — Implantação e Homologação na Vercel (Protótipo)
+
+O deploy do protótipo no Vercel foi configurado e preparado com as seguintes etapas e rotas de testes:
+
+### Lista de Variáveis Obrigatórias no Vercel
+* `NEXT_PUBLIC_SUPABASE_URL` (URL pública do Supabase)
+* `NEXT_PUBLIC_SUPABASE_ANON_KEY` (Chave anônima do Supabase)
+* `ZAPI_SEND_ENABLED=false` (WhatsApp desabilitado no protótipo por segurança)
+* `WHATSAPP_PROVIDER=zapi` (Provedor Z-API ativo)
+* `NEXT_PUBLIC_APP_URL` (URL final de produção gerada pela Vercel)
+
+### Roteiro de Validação Pós-Deploy (Checklist de Rotas)
+Após a conclusão da publicação, as seguintes rotas públicas e privadas devem ser validadas no ambiente de produção:
+
+1. **[ ] Rota Pública / Home (`/`)**: A página inicial carrega perfeitamente.
+2. **[ ] Rota de Login (`/login`)**: O formulário de login está operacional.
+3. **[ ] Rota Admin Dashboard (`/admin/dashboard`)**: Acesso restrito a administradores.
+4. **[ ] Rota Admin Clientes (`/admin/clientes`)**: Listagem e edição de clientes operacionais.
+5. **[ ] Rota Admin Agenda (`/admin/agenda`)**: Visualização da agenda Kanban de OS.
+6. **[ ] Rota Admin Relatórios (`/admin/relatorios`)**: Painéis analíticos funcionais.
+7. **[ ] Rota Cliente Dashboard (`/cliente/dashboard`)**: Painel do portal do cliente funcional.
+8. **[ ] Rota Cliente Pedidos (`/cliente/pedidos`)**: Histórico de compras do cliente operacional.
+9. **[ ] Rota Cliente Suporte (`/cliente/suporte`)**: Linha do tempo de chamados operacionais.
+10. **[ ] Rota Técnico Dashboard (`/tecnico/dashboard`)**: Painel tátil mobile-first do técnico funcional.
+11. **[ ] Rota Técnico Serviços (`/tecnico/servicos`)**: Fila de OS destinadas ao técnico funcional.
+12. **[ ] Rota Técnico Agenda (`/tecnico/agenda`)**: Itinerário de visitas de campo.
+
+### Comportamento Esperado em Produção
+* **Sem Erros de Hydration**: Sem overlays indesejados de erro ou Hydration Warnings visíveis.
+* **Redirecionamentos de Segurança**: Tentativa de acesso direto a rotas protegidas (ex: `/admin/*`) sem autenticação redireciona de volta para `/login`.
+* **Sidebar Recolhida**: A barra lateral de navegação é mantida fechada (recolhida) por padrão no carregamento inicial.
+* **Integração Supabase**: Sem falhas nas conexões ou chamadas de banco de dados e APIs do Supabase.
+* **Envio WhatsApp**: Mantido inativo para testes seguros do protótipo.
