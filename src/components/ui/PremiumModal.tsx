@@ -33,24 +33,24 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
-      {/* Fondo oscuro y difuso */}
+      {/* Fondo oscuro y difuso más denso */}
       <div
         onClick={onClose}
-        className="fixed inset-0 bg-slate-950/45 backdrop-blur-xs transition-opacity"
+        className="fixed inset-0 bg-slate-950/60 backdrop-blur-md transition-opacity"
       ></div>
 
-      {/* Caja del modal */}
+      {/* Caja del modal premium */}
       <div
-        className={`bg-white rounded-3xl w-full ${getSizeStyles()} overflow-hidden shadow-2xl border border-slate-100 relative z-10 transform transition-all duration-300 animate-in zoom-in-95`}
+        className={`bg-white rounded-3xl w-full ${getSizeStyles()} overflow-hidden shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.7)] border border-slate-200/80 relative z-10 transform transition-all duration-300 animate-in zoom-in-95`}
       >
         {/* Cabecera del modal */}
-        <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/20">
+        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-b from-slate-50 to-white">
           <h3 className="font-extrabold text-sm text-slate-800 tracking-tight leading-none text-left">
             {title}
           </h3>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors border border-slate-100/40 hover:border-slate-200"
+            className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-all border border-slate-250/30 hover:border-slate-350 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>

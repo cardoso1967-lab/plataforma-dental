@@ -610,53 +610,53 @@ export default function AdminClientesPage() {
         {/* Ficha Detalhada e Equipamentos */}
         <div className="lg:col-span-1">
           {selectedCustomer ? (
-            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden space-y-0 animate-in fade-in zoom-in-95 duration-200">
+            <div className="bg-gradient-to-b from-white to-slate-50/35 rounded-3xl border border-slate-200/80 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
               {/* Header Ficha Premium */}
-              <div className="bg-gradient-to-r from-slate-900 to-sky-950 text-white p-5 space-y-2 relative text-left">
+              <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950 text-white p-5 space-y-2 relative text-left border-b border-slate-800">
                 <button
                   onClick={() => setSelectedCustomer(null)}
-                  className="absolute right-4 top-4 text-slate-400 hover:text-white bg-white/10 hover:bg-white/20 p-1.5 rounded-lg transition-colors"
+                  className="absolute right-4 top-4 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 p-1.5 rounded-lg border border-white/5 transition-all cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
                 <div className="flex items-center gap-2">
-                  <div className="bg-brand-clinical/20 text-sky-400 p-1.5 rounded-lg border border-sky-400/20">
-                    <Building2 className="w-4 h-4" />
+                  <div className="bg-sky-500/10 text-sky-450 p-1.5 rounded-lg border border-sky-550/20">
+                    <Building2 className="w-4 h-4 stroke-[2]" />
                   </div>
-                  <span className="text-[10px] font-extrabold tracking-wider text-sky-400 uppercase">Ficha do Cliente</span>
+                  <span className="text-[9px] font-bold tracking-widest text-sky-400 uppercase font-mono">Ficha do Cliente</span>
                 </div>
                 <h2 className="font-extrabold text-sm leading-tight pr-6">{selectedCustomer.company_name}</h2>
-                <p className="text-[10px] text-slate-300 font-medium">{selectedCustomer.trade_name || 'Sem nome fantasia'}</p>
+                <p className="text-[10px] text-slate-350 font-medium">{selectedCustomer.trade_name || 'Sem nome fantasia'}</p>
               </div>
 
               {/* Endereço e Dados Básicos */}
-              <div className="p-5 border-b border-slate-50 space-y-4 text-left">
-                <h4 className="font-extrabold text-[10px] text-slate-400 uppercase tracking-widest font-sans">Dados e Endereço</h4>
+              <div className="p-5 border-b border-slate-100/60 space-y-4 text-left">
+                <h4 className="font-bold text-[9px] text-slate-400 uppercase tracking-widest font-mono">Dados e Endereço</h4>
                 
                 <div className="grid grid-cols-2 gap-4 text-[11px] font-bold text-slate-700">
                   <div>
-                    <span className="text-[9px] font-extrabold text-slate-400 block uppercase tracking-wider mb-0.5">Documento</span>
-                    <span className="font-mono">{selectedCustomer.cnpj || selectedCustomer.cpf || '—'}</span>
+                    <span className="text-[9px] font-bold text-slate-400 block uppercase tracking-wider mb-0.5 font-mono">Documento</span>
+                    <span className="font-mono text-slate-900">{selectedCustomer.cnpj || selectedCustomer.cpf || '—'}</span>
                   </div>
                   <div>
-                    <span className="text-[9px] font-extrabold text-slate-400 block uppercase tracking-wider mb-0.5">Telefone</span>
-                    <span>{selectedCustomer.phone || selectedCustomer.profile?.phone || '—'}</span>
+                    <span className="text-[9px] font-bold text-slate-400 block uppercase tracking-wider mb-0.5 font-mono">Telefone</span>
+                    <span className="text-slate-900">{selectedCustomer.phone || selectedCustomer.profile?.phone || '—'}</span>
                   </div>
                 </div>
 
-                <div className="pt-2 flex gap-2 text-[11px] font-bold text-slate-700 border-t border-slate-50/50">
-                  <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                  <div className="space-y-0.5 leading-normal">
-                    <span>
+                <div className="pt-3.5 flex gap-2.5 text-[11px] font-bold text-slate-700 border-t border-slate-100/60">
+                  <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 stroke-[2]" />
+                  <div className="space-y-0.5 leading-normal text-slate-600">
+                    <span className="text-slate-800">
                       {selectedCustomer.address_street || '—'}
                       {selectedCustomer.address_number ? `, ${selectedCustomer.address_number}` : ''}
                     </span>
                     {selectedCustomer.address_complement && (
-                      <span className="block text-slate-400 font-semibold text-[10px]">
+                      <span className="block text-slate-450 font-medium text-[10px]">
                         {selectedCustomer.address_complement}
                       </span>
                     )}
-                    <span className="block text-slate-400 font-semibold text-[10px]">
+                    <span className="block text-slate-450 font-medium text-[10px]">
                       {selectedCustomer.address_neighborhood ? `${selectedCustomer.address_neighborhood}, ` : ''}
                       {selectedCustomer.address_city ? `${selectedCustomer.address_city} - ` : ''}
                       {selectedCustomer.address_state || ''}
@@ -668,59 +668,57 @@ export default function AdminClientesPage() {
               {/* Equipamentos */}
               <div className="p-5 space-y-4 text-left">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-extrabold text-[10px] text-slate-400 uppercase tracking-widest flex items-center gap-1.5 font-sans">
-                    <Stethoscope className="w-4 h-4 text-brand-clinical" />
+                  <h4 className="font-bold text-[9px] text-slate-400 uppercase tracking-widest flex items-center gap-1.5 font-mono">
+                    <Stethoscope className="w-4 h-4 text-sky-655 stroke-[2]" />
                     Equipamentos ({selectedCustomerEquipments.length})
                   </h4>
                   <button
                     onClick={() => openEquipmentModal()}
-                    className="text-[10px] font-extrabold text-brand-clinical hover:text-sky-700 bg-sky-50 hover:bg-sky-100/70 px-3 py-1.5 rounded-xl border border-sky-100 transition-colors"
+                    className="text-[10px] font-bold text-sky-655 hover:text-sky-700 bg-sky-500/10 hover:bg-sky-500/15 px-3 py-1.5 rounded-xl border border-sky-500/20 transition-all cursor-pointer hover:scale-[1.015]"
                   >
                     + Adicionar
                   </button>
                 </div>
 
                 {selectedCustomerEquipments.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8 px-4 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50/20 shadow-3xs">
-                    <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-400 flex items-center justify-center mb-2">
-                      <Stethoscope className="w-4 h-4" />
-                    </div>
-                    <h5 className="font-extrabold text-[11px] text-slate-800 mb-0.5">Sem equipamentos</h5>
-                    <p className="text-[10px] text-slate-400 font-medium max-w-xs leading-normal">
-                      Nenhum equipamento foi cadastrado para esta clínica ainda.
-                    </p>
-                  </div>
+                  <EmptyState
+                    title="Nenhum equipamento"
+                    description="Cadastre os equipamentos desta clínica para acompanhar o histórico de manutenções preventivas e corretivas."
+                    icon={<Stethoscope className="w-5 h-5 text-slate-400" />}
+                    actionLabel="Adicionar Equipamento"
+                    onActionClick={() => openEquipmentModal()}
+                  />
                 ) : (
                   <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1 no-scrollbar">
                     {selectedCustomerEquipments.map((equip) => (
                       <div 
                         key={equip.id} 
-                        className="border border-slate-100/80 rounded-2xl p-3 bg-slate-50/20 hover:bg-slate-50/60 transition-all duration-200 flex justify-between items-start gap-2 group shadow-2xs hover:shadow-xs animate-in fade-in duration-200"
+                        className="border border-slate-200 rounded-2xl p-3 bg-white hover:bg-slate-50/50 transition-all duration-200 flex justify-between items-start gap-2 group shadow-3xs"
                       >
-                        <div className="space-y-1 text-left">
+                        <div className="space-y-1.5 text-left">
                           <h5 className="font-extrabold text-xs text-slate-800">{equip.name}</h5>
-                          <div className="text-[10px] font-bold text-slate-500 space-y-0.5">
-                            <p>Marca: {equip.brand || '—'} | Modelo: {equip.model || '—'}</p>
+                          <div className="text-[10px] font-medium text-slate-450 space-y-0.5">
+                            <p>Marca: <span className="font-bold text-slate-600">{equip.brand || '—'}</span> | Modelo: <span className="font-bold text-slate-600">{equip.model || '—'}</span></p>
                             {equip.serial_number && <p className="font-mono text-[9px] text-slate-400">N/S: {equip.serial_number}</p>}
                             {equip.installation_date && (
-                              <p className="flex items-center gap-0.5 text-slate-400 text-[9px] font-semibold pt-0.5">
-                                <Calendar className="w-2.5 h-2.5" /> Instalação: {new Date(equip.installation_date).toLocaleDateString('pt-BR')}
+                              <p className="flex items-center gap-1 text-slate-400 text-[9px] pt-0.5 font-medium">
+                                <Calendar className="w-2.5 h-2.5 stroke-[2]" /> Instalação: {new Date(equip.installation_date).toLocaleDateString('pt-BR')}
                               </p>
                             )}
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-0.5 opacity-60 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-0.5 opacity-60 group-hover:opacity-100 transition-opacity shrink-0">
                           <button
                             onClick={() => openEquipmentModal(equip)}
-                            className="p-1.5 text-slate-400 hover:text-brand-clinical hover:bg-white rounded-lg border border-transparent hover:border-slate-100 transition-all shadow-2xs"
+                            className="p-1.5 text-slate-400 hover:text-sky-655 hover:bg-slate-100 rounded-lg transition-all cursor-pointer"
                             title="Editar equipamento"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleDeleteEquipment(equip.id)}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-white rounded-lg border border-transparent hover:border-slate-100 transition-all shadow-2xs"
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-all cursor-pointer"
                             title="Excluir equipamento"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -733,18 +731,17 @@ export default function AdminClientesPage() {
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-16 px-6 text-center border border-dashed border-slate-200 rounded-3xl bg-slate-50/20 shadow-3xs min-h-[350px]">
-              <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mb-4">
-                <Building2 className="w-6 h-6" />
-              </div>
-              <h4 className="font-extrabold text-xs text-slate-800 mb-1.5">Ficha de Cliente Vazia</h4>
-              <p className="text-[11px] text-slate-400 font-medium max-w-xs leading-relaxed">
-                Selecione uma clínica na tabela ao lado para visualizar os dados de endereço, detalhes de contato e gerenciar a lista de equipamentos instalados.
-              </p>
+            <div className="py-16 px-6 text-center border border-slate-200/80 rounded-3xl bg-gradient-to-b from-white to-slate-50/30 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)] min-h-[350px] flex flex-col items-center justify-center">
+              <EmptyState
+                title="Selecione um Cliente"
+                description="Escolha uma clínica ou consultório listado na tabela ao lado para visualizar os detalhes completos, contatos operacionais e histórico de equipamentos instalados."
+                icon={<Building2 className="w-5 h-5 text-slate-400 stroke-[2]" />}
+              />
             </div>
           )}
         </div>
       </div>
+
 
       {/* Modal Cliente */}
       <PremiumModal

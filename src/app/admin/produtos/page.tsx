@@ -359,9 +359,10 @@ export default function AdminProdutosPage() {
                         {prod.category?.name || 'Sem Categoria'}
                       </td>
                       <td className="py-4 px-2">
-                        <span className="text-[9.5px] font-extrabold text-slate-600 capitalize bg-slate-100/80 px-2 py-0.5 rounded-md border border-slate-200/50">
-                          {prod.product_type}
-                        </span>
+                        <StatusBadge
+                          label={prod.product_type}
+                          type={prod.product_type === 'equipamento' ? 'indigo' : prod.product_type === 'peca' ? 'info' : 'neutral'}
+                        />
                       </td>
                       <td className="py-4 px-2 text-right font-black text-slate-900">
                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(prod.price)}
@@ -372,26 +373,23 @@ export default function AdminProdutosPage() {
                         </span>
                       </td>
                       <td className="py-4 text-center">
-                        <span className={`text-[9.5px] font-extrabold px-2.5 py-0.5 rounded-full border uppercase tracking-wider shadow-2xs ${
-                          prod.is_active 
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
-                            : 'bg-slate-100 text-slate-500 border-slate-200'
-                        }`}>
-                          {prod.is_active ? 'Ativo' : 'Inativo'}
-                        </span>
+                        <StatusBadge
+                          label={prod.is_active ? 'Ativo' : 'Inativo'}
+                          type={prod.is_active ? 'success' : 'neutral'}
+                        />
                       </td>
                       <td className="py-4 pr-2 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={() => openModal(prod)}
-                            className="p-1.5 text-slate-400 hover:text-brand-clinical rounded-lg hover:bg-slate-50 transition-colors"
+                            className="p-1.5 text-slate-450 hover:text-sky-655 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
                             title="Editar Produto"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleDelete(prod.id)}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-50 transition-colors"
+                            className="p-1.5 text-slate-450 hover:text-rose-650 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
                             title="Excluir Produto"
                           >
                             <Trash2 className="w-3.5 h-3.5" />

@@ -31,16 +31,16 @@ export const PremiumInput: React.FC<PremiumInputProps> = ({
   className = '',
   rows = 3,
 }) => {
-  const baseInputStyles = "w-full border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 placeholder-slate-400 font-medium focus:outline-none focus:ring-2 focus:ring-sky-100 focus:border-sky-500 transition-all bg-slate-50/20 disabled:opacity-50 disabled:cursor-not-allowed";
+  const baseInputStyles = "w-full border border-slate-200 hover:border-slate-300 rounded-xl px-3 py-2.5 text-xs text-slate-800 placeholder-slate-400 font-medium focus:outline-none focus:ring-4 focus:ring-sky-500/5 focus:border-sky-500 transition-all bg-white shadow-[0_1px_2px_rgba(0,0,0,0.01),inset_0_1px_0_rgba(255,255,255,0.8)] disabled:opacity-50 disabled:cursor-not-allowed";
 
   return (
-    <div className={`space-y-1 text-left ${className}`}>
-      <label htmlFor={name} className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">
+    <div className={`space-y-1.5 text-left ${className}`}>
+      <label htmlFor={name} className="text-[10px] font-bold text-slate-450 uppercase tracking-widest block font-mono">
         {label} {required && <span className="text-rose-500">*</span>}
       </label>
-      <div className="relative flex items-center">
+      <div className="relative flex items-center w-full">
         {icon && (
-          <div className="absolute left-3.5 text-slate-400 pointer-events-none">
+          <div className="absolute left-3.5 text-slate-400 pointer-events-none z-10 shrink-0">
             {icon}
           </div>
         )}
