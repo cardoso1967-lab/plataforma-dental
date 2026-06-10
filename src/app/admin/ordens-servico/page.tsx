@@ -1,6 +1,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { PageHero } from '@/components/ui/PageHero';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { PremiumButton } from '@/components/ui/PremiumButton';
+import { PremiumInput } from '@/components/ui/PremiumInput';
+import { PremiumModal } from '@/components/ui/PremiumModal';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { MetricCard } from '@/components/ui/MetricCard';
 import { 
   Wrench, Plus, User, Calendar, Search, Edit2, 
   Trash2, X, ClipboardList, AlertCircle, Clock, ShieldAlert, RefreshCw
@@ -331,53 +338,57 @@ export default function AdminOrdensServicoPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       {/* Header Premium */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
-        <div className="space-y-1 text-left">
-          <h1 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2.5">
-            <div className="p-2 bg-sky-50 text-brand-clinical rounded-2xl shadow-2xs">
-              <Wrench className="w-6 h-6 animate-pulse" />
-            </div>
-            Ordens de Serviço (OS)
-          </h1>
-          <p className="text-xs text-slate-500 font-medium">
-            Abra ordens de serviço manualmente, designe técnicos responsáveis e agende visitas operacionais.
-          </p>
-        </div>
-        <button
-          onClick={() => openModal()}
-          className="bg-brand-clinical hover:bg-sky-700 hover:shadow-md text-white text-xs font-bold px-4.5 py-2.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm hover:scale-[1.02] active:scale-[0.98] self-start md:self-center"
-        >
-          <Plus className="w-4 h-4" /> Nova OS
-        </button>
-      </div>
+      <PageHero
+        title="Ordens de Serviço (OS)"
+        description="Abra ordens de serviço manualmente, designe técnicos responsáveis e agende visitas operacionais."
+        badge="Central Operacional de Chamados"
+        icon={Wrench}
+        rightElement={
+          <PremiumButton
+            onClick={() => openModal()}
+            icon={<Plus className="w-4 h-4" />}
+            variant="primary"
+          >
+            Nova OS
+          </PremiumButton>
+        }
+      />
 
       {/* Métricas rápidas de OS */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-2xs text-left">
-          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">Total de OS</span>
-          <p className="text-lg font-black text-slate-800">{serviceOrders.length}</p>
-          <span className="text-[9.5px] text-slate-400 font-medium">Histórico acumulado</span>
-        </div>
-        <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-2xs text-left">
-          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">Em Triagem</span>
-          <p className="text-lg font-black text-brand-clinical">{serviceOrders.filter(os => os.status === 'aberta' || os.status === 'em_analise').length}</p>
-          <span className="text-[9.5px] text-slate-400 font-medium">Novos chamados</span>
-        </div>
-        <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-2xs text-left">
-          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">Em Campo</span>
-          <p className="text-lg font-black text-indigo-650">{serviceOrders.filter(os => os.status === 'em_atendimento').length}</p>
-          <span className="text-[9.5px] text-indigo-600 font-semibold">Técnico em visita</span>
-        </div>
-        <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-2xs text-left">
-          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">Sem Técnico</span>
-          <p className="text-lg font-black text-rose-600">{serviceOrders.filter(os => !os.technician_id && os.status !== 'concluida' && os.status !== 'cancelada').length}</p>
-          <span className="text-[9.5px] text-rose-500 font-semibold">Aguardando alocação</span>
-        </div>
-        <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-2xs text-left col-span-2 lg:col-span-1">
-          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">Concluídas</span>
-          <p className="text-lg font-black text-emerald-600">{serviceOrders.filter(os => os.status === 'concluida').length}</p>
-          <span className="text-[9.5px] text-emerald-600 font-bold">Encerradas com sucesso</span>
-        </div>
+        <MetricCard
+          title="Total de OS"
+          value={serviceOrders.length}
+          description="Histórico acumulado"
+          variant="default"
+        />
+        <MetricCard
+          title="Em Triagem"
+          value={serviceOrders.filter(os => os.status === 'aberta' || os.status === 'em_analise').length}
+          description="Novos chamados"
+          variant="default"
+        />
+        <MetricCard
+          title="Em Campo"
+          value={serviceOrders.filter(os => os.status === 'em_atendimento').length}
+          description="Técnico em visita"
+          icon={<Clock className="w-4.5 h-4.5 text-indigo-650" />}
+          variant="indigo"
+        />
+        <MetricCard
+          title="Sem Técnico"
+          value={serviceOrders.filter(os => !os.technician_id && os.status !== 'concluida' && os.status !== 'cancelada').length}
+          description="Aguardando alocação"
+          icon={<AlertCircle className="w-4.5 h-4.5 text-rose-500" />}
+          variant="rose"
+        />
+        <MetricCard
+          title="Concluídas"
+          value={serviceOrders.filter(os => os.status === 'concluida').length}
+          description="Encerradas com sucesso"
+          variant="emerald"
+          className="col-span-2 lg:col-span-1"
+        />
       </div>
 
       {/* Fila de Ordens de Serviço */}
@@ -395,7 +406,7 @@ export default function AdminOrdensServicoPage() {
               placeholder="Buscar por código, cliente, equipamento..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 bg-slate-50/40 transition-all text-slate-700 font-sans"
+              className="w-full pl-9 pr-4 py-2.5 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 bg-slate-50/20 transition-all text-slate-700 font-sans"
             />
           </div>
         </div>
@@ -405,21 +416,13 @@ export default function AdminOrdensServicoPage() {
             Carregando ordens de serviço...
           </div>
         ) : filteredOS.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 px-4 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50/20 shadow-3xs">
-            <div className="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center mb-4 border border-sky-100/50">
-              <ClipboardList className="w-6 h-6" />
-            </div>
-            <h4 className="font-extrabold text-slate-800 text-sm mb-1.5">Fila de Ordens de Serviço Vazia</h4>
-            <p className="text-xs text-slate-400 font-medium max-w-sm leading-relaxed mb-4">
-              Nenhuma ordem de serviço foi registrada ou atende aos filtros atuais. Crie uma nova OS para iniciar as atividades operacionais.
-            </p>
-            <button
-              onClick={() => openModal()}
-              className="bg-brand-clinical hover:bg-sky-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all duration-200 shadow-sm hover:scale-[1.02] active:scale-[0.98]"
-            >
-              Criar Nova OS
-            </button>
-          </div>
+          <EmptyState
+            title="Fila de Ordens de Serviço Vazia"
+            description="Nenhuma ordem de serviço foi registrada ou atende aos filtros atuais. Crie uma nova OS para iniciar as atividades operacionais."
+            icon={<ClipboardList className="w-6 h-6 text-sky-600" />}
+            actionLabel="Criar Nova OS"
+            onActionClick={() => openModal()}
+          />
         ) : (
           <>
             {/* Tabela para Desktop */}
@@ -597,173 +600,136 @@ export default function AdminOrdensServicoPage() {
       </div>
 
       {/* Modal OS */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 transition-all">
-          <div className="bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-slate-100 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <h3 className="font-extrabold text-sm text-brand-dark flex items-center gap-1.5">
-                <Wrench className="w-5 h-5 text-brand-clinical animate-pulse" />
-                {editingOS ? 'Editar Ordem de Serviço' : 'Nova Ordem de Serviço'}
-              </h3>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+      <PremiumModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={editingOS ? 'Editar Ordem de Serviço' : 'Nova Ordem de Serviço'}
+        size="lg"
+      >
+        <form onSubmit={handleSave} className="space-y-4 text-left">
+          {/* Cliente */}
+          <PremiumInput
+            label="Cliente"
+            name="customer_id"
+            as="select"
+            required
+            value={formOS.customer_id}
+            onChange={(e) => setFormOS({ ...formOS, customer_id: e.target.value, equipment_id: '' })}
+            placeholder="Selecione um cliente..."
+            options={customers.map(c => ({ value: c.id, label: c.company_name }))}
+          />
 
-            <form onSubmit={handleSave} className="p-6 space-y-4 text-left">
-              {/* Cliente */}
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Cliente *</label>
-                <select
-                  required
-                  value={formOS.customer_id}
-                  onChange={(e) => setFormOS({ ...formOS, customer_id: e.target.value, equipment_id: '' })}
-                  className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 bg-white"
-                >
-                  <option value="">Selecione um cliente...</option>
-                  {customers.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.company_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+          {/* Equipamento */}
+          <PremiumInput
+            label="Equipamento"
+            name="equipment_id"
+            as="select"
+            disabled={!formOS.customer_id}
+            value={formOS.equipment_id}
+            onChange={(e) => setFormOS({ ...formOS, equipment_id: e.target.value })}
+            placeholder={!formOS.customer_id ? 'Selecione primeiro o cliente...' : 'Nenhum equipamento cadastrado / Sem associação'}
+            options={getFilteredEquipments().map(eq => ({
+              value: eq.id,
+              label: `${eq.name} ${eq.brand ? `(${eq.brand})` : ''} ${eq.model ? `- ${eq.model}` : ''}`
+            }))}
+          />
 
-              {/* Equipamento */}
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Equipamento</label>
-                <select
-                  disabled={!formOS.customer_id}
-                  value={formOS.equipment_id}
-                  onChange={(e) => setFormOS({ ...formOS, equipment_id: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 bg-white disabled:bg-slate-50 disabled:text-slate-400"
-                >
-                  <option value="">
-                    {!formOS.customer_id 
-                      ? 'Selecione primeiro o cliente...' 
-                      : 'Nenhum equipamento cadastrado / Sem associação'}
-                  </option>
-                  {getFilteredEquipments().map((eq) => (
-                    <option key={eq.id} value={eq.id}>
-                      {eq.name} {eq.brand ? `(${eq.brand})` : ''} {eq.model ? `- ${eq.model}` : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
+          {/* Técnico */}
+          <PremiumInput
+            label="Técnico Designado (Opcional)"
+            name="technician_id"
+            as="select"
+            value={formOS.technician_id}
+            onChange={(e) => setFormOS({ ...formOS, technician_id: e.target.value })}
+            placeholder="Não atribuído (Aguardando designação)"
+            options={technicians.map(t => ({
+              value: t.id,
+              label: t.profile?.name || 'Técnico sem nome'
+            }))}
+          />
 
-              {/* Técnico */}
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Técnico Designado (Opcional)</label>
-                <select
-                  value={formOS.technician_id}
-                  onChange={(e) => setFormOS({ ...formOS, technician_id: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 bg-white"
-                >
-                  <option value="">Não atribuído (Aguardando designação)</option>
-                  {technicians.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.profile?.name || 'Técnico sem nome'}
-                    </option>
-                  ))}
-                </select>
-              </div>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Prioridade */}
+            <PremiumInput
+              label="Prioridade"
+              name="priority"
+              as="select"
+              required
+              value={formOS.priority}
+              onChange={(e) => setFormOS({ ...formOS, priority: e.target.value as ServiceOrder['priority'] })}
+              options={[
+                { value: 'baixa', label: 'Baixa' },
+                { value: 'media', label: 'Média' },
+                { value: 'alta', label: 'Alta' },
+                { value: 'urgente', label: 'Urgente' }
+              ]}
+            />
 
-              <div className="grid grid-cols-2 gap-4">
-                {/* Prioridade */}
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Prioridade *</label>
-                  <select
-                    value={formOS.priority}
-                    onChange={(e) => setFormOS({ ...formOS, priority: e.target.value as ServiceOrder['priority'] })}
-                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 bg-white"
-                  >
-                    <option value="baixa">Baixa</option>
-                    <option value="media">Média</option>
-                    <option value="alta">Alta</option>
-                    <option value="urgente">Urgente</option>
-                  </select>
-                </div>
-
-                {/* Fecha agendada */}
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Data/Hora Agendada</label>
-                  <input
-                    type="datetime-local"
-                    value={formOS.scheduled_date}
-                    onChange={(e) => setFormOS({ ...formOS, scheduled_date: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 font-medium"
-                  />
-                </div>
-              </div>
-
-              {/* Detalhes problema */}
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Descrição do Problema *</label>
-                <textarea
-                  required
-                  value={formOS.description}
-                  onChange={(e) => setFormOS({ ...formOS, description: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 min-h-[70px]"
-                  placeholder="Relato detalhado enviado pelo cliente..."
-                />
-              </div>
-
-              {/* Notas de triagem */}
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Observações de Triagem / Problemas Detectados</label>
-                <textarea
-                  value={formOS.reported_issues}
-                  onChange={(e) => setFormOS({ ...formOS, reported_issues: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 min-h-[60px]"
-                  placeholder="Notas internas do suporte técnico..."
-                />
-              </div>
-
-              {editingOS && (
-                <div className="space-y-1 pt-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">Status Atual</label>
-                  <select
-                    value={formOS.status}
-                    onChange={(e) => setFormOS({ ...formOS, status: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 bg-white font-bold"
-                  >
-                    {Object.entries(statusMap).map(([key, val]) => (
-                      <option key={key} value={key}>
-                        {val.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {/* Botões Ação */}
-              <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 bg-slate-50 -mx-6 -mb-6 p-6 rounded-b-2xl">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="bg-transparent hover:bg-slate-100 text-slate-600 font-bold text-xs px-4 py-2.5 rounded-xl border border-slate-200 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-brand-clinical hover:bg-sky-700 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl transition-all shadow-sm disabled:opacity-50 min-w-[120px]"
-                >
-                  {loading ? (
-                    <span className="flex items-center justify-center gap-1">
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Salvando...
-                    </span>
-                  ) : 'Salvar Ordem de Serviço'}
-                </button>
-              </div>
-            </form>
+            {/* Fecha agendada */}
+            <PremiumInput
+              label="Data/Hora Agendada"
+              name="scheduled_date"
+              type="datetime-local"
+              value={formOS.scheduled_date}
+              onChange={(e) => setFormOS({ ...formOS, scheduled_date: e.target.value })}
+            />
           </div>
-        </div>
-      )}
+
+          {/* Detalhes problema */}
+          <PremiumInput
+            label="Descrição do Problema"
+            name="description"
+            as="textarea"
+            required
+            value={formOS.description}
+            onChange={(e) => setFormOS({ ...formOS, description: e.target.value })}
+            placeholder="Relato detalhado enviado pelo cliente..."
+            rows={2.5}
+          />
+
+          {/* Notas de triagem */}
+          <PremiumInput
+            label="Observações de Triagem / Problemas Detectados"
+            name="reported_issues"
+            as="textarea"
+            value={formOS.reported_issues || ''}
+            onChange={(e) => setFormOS({ ...formOS, reported_issues: e.target.value })}
+            placeholder="Notas internas do suporte técnico..."
+            rows={2}
+          />
+
+          {editingOS && (
+            <PremiumInput
+              label="Status Atual"
+              name="status"
+              as="select"
+              value={formOS.status}
+              onChange={(e) => setFormOS({ ...formOS, status: e.target.value })}
+              options={Object.entries(statusMap).map(([key, val]) => ({
+                value: key,
+                label: val.label
+              }))}
+            />
+          )}
+
+          {/* Botões Ação */}
+          <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 bg-slate-50 -mx-6 -mb-6 p-6 rounded-b-3xl">
+            <PremiumButton
+              variant="outline"
+              onClick={() => setIsModalOpen(false)}
+            >
+              Cancelar
+            </PremiumButton>
+            <PremiumButton
+              type="submit"
+              loading={loading}
+              variant="primary"
+            >
+              Salvar Ordem de Serviço
+            </PremiumButton>
+          </div>
+        </form>
+      </PremiumModal>
     </div>
   );
 }

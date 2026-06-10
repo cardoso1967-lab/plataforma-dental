@@ -9,6 +9,15 @@ import {
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 
+import { PageHero } from '@/components/ui/PageHero';
+import { KanbanColumn } from '@/components/ui/KanbanColumn';
+import { KanbanCard } from '@/components/ui/KanbanCard';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { PremiumModal } from '@/components/ui/PremiumModal';
+import { PremiumInput } from '@/components/ui/PremiumInput';
+import { PremiumButton } from '@/components/ui/PremiumButton';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+
 interface Customer {
   id: string;
   company_name: string;
@@ -402,52 +411,38 @@ export default function AdminAgendaPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       {/* Header y Alternador Premium */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 border-b border-slate-100 pb-5">
-        <div className="space-y-1 text-left">
-          <h1 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2.5">
-            <div className="p-2 bg-sky-50 text-brand-clinical rounded-2xl shadow-2xs">
-              <Calendar className="w-6 h-6" />
-            </div>
-            Agenda Operativa
-          </h1>
-          <p className="text-xs text-slate-500 font-medium">
-            Acompanhe o status dos atendimentos em tempo real. Arraste os chamados ou filtre a lista.
-          </p>
-        </div>
-
-        {/* Switch de vistas premium */}
-        <div className="flex items-center gap-2 bg-slate-100/80 p-1.5 rounded-2xl self-start md:self-auto border border-slate-200/50 shadow-xs">
-          <button
-            onClick={() => setViewMode('kanban')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 ${
-              viewMode === 'kanban' 
-                ? 'bg-white text-slate-900 shadow-xs' 
-                : 'text-slate-500 hover:text-slate-900'
-            }`}
-          >
-            <Grid className="w-4 h-4" />
-            <span>Kanban</span>
-          </button>
-          <button
-            onClick={() => setViewMode('list')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 ${
-              viewMode === 'list' 
-                ? 'bg-white text-slate-900 shadow-xs' 
-                : 'text-slate-500 hover:text-slate-900'
-            }`}
-          >
-            <List className="w-4 h-4" />
-            <span>Lista</span>
-          </button>
-          <button
-            disabled
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-400 bg-transparent border-none cursor-not-allowed"
-          >
-            <Calendar className="w-4 h-4 text-slate-305" />
-            <span>Calendário <span className="text-[7px] px-1.5 py-0.5 bg-slate-200 text-slate-500 rounded font-black uppercase tracking-widest">Breve</span></span>
-          </button>
-        </div>
-      </div>
+      <PageHero
+        title="Agenda Operativa"
+        description="Acompanhe o status dos atendimentos em tempo real. Arraste os chamados para atualizar o status ou filtre a lista completa."
+        badge="Operacional"
+        icon={Calendar}
+        rightElement={
+          <div className="flex items-center gap-2 bg-slate-800/80 p-1.5 rounded-2xl border border-slate-700/50 shadow-xs">
+            <button
+              onClick={() => setViewMode('kanban')}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 ${
+                viewMode === 'kanban' 
+                  ? 'bg-slate-900 text-white shadow-xs' 
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Grid className="w-4 h-4" />
+              <span>Kanban</span>
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 ${
+                viewMode === 'list' 
+                  ? 'bg-slate-900 text-white shadow-xs' 
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <List className="w-4 h-4" />
+              <span>Lista</span>
+            </button>
+          </div>
+        }
+      />
 
       {loading ? (
         <div className="text-center py-20 text-slate-400 font-medium text-xs">
@@ -464,150 +459,61 @@ export default function AdminAgendaPage() {
                   const isOver = draggedOverCol === statusCol.id;
 
                   return (
-                    <div
+                    <KanbanColumn
                       key={statusCol.id}
+                      id={statusCol.id}
+                      label={statusCol.label}
+                      badgeCount={ordersInCol.length}
+                      colorStyles={statusCol.color}
+                      isOver={isOver}
                       onDragOver={(e) => handleDragOver(e, statusCol.id)}
                       onDragLeave={() => setDraggedOverCol(null)}
                       onDrop={(e) => handleDrop(e, statusCol.id)}
-                      className={`flex-1 min-w-[230px] bg-slate-50/50 border border-slate-100 rounded-2xl p-4.5 space-y-4 transition-all duration-300 ${
-                        isOver ? 'bg-sky-50/30 border-2 border-dashed border-brand-clinical scale-[1.01] shadow-sm' : 'shadow-xs'
-                      }`}
                     >
-                      {/* Column Header */}
-                      <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                        <span className="font-extrabold text-xs text-slate-800 leading-tight tracking-wide">{statusCol.label}</span>
-                        <span className={`text-[9.5px] font-black px-2.5 py-0.5 rounded-full border ${statusCol.color} shadow-3xs`}>
-                          {ordersInCol.length}
-                        </span>
-                      </div>
-
-                      {/* Column Cards */}
-                      <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-0.5 no-scrollbar min-h-[200px] transition-all duration-300">
-                        {ordersInCol.map((os) => {
-                          const initials = os.customer?.company_name.substring(0, 2).toUpperCase() || 'OS';
-                          const colors = [
-                            'bg-sky-50 text-brand-clinical border-sky-100',
-                            'bg-emerald-50 text-emerald-600 border-emerald-100',
-                            'bg-indigo-50 text-indigo-600 border-indigo-100',
-                            'bg-purple-50 text-purple-600 border-purple-100',
-                            'bg-amber-50 text-amber-600 border-amber-100',
-                          ];
-                          const colorIndex = initials.charCodeAt(0) % colors.length;
-                          const initialsColor = colors[colorIndex];
-
-                          return (
-                            <div
-                              key={os.id}
-                              draggable
-                              onDragStart={(e) => handleDragStart(e, os.id)}
-                              className="bg-white rounded-2xl p-4 border border-slate-100 hover:border-slate-200 hover:shadow-md transition-all duration-300 hover:scale-[1.015] cursor-grab active:cursor-grabbing space-y-3.5 shadow-2xs text-left"
-                            >
-                              {/* Card Header */}
-                              <div className="flex justify-between items-start gap-1">
-                                <span className="text-[9px] font-mono font-black text-brand-clinical bg-sky-50 px-2 py-0.5 rounded-lg border border-sky-100/10">
-                                  #{os.id.substring(0, 6).toUpperCase()}
-                                </span>
-                                <span className={`text-[8px] font-black px-2 py-0.5 rounded-md border uppercase tracking-wider ${
-                                  priorityMap[os.priority]?.class || 'bg-slate-100'
-                                }`}>
-                                  {priorityMap[os.priority]?.label || os.priority}
-                                </span>
-                              </div>
-
-                              {/* Client & Equipment info */}
-                              <div className="space-y-1.5">
-                                <div className="flex items-center gap-2">
-                                  <div className={`w-6 h-6 rounded-lg border flex items-center justify-center font-extrabold text-[8.5px] ${initialsColor} flex-shrink-0`}>
-                                    {initials}
-                                  </div>
-                                  <h4 className="font-extrabold text-xs text-slate-800 line-clamp-1 leading-snug">
-                                    {os.customer?.company_name}
-                                  </h4>
-                                </div>
-                                {os.equipment ? (
-                                  <p className="text-[10px] font-semibold text-slate-500 flex items-center gap-1.5">
-                                    <Wrench className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                                    <span className="line-clamp-1">{os.equipment.name}</span>
-                                  </p>
-                                ) : (
-                                  <span className="text-[9px] text-slate-400 italic font-semibold pl-8 block">Sem equipamento registrado</span>
-                                )}
-                              </div>
-
-                              {/* Técnico y Fecha */}
-                              <div className="pt-3 border-t border-slate-50 space-y-2 text-[10px] text-slate-600 font-semibold leading-relaxed">
-                                <div className="flex items-center gap-1.5">
-                                  {os.technician?.profile ? (
-                                    <>
-                                      <div className="w-5 h-5 bg-sky-100 text-brand-clinical rounded-full flex items-center justify-center text-[8.5px] font-black">
-                                        {getInitials(os.technician.profile.name)}
-                                      </div>
-                                      <span className="line-clamp-1 text-slate-700">
-                                        {os.technician.profile.name}
-                                      </span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <div className="w-5 h-5 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center">
-                                        <User className="w-3 h-3 text-slate-350" />
-                                      </div>
-                                      <span className="text-slate-405 italic">Não designado</span>
-                                    </>
-                                  )}
-                                </div>
-                                
-                                {os.scheduled_date && (
-                                  <div className="flex items-center gap-1.5 text-[9px] text-slate-400 font-medium">
-                                    <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                    <span>{new Date(os.scheduled_date).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</span>
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Acciones móviles */}
-                              <div className="flex flex-wrap gap-1.5 pt-3 border-t border-slate-50 md:hidden justify-between">
-                                <button
-                                  onClick={() => openQuickAction(os, 'status')}
-                                  className="text-[8.5px] font-black px-2 py-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-750 transition-colors border border-slate-200/40"
-                                >
-                                  Status
-                                </button>
-                                <button
-                                  onClick={() => openQuickAction(os, 'tech')}
-                                  className="text-[8.5px] font-black px-2 py-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-750 transition-colors border border-slate-200/40"
-                                >
-                                  Técnico
-                                </button>
-                                <button
-                                  onClick={() => openQuickAction(os, 'date')}
-                                  className="text-[8.5px] font-black px-2 py-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-750 transition-colors border border-slate-200/40"
-                                >
-                                  Agendar
-                                </button>
-                              </div>
-
-                              {/* Botón Detalles */}
+                      {ordersInCol.map((os) => (
+                        <KanbanCard
+                          key={os.id}
+                          id={os.id}
+                          priority={os.priority}
+                          customerName={os.customer?.company_name || 'OS'}
+                          equipmentName={os.equipment?.name}
+                          technicianName={os.technician?.profile?.name}
+                          scheduledDate={os.scheduled_date ? new Date(os.scheduled_date).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : undefined}
+                          onDragStart={(e) => handleDragStart(e, os.id)}
+                          onDetailClick={() => setSelectedOS(os)}
+                          quickActions={
+                            <>
                               <button
-                                onClick={() => setSelectedOS(os)}
-                                className="w-full text-center text-[9.5px] font-extrabold text-slate-500 hover:text-brand-clinical bg-slate-50 hover:bg-sky-50/50 py-2 rounded-xl transition-colors duration-300 mt-1.5 border border-slate-100/50"
+                                onClick={() => openQuickAction(os, 'status')}
+                                className="text-[8.5px] font-black px-2 py-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-755 transition-colors border border-slate-200/40"
                               >
-                                Ver detalhes
+                                Status
                               </button>
-                            </div>
-                          );
-                        })}
+                              <button
+                                onClick={() => openQuickAction(os, 'tech')}
+                                className="text-[8.5px] font-black px-2 py-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-755 transition-colors border border-slate-200/40"
+                              >
+                                Técnico
+                              </button>
+                              <button
+                                onClick={() => openQuickAction(os, 'date')}
+                                className="text-[8.5px] font-black px-2 py-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-755 transition-colors border border-slate-200/40"
+                              >
+                                Agendar
+                              </button>
+                            </>
+                          }
+                        />
+                      ))}
 
-                        {ordersInCol.length === 0 && (
-                          <div className="flex flex-col items-center justify-center py-10 px-3 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50/20 shadow-3xs min-h-[160px]">
-                            <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-400 flex items-center justify-center mb-2">
-                              <ClipboardList className="w-4 h-4" />
-                            </div>
-                            <span className="text-[9.5px] text-slate-400 font-bold leading-normal">Sem chamados</span>
-                            <span className="text-[8.5px] text-slate-400 font-medium max-w-[150px] leading-normal mt-0.5">Arraste chamados aqui</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                      {ordersInCol.length === 0 && (
+                        <EmptyState
+                          title="Sem chamados"
+                          description="Arraste chamados aqui"
+                          icon={<ClipboardList className="w-5 h-5" />}
+                        />
+                      )}
+                    </KanbanColumn>
                   );
                 })}
               </div>
@@ -867,231 +773,197 @@ export default function AdminAgendaPage() {
           )}
         </>
       )}
-
-      {/* MODAL DETALHES COMPLETO */}
-      {selectedOS && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <div className="space-y-1 text-left">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-sky-100 text-brand-clinical rounded-lg">
-                    OS #{selectedOS.id.toUpperCase()}
-                  </span>
-                  <span className={`text-[9.5px] font-bold px-2.5 py-0.5 rounded-full ${
-                    statusColColorMap(selectedOS.status)
-                  }`}>
-                    {statusMap[selectedOS.status]?.label || selectedOS.status}
-                  </span>
-                </div>
-                <h3 className="font-extrabold text-sm text-brand-dark leading-tight">
-                  {selectedOS.customer?.company_name}
-                </h3>
-              </div>
-              <button
-                onClick={() => setSelectedOS(null)}
-                className="p-1 rounded-md text-slate-400 hover:bg-slate-200"
-              >
-                <X className="w-5 h-5" />
-              </button>
+      <PremiumModal
+        isOpen={!!selectedOS}
+        onClose={() => setSelectedOS(null)}
+        title={selectedOS ? `OS #${selectedOS.id.substring(0, 8).toUpperCase()}` : ''}
+        size="lg"
+      >
+        {selectedOS && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-2">
+              <StatusBadge
+                label={statusMap[selectedOS.status]?.label || selectedOS.status}
+                type={selectedOS.status === 'concluida' ? 'success' : selectedOS.status === 'cancelada' ? 'error' : 'info'}
+              />
+              <h3 className="font-extrabold text-sm text-slate-800 leading-tight">
+                {selectedOS.customer?.company_name}
+              </h3>
             </div>
 
-            <div className="p-6 space-y-6 flex-1 overflow-y-auto">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pb-6 border-b border-slate-100">
-                <div className="space-y-3 text-left">
-                  <h4 className="font-bold text-xs text-brand-clinical uppercase tracking-wider flex items-center gap-1">
-                    <FileText className="w-4 h-4" /> Detalhes do Chamado
-                  </h4>
-                  <div className="space-y-2 text-[11px] font-semibold text-slate-600">
-                    <p><span className="text-slate-400 font-medium">Equipamento:</span> {selectedOS.equipment ? `${selectedOS.equipment.name} (${selectedOS.equipment.brand || ''} ${selectedOS.equipment.model || ''})` : 'Sem equipamento'}</p>
-                    <p><span className="text-slate-400 font-medium">Prioridade:</span> <span className={`px-2 py-0.5 rounded-md ${priorityMap[selectedOS.priority]?.class}`}>{priorityMap[selectedOS.priority]?.label}</span></p>
-                    <p><span className="text-slate-400 font-medium">Data Abertura:</span> {new Date(selectedOS.created_at).toLocaleDateString('pt-BR')} {new Date(selectedOS.created_at).toLocaleTimeString('pt-BR')}</p>
-                    <p><span className="text-slate-400 font-medium">Agendamento Visita:</span> {selectedOS.scheduled_date ? new Date(selectedOS.scheduled_date).toLocaleString('pt-BR') : 'Não agendada'}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-3 text-left">
-                  <h4 className="font-bold text-xs text-brand-clinical uppercase tracking-wider flex items-center gap-1">
-                    <User className="w-4 h-4" /> Responsáveis e Contato
-                  </h4>
-                  <div className="space-y-2 text-[11px] font-semibold text-slate-600">
-                    <p><span className="text-slate-400 font-medium">Técnico Designado:</span> {selectedOS.technician?.profile?.name || 'Aguardando Técnico'}</p>
-                    <p><span className="text-slate-400 font-medium">Cidade/UF Cliente:</span> {selectedOS.customer?.address_city ? `${selectedOS.customer.address_city} - ${selectedOS.customer.address_state || ''}` : '—'}</p>
-                    <p><span className="text-slate-400 font-medium">Nome Fantasia:</span> {selectedOS.customer?.trade_name || '—'}</p>
-                  </div>
-                </div>
-
-                <div className="sm:col-span-2 space-y-2 text-left">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase block">Descrição do Problema</span>
-                  <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">
-                    {selectedOS.description}
-                  </div>
-                </div>
-
-                {selectedOS.reported_issues && (
-                  <div className="sm:col-span-2 space-y-2 text-left">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase block">Observações de Triagem</span>
-                    <div className="bg-amber-50/20 border border-amber-100/60 rounded-2xl p-4 text-xs text-amber-900/80 leading-relaxed whitespace-pre-wrap">
-                      {selectedOS.reported_issues}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Histórico de Alterações */}
-              <div className="space-y-4">
-                <h4 className="font-bold text-xs text-brand-dark uppercase tracking-wider flex items-center gap-1.5">
-                  <RefreshCw className="w-4 h-4 text-brand-clinical" />
-                  Histórico de Status da OS
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pb-6 border-b border-slate-100">
+              <div className="space-y-3 text-left">
+                <h4 className="font-bold text-xs text-sky-600 uppercase tracking-wider flex items-center gap-1">
+                  <FileText className="w-4 h-4" /> Detalhes do Chamado
                 </h4>
-
-                {historyLoading ? (
-                  <div className="text-xs text-slate-400">Carregando histórico...</div>
-                ) : statusHistory.length === 0 ? (
-                  <div className="text-xs text-slate-400 italic">Nenhum histórico registrado para esta ordem.</div>
-                ) : (
-                  <div className="relative border-l-2 border-slate-100 pl-4 space-y-5 ml-1.5 py-1">
-                    {statusHistory.map((hist) => (
-                      <div key={hist.id} className="relative space-y-1.5 text-left">
-                        {/* Dot */}
-                        <div className="absolute -left-[23px] top-1.5 bg-white border-2 border-brand-clinical w-2.5 h-2.5 rounded-full" />
-                        
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                          <span className={`text-[9px] font-bold px-2.5 py-0.5 rounded-full self-start ${
-                            statusColColorMap(hist.status)
-                          }`}>
-                            {statusMap[hist.status]?.label || hist.status}
-                          </span>
-                          <span className="text-[9px] text-slate-400 font-medium">
-                            {new Date(hist.created_at).toLocaleString('pt-BR')}
-                          </span>
-                        </div>
-
-                        <p className="text-[10.5px] text-slate-600 font-semibold leading-relaxed">
-                          {hist.notes || 'Status alterado.'}
-                        </p>
-                        
-                        <p className="text-[8px] text-slate-400 font-bold uppercase tracking-wider">
-                          Responsável: {hist.profiles?.name || 'Sistema'}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <div className="space-y-2 text-[11px] font-semibold text-slate-600">
+                  <p><span className="text-slate-400 font-medium">Equipamento:</span> {selectedOS.equipment ? `${selectedOS.equipment.name} (${selectedOS.equipment.brand || ''} ${selectedOS.equipment.model || ''})` : 'Sem equipamento'}</p>
+                  <p><span className="text-slate-400 font-medium">Prioridade:</span> <span className={`px-2 py-0.5 rounded-md ${priorityMap[selectedOS.priority]?.class}`}>{priorityMap[selectedOS.priority]?.label}</span></p>
+                  <p><span className="text-slate-400 font-medium">Data Abertura:</span> {new Date(selectedOS.created_at).toLocaleDateString('pt-BR')} {new Date(selectedOS.created_at).toLocaleTimeString('pt-BR')}</p>
+                  <p><span className="text-slate-400 font-medium">Agendamento Visita:</span> {selectedOS.scheduled_date ? new Date(selectedOS.scheduled_date).toLocaleString('pt-BR') : 'Não agendada'}</p>
+                </div>
               </div>
+
+              <div className="space-y-3 text-left">
+                <h4 className="font-bold text-xs text-sky-600 uppercase tracking-wider flex items-center gap-1">
+                  <User className="w-4 h-4" /> Responsáveis e Contato
+                </h4>
+                <div className="space-y-2 text-[11px] font-semibold text-slate-600">
+                  <p><span className="text-slate-400 font-medium">Técnico Designado:</span> {selectedOS.technician?.profile?.name || 'Aguardando Técnico'}</p>
+                  <p><span className="text-slate-400 font-medium">Cidade/UF Cliente:</span> {selectedOS.customer?.address_city ? `${selectedOS.customer.address_city} - ${selectedOS.customer.address_state || ''}` : '—'}</p>
+                  <p><span className="text-slate-400 font-medium">Nome Fantasia:</span> {selectedOS.customer?.trade_name || '—'}</p>
+                </div>
+              </div>
+
+              <div className="sm:col-span-2 space-y-2 text-left">
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">Descrição do Problema</span>
+                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">
+                  {selectedOS.description}
+                </div>
+              </div>
+
+              {selectedOS.reported_issues && (
+                <div className="sm:col-span-2 space-y-2 text-left">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase block">Observações de Triagem</span>
+                  <div className="bg-amber-50/20 border border-amber-100/60 rounded-2xl p-4 text-xs text-amber-900/80 leading-relaxed whitespace-pre-wrap">
+                    {selectedOS.reported_issues}
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 bg-slate-50 p-6 rounded-b-2xl">
-              <button
-                type="button"
+            {/* Histórico de Alterações */}
+            <div className="space-y-4">
+              <h4 className="font-bold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                <RefreshCw className="w-4 h-4 text-sky-600" />
+                Histórico de Status da OS
+              </h4>
+
+              {historyLoading ? (
+                <div className="text-xs text-slate-400">Carregando histórico...</div>
+              ) : statusHistory.length === 0 ? (
+                <div className="text-xs text-slate-400 italic">Nenhum histórico registrado para esta ordem.</div>
+              ) : (
+                <div className="relative border-l border-slate-200 pl-4 space-y-5 ml-1.5 py-1">
+                  {statusHistory.map((hist) => (
+                    <div key={hist.id} className="relative space-y-1.5 text-left">
+                      {/* Dot */}
+                      <div className="absolute -left-[21px] top-1.5 bg-white border border-sky-600 w-2 h-2 rounded-full" />
+                      
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                        <StatusBadge
+                          label={statusMap[hist.status]?.label || hist.status}
+                          type={hist.status === 'concluida' ? 'success' : hist.status === 'cancelada' ? 'error' : 'info'}
+                          className="self-start"
+                        />
+                        <span className="text-[9px] text-slate-400 font-medium">
+                          {new Date(hist.created_at).toLocaleString('pt-BR')}
+                        </span>
+                      </div>
+
+                      <p className="text-[10.5px] text-slate-600 font-semibold leading-relaxed">
+                        {hist.notes || 'Status alterado.'}
+                      </p>
+                      
+                      <p className="text-[8.5px] text-slate-400 font-bold uppercase tracking-wider">
+                        Responsável: {hist.profiles?.name || 'Sistema'}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 pt-6 border-t border-slate-100">
+              <PremiumButton
                 onClick={() => setSelectedOS(null)}
-                className="bg-brand-clinical hover:bg-sky-700 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl transition-colors shadow-sm"
+                variant="primary"
               >
                 Fechar Detalhes
-              </button>
+              </PremiumButton>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </PremiumModal>
 
       {/* PANEL MÓVIL DE ACCIONES RÁPIDAS */}
-      {activeQuickOS && quickActionType && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="absolute inset-0 -z-10" onClick={() => { setActiveQuickOS(null); setQuickActionType(null); }} />
-          
-          <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col">
-            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <h3 className="font-extrabold text-xs text-brand-dark uppercase tracking-wider">
-                {quickActionType === 'status' && 'Alterar Status da OS'}
-                {quickActionType === 'tech' && 'Designar Técnico'}
-                {quickActionType === 'date' && 'Agendar Visita'}
-              </h3>
-              <button
-                onClick={() => { setActiveQuickOS(null); setQuickActionType(null); }}
-                className="p-1 rounded-md text-slate-400 hover:bg-slate-200"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+      <PremiumModal
+        isOpen={!!activeQuickOS && !!quickActionType}
+        onClose={() => { setActiveQuickOS(null); setQuickActionType(null); }}
+        title={
+          quickActionType === 'status' ? 'Alterar Status da OS' :
+          quickActionType === 'tech' ? 'Designar Técnico' :
+          quickActionType === 'date' ? 'Agendar Visita' : ''
+        }
+        size="sm"
+      >
+        {activeQuickOS && quickActionType && (
+          <form onSubmit={handleSaveQuickAction} className="space-y-4">
+            <p className="text-[10px] text-slate-500 font-medium">
+              Atualizando OS de <span className="font-bold text-slate-800">{activeQuickOS.customer?.company_name}</span> (OS #{activeQuickOS.id.substring(0, 6).toUpperCase()})
+            </p>
 
-            <form onSubmit={handleSaveQuickAction} className="p-5 space-y-4">
-              <p className="text-[10px] text-slate-500 font-medium">
-                Atualizando OS de <span className="font-bold text-brand-dark">{activeQuickOS.customer?.company_name}</span> (OS #{activeQuickOS.id.substring(0, 6).toUpperCase()})
-              </p>
-
-              {quickActionType === 'status' && (
-                <div className="space-y-3">
-                  <div className="space-y-1 text-left">
-                    <label className="text-[9px] font-bold text-slate-500 uppercase">Novo Status</label>
-                    <select
-                      value={quickForm.status}
-                      onChange={(e) => setQuickForm({ ...quickForm, status: e.target.value })}
-                      className="w-full border border-slate-200 rounded-xl p-2 text-xs focus:outline-none focus:border-brand-clinical bg-white font-bold"
-                    >
-                      {KANBAN_STATUSES.map(s => (
-                        <option key={s.id} value={s.id}>{s.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-1 text-left">
-                    <label className="text-[9px] font-bold text-slate-500 uppercase">Observação / Nota de Status</label>
-                    <textarea
-                      value={quickForm.notes}
-                      onChange={(e) => setQuickForm({ ...quickForm, notes: e.target.value })}
-                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical min-h-[60px]"
-                      placeholder="Motivo da alteração..."
-                    />
-                  </div>
-                </div>
-              )}
-
-              {quickActionType === 'tech' && (
-                <div className="space-y-1 text-left">
-                  <label className="text-[9px] font-bold text-slate-500 uppercase">Técnico Designado</label>
-                  <select
-                    value={quickForm.technician_id}
-                    onChange={(e) => setQuickForm({ ...quickForm, technician_id: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl p-2 text-xs focus:outline-none focus:border-brand-clinical bg-white"
-                  >
-                    <option value="">Não designado (Aguardando)</option>
-                    {technicians.map(t => (
-                      <option key={t.id} value={t.id}>{t.profile?.name}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {quickActionType === 'date' && (
-                <div className="space-y-1 text-left">
-                  <label className="text-[9px] font-bold text-slate-500 uppercase">Data e Hora Programada</label>
-                  <input
-                    type="datetime-local"
-                    value={quickForm.scheduled_date}
-                    onChange={(e) => setQuickForm({ ...quickForm, scheduled_date: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl p-2 text-xs focus:outline-none focus:border-brand-clinical font-medium"
-                  />
-                </div>
-              )}
-
-              <div className="flex gap-2 justify-end pt-4 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => { setActiveQuickOS(null); setQuickActionType(null); }}
-                  className="bg-transparent hover:bg-slate-100 text-slate-600 font-bold text-xs px-3.5 py-2.5 rounded-lg border border-slate-200 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="bg-brand-clinical hover:bg-sky-700 text-white font-bold text-xs px-3.5 py-2.5 rounded-lg transition-colors shadow-xs"
-                >
-                  Confirmar Alteração
-                </button>
+            {quickActionType === 'status' && (
+              <div className="space-y-3">
+                <PremiumInput
+                  label="Novo Status"
+                  name="status"
+                  as="select"
+                  value={quickForm.status}
+                  onChange={(e) => setQuickForm({ ...quickForm, status: e.target.value })}
+                  options={KANBAN_STATUSES.map(s => ({ value: s.id, label: s.label }))}
+                />
+                <PremiumInput
+                  label="Observação / Nota de Status"
+                  name="notes"
+                  as="textarea"
+                  value={quickForm.notes}
+                  onChange={(e) => setQuickForm({ ...quickForm, notes: e.target.value })}
+                  placeholder="Motivo da alteração..."
+                  rows={3}
+                />
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+            )}
+
+            {quickActionType === 'tech' && (
+              <PremiumInput
+                label="Técnico Designado"
+                name="technician_id"
+                as="select"
+                value={quickForm.technician_id}
+                onChange={(e) => setQuickForm({ ...quickForm, technician_id: e.target.value })}
+                placeholder="Não designado (Aguardando)"
+                options={technicians.map(t => ({ value: t.id, label: t.profile?.name || 'Técnico' }))}
+              />
+            )}
+
+            {quickActionType === 'date' && (
+              <PremiumInput
+                label="Data e Hora Programada"
+                name="scheduled_date"
+                type="datetime-local"
+                value={quickForm.scheduled_date}
+                onChange={(e) => setQuickForm({ ...quickForm, scheduled_date: e.target.value })}
+              />
+            )}
+
+            <div className="flex gap-2 justify-end pt-4 border-t border-slate-100">
+              <PremiumButton
+                onClick={() => { setActiveQuickOS(null); setQuickActionType(null); }}
+                variant="outline"
+              >
+                Cancelar
+              </PremiumButton>
+              <PremiumButton
+                type="submit"
+                variant="primary"
+              >
+                Confirmar Alteração
+              </PremiumButton>
+            </div>
+          </form>
+        )}
+      </PremiumModal>
     </div>
   );
 }

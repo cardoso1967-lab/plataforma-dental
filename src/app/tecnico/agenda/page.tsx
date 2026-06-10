@@ -3,11 +3,16 @@
 import React, { useEffect, useState } from 'react';
 import { 
   Calendar, Clock, MapPin, Phone, RefreshCw, 
-  Wrench, ChevronRight, AlertTriangle 
+  Wrench, ChevronRight
 } from 'lucide-react';
 import Link from 'next/link';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
+
+import { PageHero } from '@/components/ui/PageHero';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { PremiumButton } from '@/components/ui/PremiumButton';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 
 export default function TecnicoAgendaPage() {
   const supabase = createSupabaseBrowserClient();
@@ -80,6 +85,16 @@ export default function TecnicoAgendaPage() {
     loadAgendaData();
   }, [profile]);
 
+  const getStatusBadgeType = (status: string) => {
+    switch (status) {
+      case 'em_atendimento': return 'success';
+      case 'concluida': return 'success';
+      case 'aguardando_peca': return 'warning';
+      case 'cancelada': return 'error';
+      default: return 'neutral';
+    }
+  };
+
   const getStatusLabel = (status: string) => {
     const map: Record<string, string> = {
       aberta: 'Solicitação recebida',
@@ -95,19 +110,10 @@ export default function TecnicoAgendaPage() {
     return map[status] || status;
   };
 
-  const getStatusClass = (status: string) => {
-    switch(status) {
-      case 'em_atendimento': return 'bg-sky-100 text-sky-800 border-sky-200 animate-pulse';
-      case 'concluida': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
-      case 'aguardando_peca': return 'bg-orange-100 text-orange-800 border-orange-200';
-      default: return 'bg-blue-50 text-blue-800 border-blue-200';
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-slate-400 font-medium text-xs gap-3">
-        <RefreshCw className="w-8 h-8 text-brand-clinical animate-spin" />
+        <RefreshCw className="w-8 h-8 text-sky-600 animate-spin" />
         Carregando seu roteiro de hoje...
       </div>
     );
@@ -115,7 +121,7 @@ export default function TecnicoAgendaPage() {
 
   if (error) {
     return (
-      <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-800 text-xs font-semibold">
+      <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-800 text-xs font-semibold text-left">
         {error}
       </div>
     );
@@ -123,12 +129,12 @@ export default function TecnicoAgendaPage() {
 
   if (!technician) {
     return (
-      <div className="text-center py-16 px-6 max-w-sm mx-auto bg-white border border-slate-100 rounded-2xl p-6 mt-10 shadow-sm">
+      <div className="text-center py-16 px-6 max-w-sm mx-auto bg-white border border-slate-100 rounded-3xl p-6 mt-10 shadow-sm text-left animate-in fade-in duration-300">
         <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400">
           <Calendar className="w-8 h-8" />
         </div>
-        <h2 className="text-base font-extrabold text-brand-dark">Agenda Restrita</h2>
-        <p className="text-xs text-slate-500 font-medium leading-relaxed mt-2">
+        <h2 className="text-base font-extrabold text-slate-800">Agenda Restrita</h2>
+        <p className="text-xs text-slate-500 font-medium leading-relaxed mt-2 font-sans">
           Sua conta de usuário não possui vinculação operacional de campo ativa.
         </p>
       </div>
@@ -136,59 +142,50 @@ export default function TecnicoAgendaPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-md mx-auto">
+    <div className="space-y-6 max-w-md mx-auto text-left animate-in fade-in duration-300">
       {/* Header */}
-      <div className="space-y-1">
-        <h1 className="text-xl font-extrabold text-brand-dark tracking-tight">
-          Minha Agenda de Hoje
-        </h1>
-        <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-          Roteiro cronológico de visitas e manutenções designadas para o seu dia.
-        </p>
-      </div>
+      <PageHero
+        title="Minha Agenda"
+        description="Roteiro cronológico de visitas e manutenções preventivas designadas para hoje."
+        badge="Agenda"
+        icon={Calendar}
+      />
 
       {/* Roteiro */}
       <div className="space-y-4">
         {todaySchedule.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 px-6 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50/20 shadow-3xs">
-            <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-450 flex items-center justify-center mb-4 border border-slate-200/50">
-              <Calendar className="w-6 h-6 text-slate-400" />
-            </div>
-            <h3 className="font-extrabold text-sm text-slate-800 mb-1">Nenhuma visita hoje</h3>
-            <p className="text-xs text-slate-400 font-medium max-w-xs leading-normal mb-6">
-              Você não possui atendimentos agendados ou visitas na sua rota para a data de hoje.
-            </p>
-            <Link
-              href="/tecnico/servicos"
-              className="inline-flex items-center gap-1.5 bg-brand-clinical hover:bg-sky-700 text-white text-xs font-extrabold px-4.5 py-2.5 rounded-xl shadow-xs transition-colors"
-            >
-              Ver Todas as Minhas OS <ChevronRight className="w-4.5 h-4.5 animate-pulse" />
-            </Link>
-          </div>
+          <EmptyState
+            title="Nenhuma visita hoje"
+            description="Você não possui atendimentos agendados ou visitas na sua rota para a data de hoje."
+            icon={<Calendar className="w-6 h-6 text-sky-650" />}
+            actionLabel="Ver Todas as OS"
+            actionHref="/tecnico/servicos"
+          />
         ) : (
           todaySchedule.map((item) => (
             <div 
               key={item.id}
-              className="bg-white border border-slate-100 rounded-2xl p-4.5 shadow-sm space-y-4 hover:shadow-md transition-shadow text-left"
+              className="bg-white border border-slate-100/80 rounded-3xl p-5 shadow-3xs space-y-4 hover:shadow-sm transition-shadow text-left"
             >
               {/* Header de hora e status */}
               <div className="flex items-center justify-between border-b border-slate-50 pb-2.5">
-                <span className="text-xs font-extrabold text-brand-clinical flex items-center gap-1.5">
-                  <Clock className="w-4 h-4" />
+                <span className="text-xs font-black text-sky-600 flex items-center gap-1.5 leading-none">
+                  <Clock className="w-4 h-4 text-sky-550" />
                   {item.scheduled_date ? new Date(item.scheduled_date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Sem hora'}
                 </span>
-                <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full border uppercase tracking-wider ${getStatusClass(item.status)}`}>
-                  {getStatusLabel(item.status)}
-                </span>
+                <StatusBadge
+                  label={getStatusLabel(item.status)}
+                  type={getStatusBadgeType(item.status)}
+                />
               </div>
 
               {/* Informações da Tarefa */}
-              <div className="space-y-3 text-xs font-semibold text-slate-600">
+              <div className="space-y-3 text-xs font-semibold text-slate-655">
                 <div className="space-y-1">
-                  <span className="text-[9px] font-mono font-bold text-slate-400 block">
+                  <span className="text-[9px] font-mono font-black text-sky-600 block leading-none">
                     OS: #{item.id.slice(0, 8).toUpperCase()}
                   </span>
-                  <h4 className="font-extrabold text-brand-dark text-base leading-snug">
+                  <h4 className="font-extrabold text-slate-800 text-base leading-snug">
                     {item.equipment?.name || 'Equipamento Geral'}
                   </h4>
                   {item.description && (
@@ -199,14 +196,14 @@ export default function TecnicoAgendaPage() {
                 </div>
                 
                 {/* Dados do Cliente e Endereço */}
-                <div className="space-y-2 border-t border-slate-50 pt-2.5 text-[11px] pt-1">
-                  <p className="text-slate-800">
-                    Cliente: <strong className="text-brand-dark">{item.customer?.company_name}</strong>
+                <div className="space-y-2 border-t border-slate-50 pt-2.5 text-[11px]">
+                  <p className="text-slate-700">
+                    Cliente: <strong className="text-slate-800">{item.customer?.company_name}</strong>
                   </p>
                   
                   {item.customer && (
                     <div className="space-y-1.5">
-                      <p className="flex items-start gap-1.5 text-slate-500 font-medium">
+                      <p className="flex items-start gap-1.5 text-slate-400 font-medium leading-relaxed">
                         <MapPin className="w-3.5 h-3.5 text-slate-400 flex-shrink-0 mt-0.5" />
                         <span>
                           {item.customer.address_street}, {item.customer.address_number}
@@ -219,7 +216,7 @@ export default function TecnicoAgendaPage() {
                       {item.customer.phone && (
                         <p className="flex items-center gap-1.5 text-slate-500 font-semibold">
                           <Phone className="w-3.5 h-3.5 text-slate-400" />
-                          <a href={`tel:${item.customer.phone}`} className="text-brand-clinical font-bold hover:underline">
+                          <a href={`tel:${item.customer.phone}`} className="text-sky-650 font-extrabold hover:underline">
                             {item.customer.phone}
                           </a>
                         </p>
@@ -229,11 +226,14 @@ export default function TecnicoAgendaPage() {
                 </div>
 
                 {/* Botão para iniciar atendimento */}
-                <Link
-                  href={`/tecnico/servicos`}
-                  className="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-brand-clinical font-extrabold text-xs py-2.5 rounded-xl flex items-center justify-center gap-1 transition-colors cursor-pointer"
-                >
-                  <Wrench className="w-3.5 h-3.5" /> Atualizar Atendimento
+                <Link href={`/tecnico/servicos`} className="block w-full">
+                  <PremiumButton
+                    variant="outline"
+                    className="w-full"
+                    icon={<Wrench className="w-3.5 h-3.5" />}
+                  >
+                    Atualizar Atendimento
+                  </PremiumButton>
                 </Link>
               </div>
             </div>

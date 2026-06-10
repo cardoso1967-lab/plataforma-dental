@@ -1,14 +1,19 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { StatusCard } from '@/components/ui/StatusCard';
 import { 
   Calendar, CheckCircle2, Clock, Wrench, User, MapPin, 
-  Phone, AlertTriangle, ChevronRight, Check, X, RefreshCw 
+  Phone, AlertTriangle, ChevronRight, Check, RefreshCw 
 } from 'lucide-react';
 import Link from 'next/link';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
+
+import { PageHero } from '@/components/ui/PageHero';
+import { MetricCard } from '@/components/ui/MetricCard';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { PremiumButton } from '@/components/ui/PremiumButton';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 
 export default function TecnicoDashboardPage() {
   const supabase = createSupabaseBrowserClient();
@@ -138,7 +143,7 @@ export default function TecnicoDashboardPage() {
           service_order_id: activeOS.id,
           status: newStatus,
           changed_by: profile.id,
-          notes: `Status atualizado em campo pelo técnico para: ${newStatus}.`
+          notes: `Status atualizado em campo pelo técnico para: ${getStatusLabel(newStatus)}.`
         });
 
       if (histError) console.error('Erro ao salvar histórico de status:', histError.message);
@@ -151,12 +156,22 @@ export default function TecnicoDashboardPage() {
     }
   };
 
-  const getPriorityBadgeClass = (priority: string) => {
-    switch(priority) {
-      case 'urgente': return 'bg-rose-500 text-white border-rose-600 animate-pulse';
-      case 'alta': return 'bg-orange-50 text-orange-700 border-orange-200';
-      case 'media': return 'bg-blue-50 text-blue-700 border-blue-200';
-      default: return 'bg-slate-100 text-slate-700 border-slate-200';
+  const getPriorityBadgeType = (priority: string) => {
+    switch (priority) {
+      case 'baixa': return 'neutral';
+      case 'media': return 'info';
+      case 'alta': return 'warning';
+      case 'urgente': return 'error';
+      default: return 'neutral';
+    }
+  };
+
+  const getStatusBadgeType = (status: string) => {
+    switch (status) {
+      case 'em_atendimento': return 'success';
+      case 'concluida': return 'success';
+      case 'cancelada': return 'error';
+      default: return 'neutral';
     }
   };
 
@@ -178,7 +193,7 @@ export default function TecnicoDashboardPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-slate-400 font-medium text-xs gap-3">
-        <RefreshCw className="w-8 h-8 text-brand-clinical animate-spin" />
+        <RefreshCw className="w-8 h-8 text-sky-600 animate-spin" />
         Carregando painel operacional de campo...
       </div>
     );
@@ -186,7 +201,7 @@ export default function TecnicoDashboardPage() {
 
   if (error) {
     return (
-      <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-800 text-xs font-semibold">
+      <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-800 text-xs font-semibold text-left">
         {error}
       </div>
     );
@@ -198,7 +213,7 @@ export default function TecnicoDashboardPage() {
         <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400">
           <User className="w-8 h-8" />
         </div>
-        <h2 className="text-base font-extrabold text-brand-dark">Acesso Restrito</h2>
+        <h2 className="text-base font-extrabold text-slate-800">Acesso Restrito</h2>
         <p className="text-xs text-slate-500 font-medium leading-relaxed">
           Seu perfil de usuário não está vinculado a um cadastro de técnico ativo no sistema. 
           Entre em contato com o administrador para habilitar seu acesso.
@@ -208,52 +223,50 @@ export default function TecnicoDashboardPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-md mx-auto">
+    <div className="space-y-6 max-w-md mx-auto text-left animate-in fade-in duration-300">
       {/* Welcome Block */}
-      <div className="space-y-1">
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Painel do Técnico</span>
-        <h1 className="text-2xl font-extrabold text-brand-dark tracking-tight">
-          Olá, {profile?.name || 'Técnico'}
-        </h1>
-        <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-          Acesse sua rota de visitas e gerencie seus atendimentos de hoje.
-        </p>
-      </div>
+      <PageHero
+        title={`Olá, ${profile?.name || 'Técnico'}`}
+        description="Acesse sua rota de visitas e gerencie seus atendimentos odontológicos de hoje."
+        badge="Painel do Técnico"
+        icon={Calendar}
+      />
 
       {/* OS ativa designada */}
       {activeOS ? (
         <div className="space-y-3">
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+          <h3 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest pl-1 font-sans flex items-center gap-1.5">
             <Clock className={`w-3.5 h-3.5 ${activeOS.status === 'em_atendimento' ? 'text-rose-500 animate-pulse' : 'text-slate-400'}`} />
             {activeOS.status === 'em_atendimento' ? 'Serviço Ativo (Em andamento)' : 'Próximo Serviço da Lista'}
           </h3>
           
-          <div className={`bg-white border rounded-2xl p-5 shadow-sm space-y-4 transition-all relative overflow-hidden ${
-            activeOS.priority === 'urgente' ? 'border-rose-200 ring-2 ring-rose-50' : 'border-slate-100'
+          <div className={`bg-white border rounded-3xl p-5 shadow-3xs space-y-4 transition-all relative overflow-hidden ${
+            activeOS.priority === 'urgente' ? 'border-rose-250 ring-4 ring-rose-50' : 'border-slate-100'
           }`}>
             {/* Status y Prioridad */}
             <div className="flex items-center justify-between">
-              <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider border ${
-                activeOS.status === 'em_atendimento' ? 'bg-sky-500 text-white border-sky-600' : 'bg-slate-100 text-slate-700 border-slate-200'
-              }`}>
-                {getStatusLabel(activeOS.status)}
-              </span>
+              <StatusBadge
+                label={getStatusLabel(activeOS.status)}
+                type={getStatusBadgeType(activeOS.status)}
+              />
 
-              <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${getPriorityBadgeClass(activeOS.priority)}`}>
-                {activeOS.priority.toUpperCase()}
-              </span>
+              <StatusBadge
+                label={activeOS.priority}
+                type={getPriorityBadgeType(activeOS.priority)}
+                className={activeOS.priority === 'urgente' ? 'animate-pulse' : ''}
+              />
             </div>
 
             {/* Equipamiento y Cliente */}
             <div className="space-y-2">
-              <span className="text-[10px] font-mono font-bold text-brand-clinical block">
+              <span className="text-[10px] font-mono font-black text-sky-600 block leading-none">
                 OS: #{activeOS.id.slice(0, 8).toUpperCase()}
               </span>
-              <h4 className="font-extrabold text-brand-dark text-lg leading-snug">
+              <h4 className="font-extrabold text-slate-800 text-base leading-snug">
                 {activeOS.equipment?.name || 'Equipamento Geral'}
               </h4>
               {activeOS.equipment?.model && (
-                <p className="text-xs text-slate-400 font-medium">
+                <p className="text-[10px] text-slate-400 font-bold">
                   {activeOS.equipment.brand} • {activeOS.equipment.model} {activeOS.equipment.serial_number ? `(S/N: ${activeOS.equipment.serial_number})` : ''}
                 </p>
               )}
@@ -266,7 +279,7 @@ export default function TecnicoDashboardPage() {
 
             {/* Dirección */}
             {activeOS.customer && (
-              <div className="bg-slate-50 rounded-xl p-3 space-y-1.5 text-xs font-semibold text-slate-600">
+              <div className="bg-slate-50/50 rounded-2xl p-4 space-y-1.5 text-xs font-semibold text-slate-600 border border-slate-100/50">
                 <div className="flex items-start gap-2">
                   <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
                   <span>
@@ -281,7 +294,7 @@ export default function TecnicoDashboardPage() {
                 {activeOS.customer.phone && (
                   <div className="flex items-center gap-2 border-t border-slate-100 pt-1.5 mt-1.5">
                     <Phone className="w-4 h-4 text-slate-400" />
-                    <a href={`tel:${activeOS.customer.phone}`} className="text-brand-clinical font-bold hover:underline">
+                    <a href={`tel:${activeOS.customer.phone}`} className="text-sky-650 font-extrabold hover:underline">
                       {activeOS.customer.phone}
                     </a>
                   </div>
@@ -291,8 +304,8 @@ export default function TecnicoDashboardPage() {
 
             {/* Relato del problema */}
             <div className="space-y-1">
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Descrição do Chamado:</span>
-              <p className="text-xs text-slate-500 font-medium leading-relaxed bg-slate-50/50 p-2.5 rounded-lg border border-slate-100/50 italic">
+              <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wide">Descrição do Chamado:</span>
+              <p className="text-xs text-slate-500 font-medium leading-relaxed bg-slate-50/20 p-2.5 rounded-xl border border-slate-100/50 italic">
                 "{activeOS.description}"
               </p>
             </div>
@@ -300,35 +313,40 @@ export default function TecnicoDashboardPage() {
             {/* Botones de acción táctiles grandes */}
             <div className="pt-2 border-t border-slate-100/80 flex flex-col gap-2">
               {activeOS.status !== 'em_atendimento' ? (
-                <button
-                  disabled={updatingStatus}
+                <PremiumButton
+                  loading={updatingStatus}
                   onClick={() => handleUpdateActiveStatus('em_atendimento')}
-                  className="w-full bg-brand-clinical hover:bg-sky-700 text-white font-extrabold text-sm py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md hover:scale-[1.01] cursor-pointer"
+                  variant="primary"
+                  className="w-full py-3 text-sm"
+                  icon={<Wrench className="w-4 h-4" />}
                 >
-                  {updatingStatus ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Wrench className="w-4 h-4" />}
                   Iniciar Atendimento Local
-                </button>
+                </PremiumButton>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
-                  <button
-                    disabled={updatingStatus}
+                  <PremiumButton
+                    loading={updatingStatus}
                     onClick={() => handleUpdateActiveStatus('concluida')}
-                    className="bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-sm hover:scale-[1.01] cursor-pointer"
+                    variant="emerald"
+                    className="py-3 text-xs"
+                    icon={<Check className="w-4 h-4" />}
                   >
-                    <Check className="w-4 h-4" /> Concluir Serviço
-                  </button>
-                  <button
-                    disabled={updatingStatus}
+                    Concluir Serviço
+                  </PremiumButton>
+                  <PremiumButton
+                    loading={updatingStatus}
                     onClick={() => handleUpdateActiveStatus('aguardando_peca')}
-                    className="bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-sm hover:scale-[1.01] cursor-pointer"
+                    variant="danger"
+                    className="py-3 text-xs bg-orange-500 hover:bg-orange-600 border-none"
+                    icon={<AlertTriangle className="w-4 h-4" />}
                   >
-                    <AlertTriangle className="w-4 h-4" /> Aguardar Peça
-                  </button>
+                    Aguardar Peça
+                  </PremiumButton>
                 </div>
               )}
               <Link 
                 href="/tecnico/servicos"
-                className="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-1 transition-all"
+                className="w-full bg-slate-50 hover:bg-slate-100/60 border border-slate-200 text-slate-655 font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-1 transition-all"
               >
                 Gerenciar Todos os Chamados <ChevronRight className="w-4 h-4" />
               </Link>
@@ -336,65 +354,57 @@ export default function TecnicoDashboardPage() {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-10 px-6 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50/20 shadow-3xs">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4 border border-emerald-100/50">
-            <CheckCircle2 className="w-6 h-6" />
-          </div>
-          <h3 className="font-extrabold text-sm text-slate-800">Sem chamados ativos</h3>
-          <p className="text-xs text-slate-400 font-medium max-w-xs leading-normal">
-            Ótimo trabalho! Você completou todos os chamados ativos. Não há nenhuma ordem de serviço pendente ou designada no momento.
-          </p>
-        </div>
+        <EmptyState
+          title="Sem chamados ativos"
+          description="Ótimo trabalho! Você completou todos os chamados designados no momento."
+          icon={<CheckCircle2 className="w-6 h-6 text-emerald-600" />}
+        />
       )}
 
       {/* Grid de Métricas */}
       <div className="grid grid-cols-2 gap-4">
-        <StatusCard
+        <MetricCard
           title="Agendados Hoje"
           value={`${todayScheduledCount} visitas`}
-          icon={<Calendar className="w-5 h-5 text-brand-clinical" />}
-          variant="light"
+          icon={<Calendar className="w-4.5 h-4.5 text-sky-600" />}
         />
-        <StatusCard
+        <MetricCard
           title="Concluídos Hoje"
           value={`${todayCompletedCount} OS`}
-          icon={<CheckCircle2 className="w-5 h-5 text-emerald-500" />}
-          variant="light"
+          icon={<CheckCircle2 className="w-4.5 h-4.5 text-emerald-600" />}
+          variant="emerald"
         />
       </div>
 
       {/* Checklist / Próxima rota */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-5 space-y-4 shadow-xs">
-        <div className="flex justify-between items-center pb-2 border-b border-slate-50">
-          <h3 className="text-xs font-bold text-brand-dark uppercase tracking-wider">
+      <div className="bg-white rounded-3xl border border-slate-100 p-5 space-y-4 shadow-xs">
+        <div className="flex justify-between items-center pb-2 border-b border-slate-55">
+          <h3 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest pl-1 font-sans">
             Sua Rota de Hoje
           </h3>
-          <span className="text-[10px] font-bold text-slate-400">
+          <span className="text-[10px] font-extrabold text-slate-400 font-sans">
             {todayVisits.length} visitas restantes
           </span>
         </div>
 
-        <div className="space-y-3.5 text-xs font-semibold text-slate-600">
+        <div className="space-y-3.5 text-xs font-semibold text-slate-655">
           {todayVisits.length === 0 ? (
             <p className="text-slate-400 text-center py-4 font-medium italic">Nenhuma outra visita programada para hoje.</p>
           ) : (
             todayVisits.map((visit) => (
               <div key={visit.id} className="flex justify-between items-start border-b border-slate-50/50 pb-3 last:border-0 last:pb-0">
                 <div className="space-y-1">
-                  <p className="text-brand-dark">
+                  <p className="text-slate-800 font-extrabold">
                     {visit.scheduled_date ? new Date(visit.scheduled_date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Sem hora'} - {visit.customer?.company_name}
                   </p>
                   <p className="text-[10px] text-slate-400 font-medium">
                     {visit.equipment?.name || 'Equipamento geral'} ({visit.description.slice(0, 45)}...)
                   </p>
                 </div>
-                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md ${
-                  visit.status === 'em_atendimento' 
-                    ? 'bg-sky-100 text-sky-800 animate-pulse' 
-                    : 'bg-blue-50 text-blue-700'
-                }`}>
-                  {getStatusLabel(visit.status)}
-                </span>
+                <StatusBadge
+                  label={getStatusLabel(visit.status)}
+                  type={getStatusBadgeType(visit.status)}
+                />
               </div>
             ))
           )}

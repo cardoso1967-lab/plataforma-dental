@@ -1,10 +1,17 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { PageHero } from '@/components/ui/PageHero';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { PremiumButton } from '@/components/ui/PremiumButton';
+import { PremiumInput } from '@/components/ui/PremiumInput';
+import { PremiumModal } from '@/components/ui/PremiumModal';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { MetricCard } from '@/components/ui/MetricCard';
 import { 
   Users, Mail, Phone, MapPin, Search, Plus, Edit2, 
   Trash2, Stethoscope, ChevronRight, X, Building2, 
-  Layers, Calendar, ClipboardList, Info, CheckCircle, RefreshCw, UserPlus
+  Layers, Calendar, ClipboardList, Info, CheckCircle, RefreshCw, UserPlus, Wrench
 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
@@ -419,48 +426,49 @@ export default function AdminClientesPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       {/* Header Premium */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
-        <div className="space-y-1 text-left">
-          <h1 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2.5">
-            <div className="p-2 bg-sky-50 text-brand-clinical rounded-2xl shadow-2xs">
-              <Users className="w-6 h-6" />
-            </div>
-            Gestão de Clientes
-          </h1>
-          <p className="text-xs text-slate-500 font-medium">
-            Gerencie clínicas, consultórios, dentistas cadastrados e seus respectivos equipamentos odontológicos.
-          </p>
-        </div>
-        <button
-          onClick={() => openCustomerModal()}
-          className="bg-brand-clinical hover:bg-sky-700 hover:shadow-md text-white text-xs font-bold px-4.5 py-2.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm hover:scale-[1.02] active:scale-[0.98] self-start md:self-center"
-        >
-          <Plus className="w-4 h-4" /> Novo Cliente
-        </button>
-      </div>
+      <PageHero
+        title="Gestão de Clientes"
+        description="Gerencie clínicas, consultórios, dentistas cadastrados e seus respectivos equipamentos odontológicos."
+        badge="Administração de Clientes"
+        icon={Users}
+        rightElement={
+          <PremiumButton
+            onClick={() => openCustomerModal()}
+            icon={<Plus className="w-4 h-4" />}
+            variant="primary"
+          >
+            Novo Cliente
+          </PremiumButton>
+        }
+      />
 
       {/* Métricas rápidas de clientes */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4.5 rounded-2xl border border-slate-100 shadow-2xs text-left">
-          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">Total de Clientes</span>
-          <p className="text-lg font-black text-slate-800">{customers.length}</p>
-          <span className="text-[9.5px] text-slate-400 font-medium">Clínicas e Dentistas</span>
-        </div>
-        <div className="bg-white p-4.5 rounded-2xl border border-slate-100 shadow-2xs text-left">
-          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">Equipamentos Ativos</span>
-          <p className="text-lg font-black text-slate-800">{equipments.length}</p>
-          <span className="text-[9.5px] text-brand-clinical font-semibold">Sob manutenção</span>
-        </div>
-        <div className="bg-white p-4.5 rounded-2xl border border-slate-100 shadow-2xs text-left">
-          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">Contas Associadas</span>
-          <p className="text-lg font-black text-emerald-600">{customers.filter(c => c.profile_id).length}</p>
-          <span className="text-[9.5px] text-slate-400 font-medium font-sans">Acesso ao portal liberado</span>
-        </div>
-        <div className="bg-white p-4.5 rounded-2xl border border-slate-100 shadow-2xs text-left">
-          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">Sem Conta</span>
-          <p className="text-lg font-black text-amber-600">{customers.filter(c => !c.profile_id).length}</p>
-          <span className="text-[9.5px] text-slate-400 font-medium font-sans">Pendente vinculação</span>
-        </div>
+        <MetricCard
+          title="Total de Clientes"
+          value={customers.length}
+          description="Clínicas e Dentistas"
+          variant="default"
+        />
+        <MetricCard
+          title="Equipamentos Ativos"
+          value={equipments.length}
+          description="Sob manutenção"
+          icon={<Wrench className="w-5 h-5 text-sky-600" />}
+          variant="default"
+        />
+        <MetricCard
+          title="Contas Associadas"
+          value={customers.filter(c => c.profile_id).length}
+          description="Acesso ao portal liberado"
+          variant="emerald"
+        />
+        <MetricCard
+          title="Sem Conta"
+          value={customers.filter(c => !c.profile_id).length}
+          description="Pendente vinculação"
+          variant="amber"
+        />
       </div>
 
       {/* Main Grid */}
@@ -481,7 +489,7 @@ export default function AdminClientesPage() {
                   placeholder="Buscar cliente, CNPJ, responsável..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 bg-slate-50/40 transition-all text-slate-700 font-sans"
+                  className="w-full pl-9 pr-4 py-2.5 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 bg-slate-50/20 transition-all text-slate-700 font-sans"
                 />
               </div>
             </div>
@@ -491,21 +499,13 @@ export default function AdminClientesPage() {
                 Carregando clientes...
               </div>
             ) : filteredCustomers.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 px-4 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50/20 shadow-3xs">
-                <div className="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center mb-4 border border-sky-100/50">
-                  <UserPlus className="w-6 h-6" />
-                </div>
-                <h4 className="font-extrabold text-slate-800 text-sm mb-1.5">Nenhum cliente registrado</h4>
-                <p className="text-xs text-slate-400 font-medium max-w-sm leading-relaxed mb-4">
-                  Cadastre o seu primeiro cliente (clínica odontológica ou cirurgião-dentista) para gerenciar chamados operacionais e equipamentos.
-                </p>
-                <button
-                  onClick={() => openCustomerModal()}
-                  className="bg-brand-clinical hover:bg-sky-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all duration-200 shadow-sm hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  Cadastrar Cliente
-                </button>
-              </div>
+              <EmptyState
+                title="Nenhum cliente registrado"
+                description="Cadastre o seu primeiro cliente (clínica odontológica ou cirurgião-dentista) para gerenciar chamados operacionais e equipamentos."
+                icon={<UserPlus className="w-6 h-6 text-sky-600" />}
+                actionLabel="Cadastrar Cliente"
+                onActionClick={() => openCustomerModal()}
+              />
             ) : (
               <div className="overflow-x-auto no-scrollbar">
                 <table className="w-full text-left text-xs border-collapse">
@@ -747,385 +747,272 @@ export default function AdminClientesPage() {
       </div>
 
       {/* Modal Cliente */}
-      {isCustomerModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 transition-all">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <h3 className="font-extrabold text-sm text-brand-dark flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-brand-clinical animate-pulse" />
-                {editingCustomer ? 'Editar Cliente' : 'Novo Cliente'}
-              </h3>
-              <button
-                onClick={() => setIsCustomerModalOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
+      <PremiumModal
+        isOpen={isCustomerModalOpen}
+        onClose={() => setIsCustomerModalOpen(false)}
+        title={editingCustomer ? 'Editar Cliente' : 'Novo Cliente'}
+        size="lg"
+      >
+        <form onSubmit={handleSaveCustomer} className="space-y-6 text-left">
+          {/* Seção Dados Principais */}
+          <div className="space-y-4">
+            <h4 className="font-bold text-xs text-sky-600 uppercase tracking-wider">Informações Principais</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <PremiumInput
+                label="Razão Social / Nome completo"
+                name="company_name"
+                required
+                value={formCustomer.company_name}
+                onChange={(e) => setFormCustomer({ ...formCustomer, company_name: e.target.value })}
+                placeholder="Ex: Clínica Sorriso Lindo Ltda"
+              />
+              <PremiumInput
+                label="Nome Fantasia"
+                name="trade_name"
+                value={formCustomer.trade_name}
+                onChange={(e) => setFormCustomer({ ...formCustomer, trade_name: e.target.value })}
+                placeholder="Ex: Sorriso Lindo"
+              />
+              <PremiumInput
+                label="CNPJ (apenas números)"
+                name="cnpj"
+                value={formCustomer.cnpj}
+                onChange={(e) => setFormCustomer({ ...formCustomer, cnpj: e.target.value })}
+                placeholder="Ex: 12345678000190"
+              />
+              <PremiumInput
+                label="CPF (se for pessoa física)"
+                name="cpf"
+                value={formCustomer.cpf}
+                onChange={(e) => setFormCustomer({ ...formCustomer, cpf: e.target.value })}
+                placeholder="Ex: 12345678900"
+              />
+              <PremiumInput
+                label="Vincular Conta de Usuário (Opcional)"
+                name="profile_id"
+                as="select"
+                value={formCustomer.profile_id}
+                onChange={(e) => setFormCustomer({ ...formCustomer, profile_id: e.target.value })}
+                placeholder="Nenhuma conta associada (Criar sem perfil)"
+                options={getFreeProfiles().map(p => ({
+                  value: p.id,
+                  label: `${p.name} ${p.phone ? `(${p.phone})` : ''}`
+                }))}
+                className="sm:col-span-2"
+              />
             </div>
-
-            <form onSubmit={handleSaveCustomer} className="p-6 space-y-6 flex-1 text-left">
-              {/* Seção Dados Principais */}
-              <div className="space-y-4">
-                <h4 className="font-bold text-xs text-brand-clinical uppercase tracking-wider">Informações Principais</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Razão Social / Nome completo *</label>
-                    <input
-                      type="text"
-                      required
-                      value={formCustomer.company_name}
-                      onChange={(e) => setFormCustomer({ ...formCustomer, company_name: e.target.value })}
-                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
-                      placeholder="Ex: Clínica Sorriso Lindo Ltda"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Nome Fantasia</label>
-                    <input
-                      type="text"
-                      value={formCustomer.trade_name}
-                      onChange={(e) => setFormCustomer({ ...formCustomer, trade_name: e.target.value })}
-                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
-                      placeholder="Ex: Sorriso Lindo"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">CNPJ (apenas números)</label>
-                    <input
-                      type="text"
-                      value={formCustomer.cnpj}
-                      onChange={(e) => setFormCustomer({ ...formCustomer, cnpj: e.target.value })}
-                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
-                      placeholder="Ex: 12345678000190"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">CPF (se for pessoa física)</label>
-                    <input
-                      type="text"
-                      value={formCustomer.cpf}
-                      onChange={(e) => setFormCustomer({ ...formCustomer, cpf: e.target.value })}
-                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
-                      placeholder="Ex: 12345678900"
-                    />
-                  </div>
-
-                  <div className="space-y-1 sm:col-span-2">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Vincular Conta de Usuário (Opcional)</label>
-                    <select
-                      value={formCustomer.profile_id}
-                      onChange={(e) => setFormCustomer({ ...formCustomer, profile_id: e.target.value })}
-                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-white font-semibold"
-                    >
-                      <option value="">Nenhuma conta associada (Criar sem perfil)</option>
-                      {getFreeProfiles().map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name} {p.phone ? `(${p.phone})` : ''}
-                        </option>
-                      ))}
-                    </select>
-                    <p className="text-[9px] text-slate-400 font-medium font-sans">
-                      Apenas contas registradas na plataforma com o perfil &quot;cliente&quot; que ainda não estão vinculadas a outros clientes aparecem aqui.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Seção Dados de Contato */}
-              <div className="space-y-4 pt-4 border-t border-slate-100">
-                <h4 className="font-bold text-xs text-brand-clinical uppercase tracking-wider">Informações de Contato Operacional</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Nome do Contato Principal</label>
-                    <input
-                      type="text"
-                      value={formCustomer.contact_name}
-                      onChange={(e) => setFormCustomer({ ...formCustomer, contact_name: e.target.value })}
-                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
-                      placeholder="Ex: Dra. Sandra Melo"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">E-mail de Contato</label>
-                    <input
-                      type="email"
-                      value={formCustomer.email}
-                      onChange={(e) => setFormCustomer({ ...formCustomer, email: e.target.value })}
-                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
-                      placeholder="Ex: sandra@clinica.com"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Telefone de Contato</label>
-                    <input
-                      type="text"
-                      value={formCustomer.phone}
-                      onChange={(e) => setFormCustomer({ ...formCustomer, phone: e.target.value })}
-                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
-                      placeholder="Ex: (11) 98888-7777"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">WhatsApp</label>
-                    <input
-                      type="text"
-                      value={formCustomer.whatsapp}
-                      onChange={(e) => setFormCustomer({ ...formCustomer, whatsapp: e.target.value })}
-                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
-                      placeholder="Ex: (11) 98888-7777"
-                    />
-                  </div>
-
-                  <div className="space-y-1 sm:col-span-2">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Anotações Internas (Horários de atendimento, etc.)</label>
-                    <textarea
-                      value={formCustomer.notes}
-                      onChange={(e) => setFormCustomer({ ...formCustomer, notes: e.target.value })}
-                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 min-h-[60px]"
-                      placeholder="Ex: Consultório fecha às sextas à tarde..."
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Seção Endereço */}
-              <div className="space-y-4 pt-4 border-t border-slate-100">
-                <h4 className="font-bold text-xs text-brand-clinical uppercase tracking-wider">Endereço de Atendimento</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="sm:col-span-2 space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Rua / Avenida</label>
-                    <input
-                      type="text"
-                      value={formCustomer.address_street}
-                      onChange={(e) => setFormCustomer({ ...formCustomer, address_street: e.target.value })}
-                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
-                      placeholder="Ex: Av. Paulista"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Número</label>
-                    <input
-                      type="text"
-                      value={formCustomer.address_number}
-                      onChange={(e) => setFormCustomer({ ...formCustomer, address_number: e.target.value })}
-                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
-                      placeholder="Ex: 1000"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Complemento</label>
-                    <input
-                      type="text"
-                      value={formCustomer.address_complement}
-                      onChange={(e) => setFormCustomer({ ...formCustomer, address_complement: e.target.value })}
-                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
-                      placeholder="Ex: Sala 42"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Bairro</label>
-                    <input
-                      type="text"
-                      value={formCustomer.address_neighborhood}
-                      onChange={(e) => setFormCustomer({ ...formCustomer, address_neighborhood: e.target.value })}
-                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
-                      placeholder="Ex: Bela Vista"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">CEP</label>
-                    <input
-                      type="text"
-                      value={formCustomer.address_zip}
-                      onChange={(e) => setFormCustomer({ ...formCustomer, address_zip: e.target.value })}
-                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
-                      placeholder="Ex: 01311100"
-                    />
-                  </div>
-
-                  <div className="sm:col-span-2 space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Cidade</label>
-                    <input
-                      type="text"
-                      value={formCustomer.address_city}
-                      onChange={(e) => setFormCustomer({ ...formCustomer, address_city: e.target.value })}
-                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
-                      placeholder="Ex: São Paulo"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Estado (UF)</label>
-                    <input
-                      type="text"
-                      value={formCustomer.address_state}
-                      onChange={(e) => setFormCustomer({ ...formCustomer, address_state: e.target.value })}
-                      className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
-                      placeholder="Ex: SP"
-                      maxLength={2}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Botões Ação */}
-              <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 bg-slate-50 -mx-6 -mb-6 p-6 rounded-b-2xl">
-                <button
-                  type="button"
-                  onClick={() => setIsCustomerModalOpen(false)}
-                  className="bg-transparent hover:bg-slate-100 text-slate-600 font-bold text-xs px-4 py-2.5 rounded-xl border border-slate-200 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-brand-clinical hover:bg-sky-700 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl transition-all shadow-sm disabled:opacity-50 min-w-[120px]"
-                >
-                  {loading ? (
-                    <span className="flex items-center justify-center gap-1">
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Salvando...
-                    </span>
-                  ) : 'Salvar Cliente'}
-                </button>
-              </div>
-            </form>
           </div>
-        </div>
-      )}
+
+          {/* Seção Dados de Contato */}
+          <div className="space-y-4 pt-4 border-t border-slate-100">
+            <h4 className="font-bold text-xs text-sky-600 uppercase tracking-wider">Informações de Contato Operacional</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <PremiumInput
+                label="Nome do Contato Principal"
+                name="contact_name"
+                value={formCustomer.contact_name || ''}
+                onChange={(e) => setFormCustomer({ ...formCustomer, contact_name: e.target.value })}
+                placeholder="Ex: Dra. Sandra Melo"
+              />
+              <PremiumInput
+                label="E-mail de Contato"
+                name="email"
+                type="email"
+                value={formCustomer.email || ''}
+                onChange={(e) => setFormCustomer({ ...formCustomer, email: e.target.value })}
+                placeholder="Ex: sandra@clinica.com"
+              />
+              <PremiumInput
+                label="Telefone de Contato"
+                name="phone"
+                value={formCustomer.phone || ''}
+                onChange={(e) => setFormCustomer({ ...formCustomer, phone: e.target.value })}
+                placeholder="Ex: (11) 98888-7777"
+              />
+              <PremiumInput
+                label="WhatsApp"
+                name="whatsapp"
+                value={formCustomer.whatsapp || ''}
+                onChange={(e) => setFormCustomer({ ...formCustomer, whatsapp: e.target.value })}
+                placeholder="Ex: (11) 98888-7777"
+              />
+              <PremiumInput
+                label="Anotações Internas (Horários de atendimento, etc.)"
+                name="notes"
+                as="textarea"
+                value={formCustomer.notes || ''}
+                onChange={(e) => setFormCustomer({ ...formCustomer, notes: e.target.value })}
+                placeholder="Ex: Consultório fecha às sextas à tarde..."
+                className="sm:col-span-2"
+                rows={2}
+              />
+            </div>
+          </div>
+
+          {/* Seção Endereço */}
+          <div className="space-y-4 pt-4 border-t border-slate-100">
+            <h4 className="font-bold text-xs text-sky-600 uppercase tracking-wider">Endereço de Atendimento</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <PremiumInput
+                label="Rua / Avenida"
+                name="address_street"
+                value={formCustomer.address_street || ''}
+                onChange={(e) => setFormCustomer({ ...formCustomer, address_street: e.target.value })}
+                placeholder="Ex: Av. Paulista"
+                className="sm:col-span-2"
+              />
+              <PremiumInput
+                label="Número"
+                name="address_number"
+                value={formCustomer.address_number || ''}
+                onChange={(e) => setFormCustomer({ ...formCustomer, address_number: e.target.value })}
+                placeholder="Ex: 1000"
+              />
+              <PremiumInput
+                label="Complemento"
+                name="address_complement"
+                value={formCustomer.address_complement || ''}
+                onChange={(e) => setFormCustomer({ ...formCustomer, address_complement: e.target.value })}
+                placeholder="Ex: Sala 42"
+              />
+              <PremiumInput
+                label="Bairro"
+                name="address_neighborhood"
+                value={formCustomer.address_neighborhood || ''}
+                onChange={(e) => setFormCustomer({ ...formCustomer, address_neighborhood: e.target.value })}
+                placeholder="Ex: Bela Vista"
+              />
+              <PremiumInput
+                label="CEP"
+                name="address_zip"
+                value={formCustomer.address_zip || ''}
+                onChange={(e) => setFormCustomer({ ...formCustomer, address_zip: e.target.value })}
+                placeholder="Ex: 01311100"
+              />
+              <PremiumInput
+                label="Cidade"
+                name="address_city"
+                value={formCustomer.address_city || ''}
+                onChange={(e) => setFormCustomer({ ...formCustomer, address_city: e.target.value })}
+                placeholder="Ex: São Paulo"
+                className="sm:col-span-2"
+              />
+              <PremiumInput
+                label="Estado (UF)"
+                name="address_state"
+                value={formCustomer.address_state || ''}
+                onChange={(e) => setFormCustomer({ ...formCustomer, address_state: e.target.value })}
+                placeholder="Ex: SP"
+              />
+            </div>
+          </div>
+
+          {/* Botões Ação */}
+          <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 bg-slate-50 -mx-6 -mb-6 p-6 rounded-b-3xl">
+            <PremiumButton
+              variant="outline"
+              onClick={() => setIsCustomerModalOpen(false)}
+            >
+              Cancelar
+            </PremiumButton>
+            <PremiumButton
+              type="submit"
+              loading={loading}
+              variant="primary"
+            >
+              Salvar Cliente
+            </PremiumButton>
+          </div>
+        </form>
+      </PremiumModal>
 
       {/* Modal Equipamento */}
-      {isEquipmentModalOpen && selectedCustomer && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 transition-all">
-          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-100 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <h3 className="font-extrabold text-sm text-brand-dark flex items-center gap-1.5">
-                <Stethoscope className="w-5 h-5 text-brand-clinical animate-pulse" />
-                {editingEquipment ? 'Editar Equipamento' : 'Adicionar Equipamento'}
-              </h3>
-              <button
-                onClick={() => setIsEquipmentModalOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+      <PremiumModal
+        isOpen={isEquipmentModalOpen && !!selectedCustomer}
+        onClose={() => setIsEquipmentModalOpen(false)}
+        title={editingEquipment ? 'Editar Equipamento' : 'Adicionar Equipamento'}
+      >
+        <form onSubmit={handleSaveEquipment} className="space-y-4 text-left">
+          <PremiumInput
+            label="Nome do Equipamento"
+            name="name"
+            required
+            value={formEquipment.name}
+            onChange={(e) => setFormEquipment({ ...formEquipment, name: e.target.value })}
+            placeholder="Ex: Cadeira Odontológica, Autoclave, Raio-X"
+          />
 
-            <form onSubmit={handleSaveEquipment} className="p-6 space-y-4 text-left">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Nome do Equipamento *</label>
-                <input
-                  type="text"
-                  required
-                  value={formEquipment.name}
-                  onChange={(e) => setFormEquipment({ ...formEquipment, name: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
-                  placeholder="Ex: Cadeira Odontológica, Autoclave, Raio-X"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Marca</label>
-                  <input
-                    type="text"
-                    value={formEquipment.brand}
-                    onChange={(e) => setFormEquipment({ ...formEquipment, brand: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
-                    placeholder="Ex: Olsen, Dabi Atlante"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Modelo</label>
-                  <input
-                    type="text"
-                    value={formEquipment.model}
-                    onChange={(e) => setFormEquipment({ ...formEquipment, model: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
-                    placeholder="Ex: Premium S500"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Número de Série (N/S)</label>
-                <input
-                  type="text"
-                  value={formEquipment.serial_number}
-                  onChange={(e) => setFormEquipment({ ...formEquipment, serial_number: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 font-mono"
-                  placeholder="Ex: SN-987654321"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Data de Instalação</label>
-                  <input
-                    type="date"
-                    value={formEquipment.installation_date}
-                    onChange={(e) => setFormEquipment({ ...formEquipment, installation_date: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Última Manutenção</label>
-                  <input
-                    type="date"
-                    value={formEquipment.last_maintenance_date}
-                    onChange={(e) => setFormEquipment({ ...formEquipment, last_maintenance_date: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Observações técnicas</label>
-                <textarea
-                  value={formEquipment.notes}
-                  onChange={(e) => setFormEquipment({ ...formEquipment, notes: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 min-h-[80px]"
-                  placeholder="Histórico técnico, problemas recorrentes..."
-                />
-              </div>
-
-              {/* Botões Ação */}
-              <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 bg-slate-50 -mx-6 -mb-6 p-6">
-                <button
-                  type="button"
-                  onClick={() => setIsEquipmentModalOpen(false)}
-                  className="bg-transparent hover:bg-slate-100 text-slate-600 font-bold text-xs px-4 py-2.5 rounded-xl border border-slate-200 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-brand-clinical hover:bg-sky-700 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl transition-all shadow-sm disabled:opacity-50 min-w-[120px]"
-                >
-                  {loading ? (
-                    <span className="flex items-center justify-center gap-1">
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Salvando...
-                    </span>
-                  ) : 'Salvar Equipamento'}
-                </button>
-              </div>
-            </form>
+          <div className="grid grid-cols-2 gap-4">
+            <PremiumInput
+              label="Marca"
+              name="brand"
+              value={formEquipment.brand || ''}
+              onChange={(e) => setFormEquipment({ ...formEquipment, brand: e.target.value })}
+              placeholder="Ex: Olsen, Dabi Atlante"
+            />
+            <PremiumInput
+              label="Modelo"
+              name="model"
+              value={formEquipment.model || ''}
+              onChange={(e) => setFormEquipment({ ...formEquipment, model: e.target.value })}
+              placeholder="Ex: Premium S500"
+            />
           </div>
-        </div>
-      )}
+
+          <PremiumInput
+            label="Número de Série (N/S)"
+            name="serial_number"
+            value={formEquipment.serial_number || ''}
+            onChange={(e) => setFormEquipment({ ...formEquipment, serial_number: e.target.value })}
+            placeholder="Ex: SN-987654321"
+            className="font-mono"
+          />
+
+          <div className="grid grid-cols-2 gap-4">
+            <PremiumInput
+              label="Data de Instalação"
+              name="installation_date"
+              type="date"
+              value={formEquipment.installation_date || ''}
+              onChange={(e) => setFormEquipment({ ...formEquipment, installation_date: e.target.value })}
+            />
+            <PremiumInput
+              label="Última Manutenção"
+              name="last_maintenance_date"
+              type="date"
+              value={formEquipment.last_maintenance_date || ''}
+              onChange={(e) => setFormEquipment({ ...formEquipment, last_maintenance_date: e.target.value })}
+            />
+          </div>
+
+          <PremiumInput
+            label="Observações técnicas"
+            name="notes"
+            as="textarea"
+            value={formEquipment.notes || ''}
+            onChange={(e) => setFormEquipment({ ...formEquipment, notes: e.target.value })}
+            placeholder="Histórico técnico, problemas recorrentes..."
+            rows={2.5}
+          />
+
+          {/* Botões Ação */}
+          <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 bg-slate-50 -mx-6 -mb-6 p-6">
+            <PremiumButton
+              variant="outline"
+              onClick={() => setIsEquipmentModalOpen(false)}
+            >
+              Cancelar
+            </PremiumButton>
+            <PremiumButton
+              type="submit"
+              loading={loading}
+              variant="primary"
+            >
+              Salvar Equipamento
+            </PremiumButton>
+          </div>
+        </form>
+      </PremiumModal>
     </div>
   );
 }

@@ -1,7 +1,11 @@
 import React from 'react';
 import { SupportForm } from './SupportForm';
-import { Clock, AlertCircle, CheckCircle2, ShieldAlert, ArrowRight, Clipboard } from 'lucide-react';
+import { Clock, ShieldAlert, Clipboard } from 'lucide-react';
 import { getCustomerSession } from '@/lib/customer-data';
+import { PageHero } from '@/components/ui/PageHero';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { TimelineStep } from '@/components/ui/TimelineStep';
 
 export default async function ClienteSuportePage() {
   const { supabase, customer } = await getCustomerSession();
@@ -60,36 +64,25 @@ export default async function ClienteSuportePage() {
   return (
     <div className="space-y-8 max-w-4xl mx-auto text-left animate-in fade-in duration-300">
       {/* Header Premium */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
-        <div className="space-y-1 text-left">
-          <h1 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2.5">
-            <div className="p-2 bg-sky-50 text-brand-clinical rounded-2xl shadow-2xs">
-              <Clock className="w-6 h-6 animate-pulse" />
-            </div>
-            Suporte Técnico
-          </h1>
-          <p className="text-xs text-slate-500 font-medium">
-            Acompanhe suas solicitações de reparo e abra novos chamados para seus equipamentos odontológicos.
-          </p>
-        </div>
-      </div>
+      <PageHero
+        title="Suporte Técnico"
+        description="Acompanhe suas solicitações de reparo em tempo real e abra novos chamados para seus equipamentos odontológicos."
+        badge="Suporte"
+        icon={Clock}
+      />
 
       {/* OS ativas */}
       <div className="space-y-4.5">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">
+        <h3 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest pl-1 font-sans">
           Acompanhamento de Chamados e Visitas ({openOS?.length || 0})
         </h3>
         
         {!openOS || openOS.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 px-6 text-center border border-dashed border-slate-200 rounded-3xl bg-slate-50/20 shadow-3xs">
-            <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mb-4 border border-slate-200/50">
-              <Clipboard className="w-6 h-6" />
-            </div>
-            <h4 className="font-extrabold text-slate-800 text-sm mb-1.5">Nenhum chamado aberto</h4>
-            <p className="text-xs text-slate-400 font-medium max-w-sm leading-relaxed">
-              Todos os seus chamados de manutenção e visitas preventivas estão concluídos. Use o formulário abaixo para abrir uma nova solicitação caso tenha algum problema técnico.
-            </p>
-          </div>
+          <EmptyState
+            title="Nenhum chamado aberto"
+            description="Todos os seus chamados de manutenção e visitas preventivas estão concluídos. Use o formulário abaixo para abrir uma nova solicitação técnica."
+            icon={<Clipboard className="w-6 h-6 text-sky-650" />}
+          />
         ) : (
           <div className="space-y-5">
             {openOS.map((os) => {
@@ -100,89 +93,82 @@ export default async function ClienteSuportePage() {
                 step: 1
               };
 
+              const getStatusBadgeType = (status: string) => {
+                switch (status) {
+                  case 'aberta': return 'neutral';
+                  case 'em_analise': return 'indigo';
+                  case 'tecnico_atribuido': return 'info';
+                  case 'visita_agendada': return 'info';
+                  case 'em_atendimento': return 'success';
+                  case 'aguardando_peca': return 'warning';
+                  case 'orcamento_pendente': return 'warning';
+                  case 'concluida': return 'success';
+                  case 'cancelada': return 'error';
+                  default: return 'neutral';
+                }
+              };
+
               const currentStep = statusStyle.step;
               const isCancelado = os.status === 'cancelada';
 
               return (
                 <div 
                   key={os.id} 
-                  className="bg-white border border-slate-100/80 rounded-3xl p-6 shadow-2xs hover:shadow-xs hover:border-slate-200 transition-all duration-300 space-y-5 relative overflow-hidden text-left"
+                  className="bg-white border border-slate-100/80 rounded-3xl p-6 shadow-3xs hover:shadow-sm hover:border-slate-200 transition-all duration-300 space-y-5 relative overflow-hidden text-left"
                 >
                   {/* Encabezado OS */}
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-50">
                     <div className="text-left">
-                      <span className="text-[9.5px] font-mono font-black text-brand-clinical tracking-wider block">
+                      <span className="text-[9.5px] font-mono font-black text-sky-650 tracking-wider block">
                         OS: #{os.id.slice(0, 8).toUpperCase()} • Abertura: {new Date(os.created_at).toLocaleDateString('pt-BR')}
                       </span>
                       <h4 className="font-extrabold text-slate-800 text-sm mt-0.5">
                         {(os.client_equipment as any)?.name || 'Equipamento Geral'}
                       </h4>
                       {os.description && (
-                        <p className="text-[10.5px] text-slate-450 font-semibold italic mt-1 max-w-2xl line-clamp-2 leading-relaxed">
+                        <p className="text-[10.5px] text-slate-500 font-semibold italic mt-1 max-w-2xl line-clamp-2 leading-relaxed">
                           "{os.description}"
                         </p>
                       )}
                     </div>
                     
-                    <div className="flex items-center self-start sm:self-center">
-                      <span className={`text-[9px] font-black px-3 py-1 rounded-full border flex items-center gap-1.5 uppercase tracking-wider shadow-3xs ${statusStyle.bg}`}>
-                        <Clock className="w-3.5 h-3.5" />
-                        {statusStyle.label}
-                      </span>
+                    <div className="flex items-center self-start sm:self-center shrink-0">
+                      <StatusBadge
+                        label={statusStyle.label}
+                        type={getStatusBadgeType(os.status)}
+                      />
                     </div>
                   </div>
 
                   {/* Visualizador Gráfico de Progreso (Timeline) Premium */}
                   {!isCancelado && (
-                    <div className="bg-slate-50/40 rounded-2xl p-5 border border-slate-100/50 mt-2">
-                      <div className="relative">
-                        {/* Barra de fondo */}
-                        <div className="absolute top-3 left-0 right-0 h-1 bg-slate-200 rounded-full" />
-                        
-                        {/* Barra de progreso activa */}
-                        <div 
-                          className="absolute top-3 left-0 h-1 bg-brand-clinical rounded-full transition-all duration-550" 
-                          style={{ width: `${Math.max(0, ((currentStep - 1) / 4) * 100)}%` }}
-                        />
-                        
-                        {/* Nodos */}
-                        <div className="relative flex justify-between">
-                          {steps.map((st) => {
-                            const isDone = currentStep >= st.num;
-                            const isCurrent = currentStep === st.num;
-                            
-                            return (
-                              <div key={st.num} className="flex flex-col items-center space-y-2.5">
-                                <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all z-10 shadow-3xs ${
-                                  isDone 
-                                    ? 'bg-brand-clinical border-brand-clinical text-white' 
-                                    : 'bg-white border-slate-200 text-slate-350'
-                                } ${isCurrent ? 'ring-4 ring-sky-100 scale-105 font-black' : ''}`}>
-                                  {isDone && st.num < currentStep ? (
-                                    <CheckCircle2 className="w-4.5 h-4.5 text-white" />
-                                  ) : (
-                                    <span className="text-[10px] font-bold">{st.num}</span>
-                                  )}
-                                </div>
-                                <span className={`text-[9px] font-black tracking-tight ${
-                                  isCurrent 
-                                    ? 'text-brand-clinical' 
-                                    : isDone 
-                                      ? 'text-slate-700' 
-                                      : 'text-slate-400'
-                                }`}>
-                                  {st.name}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
+                    <div className="bg-slate-50/30 rounded-2xl p-6 border border-slate-100/50 mt-2 max-w-xl">
+                      <div className="space-y-0">
+                        {steps.map((st, idx) => {
+                          const isDone = currentStep >= st.num;
+                          const isCurrent = currentStep === st.num;
+                          
+                          let statusVal: 'completed' | 'active' | 'upcoming' = 'upcoming';
+                          if (isCurrent) statusVal = 'active';
+                          else if (isDone) statusVal = 'completed';
+
+                          return (
+                            <TimelineStep
+                              key={st.num}
+                              label={st.name}
+                              status={statusVal}
+                              isLast={idx === steps.length - 1}
+                              icon={<span className="text-[9px] font-black">{st.num}</span>}
+                              description={isCurrent ? `Fase atual do seu chamado técnico.` : undefined}
+                            />
+                          );
+                        })}
                       </div>
                     </div>
                   )}
 
                   {isCancelado && (
-                    <div className="bg-rose-50 text-rose-800 text-[10.5px] font-bold p-4 rounded-2xl border border-rose-100 flex items-center gap-2">
+                    <div className="bg-rose-50/50 text-rose-800 text-[10.5px] font-bold p-4 rounded-2xl border border-rose-100 flex items-center gap-2">
                       <ShieldAlert className="w-4.5 h-4.5 text-rose-500 flex-shrink-0" />
                       <span>Este chamado foi cancelado. Entre em contato com a administração caso julgue necessário.</span>
                     </div>
@@ -196,7 +182,7 @@ export default async function ClienteSuportePage() {
 
       {/* Formulário de Abertura */}
       <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-xs text-left">
-        <h3 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider mb-4 pl-1">
+        <h3 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest pl-1 mb-4 font-sans">
           Solicitar Nova Assistência Técnica
         </h3>
         <SupportForm 

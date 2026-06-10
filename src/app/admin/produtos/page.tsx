@@ -1,6 +1,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { PageHero } from '@/components/ui/PageHero';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { PremiumButton } from '@/components/ui/PremiumButton';
+import { PremiumInput } from '@/components/ui/PremiumInput';
+import { PremiumModal } from '@/components/ui/PremiumModal';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { MetricCard } from '@/components/ui/MetricCard';
 import { 
   Package, Plus, Search, Edit2, Trash2, 
   X, Tag, DollarSign, Archive, Layers, RefreshCw
@@ -240,48 +247,49 @@ export default function AdminProdutosPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       {/* Header Premium */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
-        <div className="space-y-1 text-left">
-          <h1 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2.5">
-            <div className="p-2 bg-purple-50 text-purple-650 rounded-2xl shadow-2xs">
-              <Package className="w-6 h-6" />
-            </div>
-            Gestão de Produtos
-          </h1>
-          <p className="text-xs text-slate-500 font-medium">
-            Gerencie o catálogo de equipamentos odontológicos, consumíveis, peças e produtos gerais para comercialização.
-          </p>
-        </div>
-        <button
-          onClick={() => openModal()}
-          className="bg-brand-clinical hover:bg-sky-700 hover:shadow-md text-white text-xs font-bold px-4.5 py-2.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm hover:scale-[1.02] active:scale-[0.98] self-start md:self-center"
-        >
-          <Plus className="w-4 h-4" /> Novo Produto
-        </button>
-      </div>
+      <PageHero
+        title="Gestão de Produtos"
+        description="Gerencie o catálogo de equipamentos odontológicos, consumíveis, peças e produtos gerais para comercialização."
+        badge="Catálogo e Inventário"
+        icon={Package}
+        rightElement={
+          <PremiumButton
+            onClick={() => openModal()}
+            icon={<Plus className="w-4 h-4" />}
+            variant="primary"
+          >
+            Novo Produto
+          </PremiumButton>
+        }
+      />
 
       {/* Métricas rápidas de catálogo */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4.5 rounded-2xl border border-slate-100 shadow-2xs text-left">
-          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">Produtos Registrados</span>
-          <p className="text-lg font-black text-slate-800">{products.length}</p>
-          <span className="text-[9.5px] text-slate-400 font-medium">Total do portfólio</span>
-        </div>
-        <div className="bg-white p-4.5 rounded-2xl border border-slate-100 shadow-2xs text-left">
-          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">Equipamentos Clínicos</span>
-          <p className="text-lg font-black text-purple-600">{products.filter(p => p.product_type === 'equipamento').length}</p>
-          <span className="text-[9.5px] text-slate-400 font-medium">Cadeiras, Autoclaves, etc.</span>
-        </div>
-        <div className="bg-white p-4.5 rounded-2xl border border-slate-100 shadow-2xs text-left">
-          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">Peças e Insumos</span>
-          <p className="text-lg font-black text-slate-850">{products.filter(p => p.product_type === 'peca' || p.product_type === 'insumo').length}</p>
-          <span className="text-[9.5px] text-slate-400 font-medium">Itens de reposição</span>
-        </div>
-        <div className="bg-white p-4.5 rounded-2xl border border-slate-100 shadow-2xs text-left">
-          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block font-sans">Estoque Crítico</span>
-          <p className="text-lg font-black text-rose-600">{products.filter(p => p.stock_quantity === 0).length}</p>
-          <span className="text-[9.5px] text-rose-600/80 font-bold">Sem unidades em estoque</span>
-        </div>
+        <MetricCard
+          title="Produtos Registrados"
+          value={products.length}
+          description="Total do portfólio"
+          variant="default"
+        />
+        <MetricCard
+          title="Equipamentos Clínicos"
+          value={products.filter(p => p.product_type === 'equipamento').length}
+          description="Cadeiras, Autoclaves, etc."
+          variant="indigo"
+        />
+        <MetricCard
+          title="Peças e Insumos"
+          value={products.filter(p => p.product_type === 'peca' || p.product_type === 'insumo').length}
+          description="Itens de reposição"
+          variant="default"
+        />
+        <MetricCard
+          title="Estoque Crítico"
+          value={products.filter(p => p.stock_quantity === 0).length}
+          description="Sem unidades em estoque"
+          icon={<Archive className="w-4.5 h-4.5 text-rose-500" />}
+          variant="rose"
+        />
       </div>
 
       {/* Listado */}
@@ -299,7 +307,7 @@ export default function AdminProdutosPage() {
               placeholder="Buscar SKU, nome, categoria..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 bg-slate-50/40 transition-all text-slate-700 font-sans"
+              className="w-full pl-9 pr-4 py-2.5 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 bg-slate-50/20 transition-all text-slate-700 font-sans"
             />
           </div>
         </div>
@@ -309,21 +317,13 @@ export default function AdminProdutosPage() {
             Carregando catálogo de produtos...
           </div>
         ) : filteredProducts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 px-4 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50/20 shadow-3xs">
-            <div className="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center mb-4 border border-sky-100/50">
-              <Package className="w-6 h-6" />
-            </div>
-            <h4 className="font-extrabold text-slate-800 text-sm mb-1.5">Catálogo de Produtos Vazio</h4>
-            <p className="text-xs text-slate-400 font-medium max-w-sm leading-relaxed mb-4">
-              Cadastre o seu primeiro produto (equipamentos odontológicos, peças de reposição ou insumos) para disponibilizá-los na plataforma.
-            </p>
-            <button
-              onClick={() => openModal()}
-              className="bg-brand-clinical hover:bg-sky-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all duration-200 shadow-sm hover:scale-[1.02] active:scale-[0.98]"
-            >
-              Cadastrar Produto
-            </button>
-          </div>
+          <EmptyState
+            title="Catálogo de Produtos Vazio"
+            description="Cadastre o seu primeiro produto (equipamentos odontológicos, peças de reposição ou insumos) para disponibilizá-los na plataforma."
+            icon={<Package className="w-6 h-6 text-sky-600" />}
+            actionLabel="Cadastrar Produto"
+            onActionClick={() => openModal()}
+          />
         ) : (
           <>
             {/* Tabela para Desktop */}
@@ -459,154 +459,120 @@ export default function AdminProdutosPage() {
       </div>
 
       {/* Modal Produto */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 transition-all">
-          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-100 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <h3 className="font-extrabold text-sm text-brand-dark flex items-center gap-1.5">
-                <Package className="w-5 h-5 text-brand-clinical" />
-                {editingProduct ? 'Editar Produto' : 'Novo Produto'}
-              </h3>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSave} className="p-6 space-y-4 text-left">
-              <div className="grid grid-cols-3 gap-4">
-                <div className="col-span-1 space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Código SKU</label>
-                  <input
-                    type="text"
-                    value={formProduct.sku}
-                    onChange={(e) => setFormProduct({ ...formProduct, sku: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 font-mono"
-                    placeholder="CAD-S500"
-                  />
-                </div>
-                <div className="col-span-2 space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Nome do Produto *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formProduct.name}
-                    onChange={(e) => setFormProduct({ ...formProduct, name: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20"
-                    placeholder="Ex: Cadeira Odontológica Premium"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Tipo de Produto *</label>
-                  <select
-                    value={formProduct.product_type}
-                    onChange={(e) => setFormProduct({ ...formProduct, product_type: e.target.value as Product['product_type'] })}
-                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 bg-white"
-                  >
-                    <option value="equipamento">Equipamento</option>
-                    <option value="peca">Peça</option>
-                    <option value="insumo">Insumo</option>
-                    <option value="outro">Outro</option>
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Categoria</label>
-                  <select
-                    value={formProduct.category_id}
-                    onChange={(e) => setFormProduct({ ...formProduct, category_id: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 bg-white"
-                  >
-                    <option value="">Nenhuma Categoria</option>
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Preço de Venda (R$) *</label>
-                  <div className="relative">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">R$</span>
-                    <input
-                      type="number"
-                      step="0.01"
-                      required
-                      value={formProduct.price}
-                      onChange={(e) => setFormProduct({ ...formProduct, price: e.target.value })}
-                      className="w-full pl-9 border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 font-semibold"
-                      placeholder="0,00"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Estoque Disponível</label>
-                  <input
-                    type="number"
-                    value={formProduct.stock_quantity}
-                    onChange={(e) => setFormProduct({ ...formProduct, stock_quantity: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 font-semibold"
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Descrição do Produto</label>
-                <textarea
-                  value={formProduct.description}
-                  onChange={(e) => setFormProduct({ ...formProduct, description: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 transition-all bg-slate-50/20 min-h-[90px]"
-                  placeholder="Detalhamento técnico, voltagem, garantias e demais especificações..."
-                />
-              </div>
-
-              <div className="flex items-center gap-2 pt-2">
-                <input
-                  type="checkbox"
-                  id="prod_active"
-                  checked={formProduct.is_active}
-                  onChange={(e) => setFormProduct({ ...formProduct, is_active: e.target.checked })}
-                  className="w-4 h-4 border border-slate-200 rounded-xl text-brand-clinical focus:ring-brand-clinical cursor-pointer"
-                />
-                <label htmlFor="prod_active" className="text-xs font-bold text-slate-600 cursor-pointer select-none">
-                  Produto Ativo (Visível no catálogo público)
-                </label>
-              </div>
-
-              {/* Botões Ação */}
-              <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 bg-slate-50 -mx-6 -mb-6 p-6 rounded-b-2xl">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="bg-transparent hover:bg-slate-100 text-slate-600 font-bold text-xs px-4 py-2.5 rounded-xl border border-slate-200 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-brand-clinical hover:bg-sky-700 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl transition-all shadow-sm disabled:opacity-50 min-w-[120px]"
-                >
-                  {loading ? (
-                    <span className="flex items-center justify-center gap-1">
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Salvando...
-                    </span>
-                  ) : 'Salvar Produto'}
-                </button>
-              </div>
-            </form>
+      <PremiumModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={editingProduct ? 'Editar Produto' : 'Novo Produto'}
+        size="lg"
+      >
+        <form onSubmit={handleSave} className="space-y-4 text-left">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <PremiumInput
+              label="Código SKU"
+              name="sku"
+              value={formProduct.sku}
+              onChange={(e) => setFormProduct({ ...formProduct, sku: e.target.value })}
+              placeholder="CAD-S500"
+              className="font-mono"
+            />
+            <PremiumInput
+              label="Nome do Produto"
+              name="name"
+              required
+              value={formProduct.name}
+              onChange={(e) => setFormProduct({ ...formProduct, name: e.target.value })}
+              placeholder="Ex: Cadeira Odontológica Premium"
+              className="md:col-span-2"
+            />
           </div>
-        </div>
-      )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <PremiumInput
+              label="Tipo de Produto"
+              name="product_type"
+              as="select"
+              value={formProduct.product_type}
+              onChange={(e) => setFormProduct({ ...formProduct, product_type: e.target.value as Product['product_type'] })}
+              placeholder="Selecione um tipo..."
+              options={[
+                { value: 'equipamento', label: 'Equipamento' },
+                { value: 'peca', label: 'Peça' },
+                { value: 'insumo', label: 'Insumo' },
+                { value: 'outro', label: 'Outro' }
+              ]}
+            />
+            <PremiumInput
+              label="Categoria"
+              name="category_id"
+              as="select"
+              value={formProduct.category_id}
+              onChange={(e) => setFormProduct({ ...formProduct, category_id: e.target.value })}
+              placeholder="Nenhuma Categoria"
+              options={categories.map(c => ({ value: c.id, label: c.name }))}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <PremiumInput
+              label="Preço de Venda (R$)"
+              name="price"
+              type="number"
+              required
+              value={formProduct.price}
+              onChange={(e) => setFormProduct({ ...formProduct, price: e.target.value })}
+              placeholder="0,00"
+            />
+            <PremiumInput
+              label="Estoque Disponível"
+              name="stock_quantity"
+              type="number"
+              value={formProduct.stock_quantity}
+              onChange={(e) => setFormProduct({ ...formProduct, stock_quantity: e.target.value })}
+              placeholder="0"
+            />
+          </div>
+
+          <PremiumInput
+            label="Descrição do Produto"
+            name="description"
+            as="textarea"
+            value={formProduct.description || ''}
+            onChange={(e) => setFormProduct({ ...formProduct, description: e.target.value })}
+            placeholder="Detalhamento técnico, voltagem, garantias e demais especificações..."
+            rows={3}
+          />
+
+          <div className="flex items-center gap-2 pt-2">
+            <input
+              type="checkbox"
+              id="prod_active"
+              checked={formProduct.is_active}
+              onChange={(e) => setFormProduct({ ...formProduct, is_active: e.target.checked })}
+              className="w-4 h-4 border border-slate-200 rounded-lg text-sky-600 focus:ring-sky-500 cursor-pointer"
+            />
+            <label htmlFor="prod_active" className="text-xs font-bold text-slate-655 cursor-pointer select-none">
+              Produto Ativo (Visível no catálogo público)
+            </label>
+          </div>
+
+          {/* Botões Ação */}
+          <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 bg-slate-50 -mx-6 -mb-6 p-6 rounded-b-3xl">
+            <PremiumButton
+              variant="outline"
+              onClick={() => setIsModalOpen(false)}
+            >
+              Cancelar
+            </PremiumButton>
+            <PremiumButton
+              type="submit"
+              loading={loading}
+              variant="primary"
+            >
+              Salvar Produto
+            </PremiumButton>
+          </div>
+        </form>
+      </PremiumModal>
     </div>
   );
 }

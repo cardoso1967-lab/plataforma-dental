@@ -1,7 +1,9 @@
 import React from 'react';
-import { ShoppingBag, Calendar, AlertCircle, Package, Receipt } from 'lucide-react';
+import { ShoppingBag, Calendar, Package, Receipt } from 'lucide-react';
 import { getCustomerSession } from '@/lib/customer-data';
-import Link from 'next/link';
+import { PageHero } from '@/components/ui/PageHero';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 
 export default async function ClientePedidosPage() {
   const { supabase, customer } = await getCustomerSession();
@@ -32,57 +34,50 @@ export default async function ClientePedidosPage() {
   }
 
   // Mapeamento de status para exibição amigável
-  const statusConfig = {
-    pendente: { label: 'Pendente', bg: 'bg-amber-50 text-amber-700 border-amber-200' },
-    aprovado: { label: 'Aprovado', bg: 'bg-blue-50 text-blue-700 border-blue-200' },
-    faturado: { label: 'Faturado', bg: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
-    cancelado: { label: 'Cancelado', bg: 'bg-rose-50 text-rose-700 border-rose-200' },
+  const getStatusBadgeType = (status: string) => {
+    switch (status) {
+      case 'pendente': return 'warning';
+      case 'aprovado': return 'info';
+      case 'faturado': return 'success';
+      case 'cancelado': return 'error';
+      default: return 'neutral';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'pendente': return 'Pendente';
+      case 'aprovado': return 'Aprovado';
+      case 'faturado': return 'Faturado';
+      case 'cancelado': return 'Cancelado';
+      default: return status;
+    }
   };
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto text-left animate-in fade-in duration-300">
       {/* Header Premium */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
-        <div className="space-y-1 text-left">
-          <h1 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2.5">
-            <div className="p-2 bg-sky-50 text-brand-clinical rounded-2xl shadow-2xs">
-              <ShoppingBag className="w-6 h-6" />
-            </div>
-            Meus Pedidos de Compra
-          </h1>
-          <p className="text-xs text-slate-500 font-medium">
-            Acompanhe o faturamento, entrega e status dos equipamentos e suprimentos adquiridos para seu consultório.
-          </p>
-        </div>
-      </div>
+      <PageHero
+        title="Meus Pedidos de Compra"
+        description="Acompanhe o faturamento, entrega e status dos equipamentos e suprimentos adquiridos para seu consultório."
+        badge="Compras"
+        icon={ShoppingBag}
+      />
 
       {!myOrders || myOrders.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 px-6 text-center border border-dashed border-slate-200 rounded-3xl bg-slate-50/20 shadow-3xs">
-          <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mb-4 border border-slate-200/50">
-            <ShoppingBag className="w-6 h-6" />
-          </div>
-          <h4 className="font-extrabold text-slate-800 text-sm mb-1.5">Nenhum pedido de compra</h4>
-          <p className="text-xs text-slate-400 font-medium max-w-sm leading-relaxed mb-6">
-            Você não possui pedidos de compra registrados nesta conta. Entre em contato com nosso departamento comercial para adquirir novos equipamentos odontológicos e suprimentos.
-          </p>
-          <Link 
-            href="/cliente/suporte"
-            className="inline-flex items-center gap-1.5 bg-brand-clinical hover:bg-sky-700 text-white font-extrabold text-xs px-4.5 py-2.5 rounded-xl transition-all shadow-sm hover:scale-[1.02] active:scale-[0.98]"
-          >
-            Falar com Vendas / Suporte
-          </Link>
-        </div>
+        <EmptyState
+          title="Nenhum pedido de compra"
+          description="Você não possui pedidos de compra registrados nesta conta. Entre em contato com nosso departamento comercial para adquirir novos equipamentos odontológicos."
+          icon={<ShoppingBag className="w-6 h-6 text-sky-650" />}
+          actionLabel="Falar com Vendas / Suporte"
+          actionHref="/cliente/suporte"
+        />
       ) : (
         <div className="space-y-5">
           {myOrders.map((order) => {
-            const statusStyle = statusConfig[order.status as keyof typeof statusConfig] || {
-              label: order.status,
-              bg: 'bg-slate-50 text-slate-700 border-slate-200',
-            };
-
             const borderColors = {
               pendente: 'border-l-4 border-l-amber-500',
-              aprovado: 'border-l-4 border-l-blue-500',
+              aprovado: 'border-l-4 border-l-sky-500',
               faturado: 'border-l-4 border-l-emerald-500',
               cancelado: 'border-l-4 border-l-rose-500',
             };
@@ -93,27 +88,28 @@ export default async function ClientePedidosPage() {
             return (
               <div 
                 key={order.id}
-                className={`bg-white border border-slate-100 rounded-3xl p-6 shadow-2xs space-y-5 hover:shadow-md hover:scale-[1.008] transition-all duration-300 relative overflow-hidden text-left ${borderColorClass}`}
+                className={`bg-white border border-slate-100/80 rounded-3xl p-6 shadow-3xs space-y-5 hover:shadow-sm hover:scale-[1.008] transition-all duration-300 relative overflow-hidden text-left ${borderColorClass}`}
               >
                 <div className="flex justify-between items-start pt-1">
                   <div className="space-y-1">
-                    <span className="text-[10px] font-mono font-black text-brand-clinical tracking-wider block">
+                    <span className="text-[10px] font-mono font-black text-sky-650 tracking-wider block">
                       PEDIDO: #{order.id.slice(0, 8).toUpperCase()}
                     </span>
-                    <p className="text-[10px] font-bold text-slate-400 flex items-center gap-1.5">
+                    <p className="text-[10px] font-bold text-slate-400 flex items-center gap-1.5 font-sans">
                       <Calendar className="w-3.5 h-3.5 text-slate-400" />
                       {new Date(order.created_at).toLocaleDateString('pt-BR', { dateStyle: 'long' })}
                     </p>
                   </div>
-                  <span className={`text-[9px] font-black px-3 py-1 rounded-full border uppercase tracking-wider shadow-3xs ${statusStyle.bg}`}>
-                    {statusStyle.label}
-                  </span>
+                  <StatusBadge
+                    label={getStatusLabel(order.status)}
+                    type={getStatusBadgeType(order.status)}
+                  />
                 </div>
 
                 {/* Listado de items del pedido */}
                 <div className="space-y-3 pt-2.5 border-t border-slate-100">
                   <h4 className="font-extrabold text-slate-800 text-xs leading-snug flex items-center gap-2">
-                    <Package className="w-4 h-4 text-purple-650" />
+                    <Package className="w-4 h-4 text-sky-600" />
                     Produtos Adquiridos
                   </h4>
                   {items.length > 0 ? (
@@ -121,7 +117,7 @@ export default async function ClientePedidosPage() {
                       {items.map((item: any) => (
                         <li key={item.id} className="flex justify-between items-center bg-slate-50/50 p-3 rounded-2xl border border-slate-100/60 hover:bg-slate-50 transition-colors">
                           <span className="text-slate-700 font-semibold">
-                            {item.quantity}x <strong className="text-slate-850 font-extrabold">{item.products?.name}</strong>
+                            {item.quantity}x <strong className="text-slate-800 font-extrabold">{item.products?.name}</strong>
                           </span>
                           <span className="font-mono text-slate-500 text-[10px] bg-white border border-slate-100 px-2 py-0.5 rounded-lg shadow-3xs">
                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(item.unit_price))} cada
