@@ -275,13 +275,13 @@ export default function TecnicoServicosPage() {
             <div
               key={os.id}
               onClick={() => openStatusModal(os)}
-              className={`bg-white rounded-3xl border p-5 space-y-4 shadow-3xs hover:shadow-xs transition-all cursor-pointer active:bg-slate-50/50 ${
-                os.status === 'em_atendimento' ? 'ring-4 ring-sky-100 border-sky-300' : 'border-slate-100/80'
+              className={`bg-white rounded-xl border p-5 space-y-4 shadow-[0_2px_8px_rgba(0,0,0,0.012)] hover:shadow-[0_8px_20px_rgba(7,10,19,0.035)] transition-all cursor-pointer active:bg-slate-50/50 ${
+                os.status === 'em_atendimento' ? 'ring-2 ring-sky-200/80 border-sky-400' : 'border-slate-200/60'
               }`}
             >
               {/* Encabezado del Card */}
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono font-black text-sky-600 leading-none">
+                <span className="text-[10px] font-mono font-black text-sky-600 bg-sky-50/50 px-2 py-0.5 rounded border border-sky-105/20 leading-none">
                   #{os.id.slice(0, 8).toUpperCase()}
                 </span>
                 <div className="flex gap-1.5 shrink-0">
@@ -292,36 +292,37 @@ export default function TecnicoServicosPage() {
                   <StatusBadge
                     label={os.priority}
                     type={getPriorityBadgeType(os.priority)}
+                    className={os.priority === 'urgente' ? 'animate-pulse font-extrabold' : ''}
                   />
                 </div>
               </div>
 
               {/* Contenido principal */}
               <div className="space-y-1.5 text-left">
-                <h4 className="font-extrabold text-slate-800 text-base leading-snug">
+                <h4 className="font-extrabold text-slate-800 text-sm leading-snug">
                   {os.equipment?.name || 'Equipamento Geral'}
                 </h4>
                 {os.equipment?.brand && (
-                  <p className="text-[10px] text-slate-450 font-bold">
+                  <p className="text-[10px] text-slate-400 font-bold">
                     {os.equipment.brand} • {os.equipment.model}
                   </p>
                 )}
-                <div className="flex items-center gap-1.5 text-xs text-slate-600 font-semibold pt-1">
+                <div className="flex items-center gap-1.5 text-xs text-slate-655 font-semibold pt-1">
                   <User className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
                   <span className="line-clamp-1">{os.customer?.company_name}</span>
                 </div>
               </div>
 
               {/* Fecha y Dirección */}
-              <div className="bg-slate-50 rounded-2xl p-4.5 text-xs font-semibold text-slate-600 space-y-2 text-left border border-slate-100/50">
+              <div className="bg-slate-50/50 rounded-xl p-4 text-xs font-semibold text-slate-600 space-y-2 text-left border border-slate-150/40 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]">
                 {os.scheduled_date && (
-                  <div className="flex items-center gap-1.5 text-sky-650 font-extrabold">
+                  <div className="flex items-center gap-1.5 text-sky-600 font-extrabold text-[11px]">
                     <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
                     <span>Agendado: {new Date(os.scheduled_date).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</span>
                   </div>
                 )}
                 {os.customer && (
-                  <div className="flex items-start gap-1.5 text-[11px] text-slate-400 font-medium leading-relaxed">
+                  <div className="flex items-start gap-1.5 text-[10.5px] text-slate-400 font-medium leading-relaxed">
                     <MapPin className="w-3.5 h-3.5 text-slate-400 flex-shrink-0 mt-0.5" />
                     <span>{os.customer.address_street}, {os.customer.address_number} - {os.customer.address_city}</span>
                   </div>
@@ -335,7 +336,7 @@ export default function TecnicoServicosPage() {
                   openStatusModal(os);
                 }}
                 variant="outline"
-                className="w-full"
+                className="w-full text-xs py-2.5"
                 icon={<Eye className="w-4 h-4" />}
               >
                 Ver & Atualizar Status

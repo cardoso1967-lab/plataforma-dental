@@ -40,38 +40,42 @@ export default async function ClienteEquipamentosPage() {
           {myEquipments.map((eq) => (
             <div 
               key={eq.id}
-              className="bg-white border border-slate-100/80 rounded-3xl p-5 shadow-2xs space-y-4.5 hover:shadow-md hover:scale-[1.012] transition-all duration-300 relative overflow-hidden text-left"
+              className="bg-white border border-slate-200/65 rounded-xl p-5.5 shadow-[0_2px_8px_rgba(0,0,0,0.012)] space-y-4 hover:shadow-[0_12px_30px_rgba(7,10,19,0.04)] hover:border-sky-300/40 transition-all duration-300 relative overflow-hidden text-left group"
             >
-              {/* Decoración superior sutil */}
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-400 to-sky-600" />
-
-              <div className="space-y-1 pt-1">
-                <span className="text-[9px] font-extrabold text-sky-600 uppercase tracking-widest block font-sans">
-                  {eq.brand || 'Fabricante não informado'}
-                </span>
-                <h4 className="font-extrabold text-slate-850 text-sm leading-snug">
+              <div className="space-y-1.5 pt-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[9px] font-extrabold text-sky-600 bg-sky-50/70 border border-sky-100/50 px-2 py-0.5 rounded uppercase tracking-widest block font-mono">
+                    {eq.brand || 'Fabricante N/D'}
+                  </span>
+                  {eq.last_maintenance_date && (
+                    <span className="text-[8px] font-extrabold text-emerald-600 bg-emerald-50/50 border border-emerald-100/50 px-2 py-0.5 rounded uppercase tracking-wide block font-mono">
+                      Revisado
+                    </span>
+                  )}
+                </div>
+                <h4 className="font-extrabold text-slate-800 text-sm leading-snug group-hover:text-sky-700 transition-colors">
                   {eq.name}
                 </h4>
                 {eq.model && (
-                  <p className="text-[10px] text-slate-400 font-bold">Modelo: {eq.model}</p>
+                  <p className="text-[10px] text-slate-400 font-bold">Modelo: <span className="text-slate-500 font-mono">{eq.model}</span></p>
                 )}
               </div>
 
-              <div className="space-y-2.5 text-xs font-semibold text-slate-500 pt-3 border-t border-slate-100">
+              <div className="space-y-2.5 text-xs font-semibold text-slate-500 pt-3.5 border-t border-slate-100/70">
                 <div className="flex items-center justify-between text-[10.5px]">
                   <span className="flex items-center gap-1.5 text-slate-400 font-bold">
-                    <Tag className="w-3.5 h-3.5 text-sky-500" />
+                    <Tag className="w-3.5 h-3.5 text-sky-505" />
                     Nº de Série
                   </span>
-                  <span className="font-mono text-slate-850 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100 shadow-3xs">{eq.serial_number || 'N/A'}</span>
+                  <span className="font-mono text-slate-700 bg-slate-50 px-2 py-0.5 rounded border border-slate-200/40 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">{eq.serial_number || 'N/A'}</span>
                 </div>
 
                 <div className="flex items-center justify-between text-[10.5px]">
                   <span className="flex items-center gap-1.5 text-slate-400 font-bold">
-                    <Calendar className="w-3.5 h-3.5 text-sky-500" />
+                    <Calendar className="w-3.5 h-3.5 text-sky-505" />
                     Instalação
                   </span>
-                  <span className="text-slate-800 font-bold">
+                  <span className="text-slate-700 font-extrabold font-mono">
                     {eq.installation_date 
                       ? new Date(eq.installation_date).toLocaleDateString('pt-BR') 
                       : 'Não informada'
@@ -85,7 +89,7 @@ export default async function ClienteEquipamentosPage() {
                       <Wrench className="w-3.5 h-3.5 text-sky-505" />
                       Última Manutenção
                     </span>
-                    <span className="text-slate-800 font-bold">
+                    <span className="text-slate-700 font-extrabold font-mono">
                       {new Date(eq.last_maintenance_date).toLocaleDateString('pt-BR')}
                     </span>
                   </div>

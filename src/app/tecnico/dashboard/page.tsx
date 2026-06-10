@@ -240,8 +240,8 @@ export default function TecnicoDashboardPage() {
             {activeOS.status === 'em_atendimento' ? 'Serviço Ativo (Em andamento)' : 'Próximo Serviço da Lista'}
           </h3>
           
-          <div className={`bg-white border rounded-3xl p-5 shadow-3xs space-y-4 transition-all relative overflow-hidden ${
-            activeOS.priority === 'urgente' ? 'border-rose-250 ring-4 ring-rose-50' : 'border-slate-100'
+          <div className={`bg-white border rounded-xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.012)] space-y-4 transition-all duration-300 hover:shadow-[0_12px_30px_rgba(7,10,19,0.04)] hover:border-sky-350/30 ${
+            activeOS.priority === 'urgente' ? 'border-rose-300 ring-2 ring-rose-50/50' : 'border-slate-200/60'
           }`}>
             {/* Status y Prioridad */}
             <div className="flex items-center justify-between">
@@ -253,16 +253,16 @@ export default function TecnicoDashboardPage() {
               <StatusBadge
                 label={activeOS.priority}
                 type={getPriorityBadgeType(activeOS.priority)}
-                className={activeOS.priority === 'urgente' ? 'animate-pulse' : ''}
+                className={activeOS.priority === 'urgente' ? 'animate-pulse font-extrabold' : ''}
               />
             </div>
 
             {/* Equipamiento y Cliente */}
             <div className="space-y-2">
-              <span className="text-[10px] font-mono font-black text-sky-600 block leading-none">
+              <span className="text-[10px] font-mono font-black text-sky-600 bg-sky-50/50 px-2 py-0.5 rounded border border-sky-105/20 inline-block leading-none">
                 OS: #{activeOS.id.slice(0, 8).toUpperCase()}
               </span>
-              <h4 className="font-extrabold text-slate-800 text-base leading-snug">
+              <h4 className="font-extrabold text-slate-800 text-sm leading-snug">
                 {activeOS.equipment?.name || 'Equipamento Geral'}
               </h4>
               {activeOS.equipment?.model && (
@@ -271,7 +271,7 @@ export default function TecnicoDashboardPage() {
                 </p>
               )}
               
-              <div className="flex items-center gap-1.5 text-xs text-slate-600 font-semibold pt-1">
+              <div className="flex items-center gap-2 text-xs text-slate-600 font-semibold pt-1">
                 <User className="w-4 h-4 text-slate-400" />
                 <span>{activeOS.customer?.company_name}</span>
               </div>
@@ -279,8 +279,8 @@ export default function TecnicoDashboardPage() {
 
             {/* Dirección */}
             {activeOS.customer && (
-              <div className="bg-slate-50/50 rounded-2xl p-4 space-y-1.5 text-xs font-semibold text-slate-600 border border-slate-100/50">
-                <div className="flex items-start gap-2">
+              <div className="bg-slate-50/60 rounded-xl p-4 space-y-2.5 text-xs font-semibold text-slate-600 border border-slate-150/40 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]">
+                <div className="flex items-start gap-2 text-[11px] leading-relaxed">
                   <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
                   <span>
                     {activeOS.customer.address_street}, {activeOS.customer.address_number}
@@ -292,9 +292,9 @@ export default function TecnicoDashboardPage() {
                   </span>
                 </div>
                 {activeOS.customer.phone && (
-                  <div className="flex items-center gap-2 border-t border-slate-100 pt-1.5 mt-1.5">
-                    <Phone className="w-4 h-4 text-slate-400" />
-                    <a href={`tel:${activeOS.customer.phone}`} className="text-sky-650 font-extrabold hover:underline">
+                  <div className="flex items-center gap-2 border-t border-slate-200/50 pt-2">
+                    <Phone className="w-3.5 h-3.5 text-slate-450" />
+                    <a href={`tel:${activeOS.customer.phone}`} className="text-sky-600 font-extrabold hover:underline">
                       {activeOS.customer.phone}
                     </a>
                   </div>
@@ -304,8 +304,8 @@ export default function TecnicoDashboardPage() {
 
             {/* Relato del problema */}
             <div className="space-y-1">
-              <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wide">Descrição do Chamado:</span>
-              <p className="text-xs text-slate-500 font-medium leading-relaxed bg-slate-50/20 p-2.5 rounded-xl border border-slate-100/50 italic">
+              <span className="text-[9px] font-extrabold text-slate-450 uppercase tracking-wide">Descrição do Chamado:</span>
+              <p className="text-xs text-slate-500 font-semibold leading-relaxed bg-slate-50/40 p-3 rounded-xl border border-slate-150/40 italic">
                 "{activeOS.description}"
               </p>
             </div>
@@ -317,7 +317,7 @@ export default function TecnicoDashboardPage() {
                   loading={updatingStatus}
                   onClick={() => handleUpdateActiveStatus('em_atendimento')}
                   variant="primary"
-                  className="w-full py-3 text-sm"
+                  className="w-full py-3 text-xs"
                   icon={<Wrench className="w-4 h-4" />}
                 >
                   Iniciar Atendimento Local
@@ -337,7 +337,7 @@ export default function TecnicoDashboardPage() {
                     loading={updatingStatus}
                     onClick={() => handleUpdateActiveStatus('aguardando_peca')}
                     variant="danger"
-                    className="py-3 text-xs bg-orange-500 hover:bg-orange-600 border-none"
+                    className="py-3 text-xs bg-orange-500 hover:bg-orange-600 border-none text-white"
                     icon={<AlertTriangle className="w-4 h-4" />}
                   >
                     Aguardar Peça
@@ -346,9 +346,9 @@ export default function TecnicoDashboardPage() {
               )}
               <Link 
                 href="/tecnico/servicos"
-                className="w-full bg-slate-50 hover:bg-slate-100/60 border border-slate-200 text-slate-655 font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-1 transition-all"
+                className="w-full bg-slate-50 hover:bg-slate-100/60 border border-slate-200/60 text-slate-600 font-extrabold text-[11px] py-3 rounded-xl flex items-center justify-center gap-1 transition-all"
               >
-                Gerenciar Todos os Chamados <ChevronRight className="w-4 h-4" />
+                Gerenciar Todos os Chamados <ChevronRight className="w-4 h-4 text-slate-400" />
               </Link>
             </div>
           </div>
@@ -357,7 +357,7 @@ export default function TecnicoDashboardPage() {
         <EmptyState
           title="Sem chamados ativos"
           description="Ótimo trabalho! Você completou todos os chamados designados no momento."
-          icon={<CheckCircle2 className="w-6 h-6 text-emerald-600" />}
+          icon={<CheckCircle2 className="w-6 h-6 text-emerald-650" />}
         />
       )}
 

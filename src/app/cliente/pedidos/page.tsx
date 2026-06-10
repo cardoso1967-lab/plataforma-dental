@@ -73,7 +73,7 @@ export default async function ClientePedidosPage() {
           actionHref="/cliente/suporte"
         />
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-6">
           {myOrders.map((order) => {
             const borderColors = {
               pendente: 'border-l-4 border-l-amber-500',
@@ -88,14 +88,14 @@ export default async function ClientePedidosPage() {
             return (
               <div 
                 key={order.id}
-                className={`bg-white border border-slate-100/80 rounded-3xl p-6 shadow-3xs space-y-5 hover:shadow-sm hover:scale-[1.008] transition-all duration-300 relative overflow-hidden text-left ${borderColorClass}`}
+                className={`bg-white border border-slate-200/60 rounded-2xl p-6 shadow-[0_2px_8px_rgba(0,0,0,0.015)] space-y-5 hover:shadow-[0_12px_30px_rgba(7,10,19,0.04)] hover:scale-[1.005] hover:border-slate-350/40 transition-all duration-300 relative overflow-hidden text-left ${borderColorClass}`}
               >
                 <div className="flex justify-between items-start pt-1">
                   <div className="space-y-1">
-                    <span className="text-[10px] font-mono font-black text-sky-650 tracking-wider block">
+                    <span className="text-[10px] font-mono font-black text-sky-600 bg-sky-50/50 px-2 py-0.5 rounded border border-sky-100/50 tracking-wider inline-block leading-none">
                       PEDIDO: #{order.id.slice(0, 8).toUpperCase()}
                     </span>
-                    <p className="text-[10px] font-bold text-slate-400 flex items-center gap-1.5 font-sans">
+                    <p className="text-[10px] font-bold text-slate-400 flex items-center gap-1.5 font-sans pt-1">
                       <Calendar className="w-3.5 h-3.5 text-slate-400" />
                       {new Date(order.created_at).toLocaleDateString('pt-BR', { dateStyle: 'long' })}
                     </p>
@@ -107,19 +107,19 @@ export default async function ClientePedidosPage() {
                 </div>
 
                 {/* Listado de items del pedido */}
-                <div className="space-y-3 pt-2.5 border-t border-slate-100">
+                <div className="space-y-3 pt-4 border-t border-slate-100/70">
                   <h4 className="font-extrabold text-slate-800 text-xs leading-snug flex items-center gap-2">
                     <Package className="w-4 h-4 text-sky-600" />
                     Produtos Adquiridos
                   </h4>
                   {items.length > 0 ? (
-                    <ul className="space-y-2 font-bold text-xs text-slate-600 pl-0.5">
+                    <ul className="space-y-2 font-bold text-xs text-slate-655 pl-0.5">
                       {items.map((item: any) => (
-                        <li key={item.id} className="flex justify-between items-center bg-slate-50/50 p-3 rounded-2xl border border-slate-100/60 hover:bg-slate-50 transition-colors">
+                        <li key={item.id} className="flex justify-between items-center bg-slate-50/60 p-3 rounded-xl border border-slate-150/40 hover:bg-slate-50 hover:border-slate-200/40 transition-all">
                           <span className="text-slate-700 font-semibold">
                             {item.quantity}x <strong className="text-slate-800 font-extrabold">{item.products?.name}</strong>
                           </span>
-                          <span className="font-mono text-slate-500 text-[10px] bg-white border border-slate-100 px-2 py-0.5 rounded-lg shadow-3xs">
+                          <span className="font-mono text-slate-500 text-[10px] bg-white border border-slate-200/50 px-2 py-0.5 rounded shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(item.unit_price))} cada
                           </span>
                         </li>
@@ -131,12 +131,12 @@ export default async function ClientePedidosPage() {
                 </div>
 
                 {/* Total de la orden */}
-                <div className="border-t border-slate-100 pt-4 flex items-center justify-between text-xs font-bold bg-slate-50/40 -mx-6 -mb-6 p-6 rounded-b-3xl">
+                <div className="border-t border-slate-100/70 pt-4 flex items-center justify-between text-xs font-bold bg-slate-50/50 -mx-6 -mb-6 p-5 rounded-b-2xl">
                   <span className="text-slate-400 font-extrabold uppercase tracking-widest flex items-center gap-1.5">
                     <Receipt className="w-4 h-4 text-slate-400" />
                     Valor Total do Pedido
                   </span>
-                  <span className="text-slate-900 font-black text-base">
+                  <span className="text-slate-900 font-black text-base font-sans">
                     {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(order.total_amount))}
                   </span>
                 </div>

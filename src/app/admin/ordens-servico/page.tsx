@@ -492,31 +492,29 @@ export default function AdminOrdensServicoPage() {
                         )}
                       </td>
                       <td className="py-4 px-2 text-center">
-                        <span className={`text-[9.5px] font-extrabold px-2 py-0.5 rounded-md border uppercase tracking-wider ${
-                          priorityMap[os.priority as keyof typeof priorityMap]?.class || 'bg-slate-100 text-slate-500 border-slate-200'
-                        }`}>
-                          {priorityMap[os.priority as keyof typeof priorityMap]?.label || os.priority}
-                        </span>
+                        <StatusBadge
+                          label={priorityMap[os.priority as keyof typeof priorityMap]?.label || os.priority}
+                          type={os.priority === 'urgente' ? 'error' : os.priority === 'alta' ? 'warning' : os.priority === 'media' ? 'info' : 'neutral'}
+                        />
                       </td>
                       <td className="py-4 px-2 text-center">
-                        <span className={`text-[9.5px] font-extrabold px-2.5 py-0.5 rounded-full border uppercase tracking-wider shadow-2xs ${
-                          statusMap[os.status]?.class || 'bg-slate-100 text-slate-500 border-slate-200'
-                        }`}>
-                          {statusMap[os.status]?.label || os.status}
-                        </span>
+                        <StatusBadge
+                          label={statusMap[os.status]?.label || os.status}
+                          type={os.status === 'concluida' ? 'success' : os.status === 'cancelada' ? 'error' : os.status === 'em_atendimento' ? 'success' : os.status === 'orcamento_pendente' ? 'warning' : 'neutral'}
+                        />
                       </td>
                       <td className="py-4 pr-2 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={() => openModal(os)}
-                            className="p-1.5 text-slate-400 hover:text-brand-clinical rounded-lg hover:bg-slate-50 transition-colors"
+                            className="p-1.5 text-slate-450 hover:text-sky-655 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
                             title="Editar OS"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleDelete(os.id)}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-50 transition-colors"
+                            className="p-1.5 text-slate-450 hover:text-rose-650 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
                             title="Remover OS"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -534,24 +532,24 @@ export default function AdminOrdensServicoPage() {
               {filteredOS.map((os) => (
                 <div 
                   key={os.id}
-                  className="bg-slate-50/20 border border-slate-100/80 rounded-2xl p-4.5 space-y-4 text-left shadow-2xs hover:shadow-xs transition-shadow duration-300"
+                  className="bg-white border border-slate-200 rounded-2xl p-4.5 space-y-4 text-left shadow-3xs"
                 >
                   <div className="flex justify-between items-start gap-2">
                     <div>
                       <span className="text-[9px] font-mono font-black text-slate-450 block">#{os.id.substring(0, 8).toUpperCase()}</span>
                       <h4 className="font-extrabold text-slate-850 text-xs leading-snug">{os.customer?.company_name}</h4>
                       {os.equipment && (
-                        <p className="text-[10px] text-brand-clinical font-extrabold mt-0.5">{os.equipment.name}</p>
+                        <p className="text-[10px] text-sky-655 font-bold mt-0.5">{os.equipment.name}</p>
                       )}
                     </div>
-                    <span className={`text-[8.5px] font-black px-2.5 py-0.5 rounded-full border uppercase tracking-wider shadow-2xs flex-shrink-0 ${
-                      statusMap[os.status]?.class || 'bg-slate-100 text-slate-500 border-slate-200'
-                    }`}>
-                      {statusMap[os.status]?.label || os.status}
-                    </span>
+                    <StatusBadge
+                      label={statusMap[os.status]?.label || os.status}
+                      type={os.status === 'concluida' ? 'success' : os.status === 'cancelada' ? 'error' : os.status === 'em_atendimento' ? 'success' : os.status === 'orcamento_pendente' ? 'warning' : 'neutral'}
+                      className="shrink-0"
+                    />
                   </div>
 
-                  <div className="space-y-1.5 text-[11px] font-bold text-slate-600 border-t border-slate-50/80 pt-3">
+                  <div className="space-y-1.5 text-[11px] font-semibold text-slate-655 border-t border-slate-100 pt-3">
                     <div className="flex items-center gap-1.5">
                       <User className="w-3.5 h-3.5 text-slate-400" />
                       <span>Técnico: </span>
@@ -568,27 +566,26 @@ export default function AdminOrdensServicoPage() {
                     </div>
                   </div>
 
-                  <div className="flex justify-between items-center border-t border-slate-50/80 pt-3">
-                    <span className={`text-[8.5px] font-black px-2 py-0.5 rounded-md border uppercase tracking-wider ${
-                      priorityMap[os.priority as keyof typeof priorityMap]?.class || 'bg-slate-100 text-slate-500 border-slate-200'
-                    }`}>
-                      {priorityMap[os.priority as keyof typeof priorityMap]?.label || os.priority}
-                    </span>
+                  <div className="flex justify-between items-center border-t border-slate-100 pt-3">
+                    <StatusBadge
+                      label={priorityMap[os.priority as keyof typeof priorityMap]?.label || os.priority}
+                      type={os.priority === 'urgente' ? 'error' : os.priority === 'alta' ? 'warning' : os.priority === 'media' ? 'info' : 'neutral'}
+                    />
                     
                     <div className="flex gap-1.5">
                       <button
                         onClick={() => openModal(os)}
-                        className="p-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-black text-slate-700 transition-all shadow-2xs hover:scale-[1.01]"
+                        className="p-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-[10px] font-black text-slate-755 transition-all shadow-3xs cursor-pointer"
                         title="Editar OS"
                       >
                         <Edit2 className="w-3 h-3 text-slate-450" />
                       </button>
                       <button
                         onClick={() => handleDelete(os.id)}
-                        className="p-1.5 bg-rose-50/50 hover:bg-rose-100 border border-rose-100 rounded-xl text-[10px] font-black text-rose-700 transition-all shadow-2xs hover:scale-[1.01]"
+                        className="p-1.5 bg-rose-50/50 hover:bg-rose-100 border border-rose-150 rounded-xl text-[10px] font-black text-rose-700 transition-all shadow-3xs cursor-pointer"
                         title="Excluir OS"
                       >
-                        <Trash2 className="w-3 h-3 text-rose-455" />
+                        <Trash2 className="w-3 h-3 text-rose-450" />
                       </button>
                     </div>
                   </div>

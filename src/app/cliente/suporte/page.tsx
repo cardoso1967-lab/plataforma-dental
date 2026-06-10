@@ -85,7 +85,7 @@ export default async function ClienteSuportePage() {
           />
         ) : (
           <div className="space-y-5">
-            {openOS.map((os) => {
+             {openOS.map((os) => {
               const statusStyle = statusConfig[os.status] || {
                 label: os.status,
                 bg: 'bg-slate-50 text-slate-700 border-slate-200',
@@ -114,19 +114,19 @@ export default async function ClienteSuportePage() {
               return (
                 <div 
                   key={os.id} 
-                  className="bg-white border border-slate-100/80 rounded-3xl p-6 shadow-3xs hover:shadow-sm hover:border-slate-200 transition-all duration-300 space-y-5 relative overflow-hidden text-left"
+                  className="bg-white border border-slate-200/60 rounded-xl p-5.5 shadow-[0_2px_8px_rgba(0,0,0,0.012)] hover:shadow-[0_12px_30px_rgba(7,10,19,0.04)] hover:border-slate-350/30 transition-all duration-300 space-y-4 relative overflow-hidden text-left group"
                 >
                   {/* Encabezado OS */}
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-50">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-100/70">
                     <div className="text-left">
-                      <span className="text-[9.5px] font-mono font-black text-sky-650 tracking-wider block">
-                        OS: #{os.id.slice(0, 8).toUpperCase()} • Abertura: {new Date(os.created_at).toLocaleDateString('pt-BR')}
+                      <span className="text-[9.5px] font-mono font-black text-sky-600 bg-sky-50/50 px-2 py-0.5 rounded border border-sky-100/50 tracking-wider inline-block leading-none">
+                        OS: #{os.id.slice(0, 8).toUpperCase()} • {new Date(os.created_at).toLocaleDateString('pt-BR')}
                       </span>
-                      <h4 className="font-extrabold text-slate-800 text-sm mt-0.5">
+                      <h4 className="font-extrabold text-slate-800 text-sm mt-1.5 group-hover:text-sky-705 transition-colors">
                         {(os.client_equipment as any)?.name || 'Equipamento Geral'}
                       </h4>
                       {os.description && (
-                        <p className="text-[10.5px] text-slate-500 font-semibold italic mt-1 max-w-2xl line-clamp-2 leading-relaxed">
+                        <p className="text-[10.5px] text-slate-500 font-semibold italic mt-1.5 max-w-2xl line-clamp-2 leading-relaxed">
                           "{os.description}"
                         </p>
                       )}
@@ -142,7 +142,7 @@ export default async function ClienteSuportePage() {
 
                   {/* Visualizador Gráfico de Progreso (Timeline) Premium */}
                   {!isCancelado && (
-                    <div className="bg-slate-50/30 rounded-2xl p-6 border border-slate-100/50 mt-2 max-w-xl">
+                    <div className="bg-slate-50/40 rounded-xl p-5 border border-slate-150/40 mt-1 max-w-xl shadow-[inset_0_1px_2px_rgba(0,0,0,0.015)]">
                       <div className="space-y-0">
                         {steps.map((st, idx) => {
                           const isDone = currentStep >= st.num;
@@ -168,8 +168,8 @@ export default async function ClienteSuportePage() {
                   )}
 
                   {isCancelado && (
-                    <div className="bg-rose-50/50 text-rose-800 text-[10.5px] font-bold p-4 rounded-2xl border border-rose-100 flex items-center gap-2">
-                      <ShieldAlert className="w-4.5 h-4.5 text-rose-500 flex-shrink-0" />
+                    <div className="bg-rose-50/40 text-rose-800 text-[10.5px] font-bold p-4 rounded-xl border border-rose-100/50 flex items-center gap-2">
+                      <ShieldAlert className="w-4.5 h-4.5 text-rose-550 flex-shrink-0" />
                       <span>Este chamado foi cancelado. Entre em contato com a administração caso julgue necessário.</span>
                     </div>
                   )}

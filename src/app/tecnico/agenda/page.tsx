@@ -113,7 +113,7 @@ export default function TecnicoAgendaPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-slate-400 font-medium text-xs gap-3">
-        <RefreshCw className="w-8 h-8 text-sky-600 animate-spin" />
+        <RefreshCw className="w-8 h-8 text-sky-650 animate-spin" />
         Carregando seu roteiro de hoje...
       </div>
     );
@@ -129,8 +129,8 @@ export default function TecnicoAgendaPage() {
 
   if (!technician) {
     return (
-      <div className="text-center py-16 px-6 max-w-sm mx-auto bg-white border border-slate-100 rounded-3xl p-6 mt-10 shadow-sm text-left animate-in fade-in duration-300">
-        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400">
+      <div className="text-center py-16 px-6 max-w-sm mx-auto bg-white border border-slate-200/60 rounded-xl p-6 mt-10 shadow-sm text-left animate-in fade-in duration-300">
+        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-450">
           <Calendar className="w-8 h-8" />
         </div>
         <h2 className="text-base font-extrabold text-slate-800">Agenda Restrita</h2>
@@ -165,12 +165,12 @@ export default function TecnicoAgendaPage() {
           todaySchedule.map((item) => (
             <div 
               key={item.id}
-              className="bg-white border border-slate-100/80 rounded-3xl p-5 shadow-3xs space-y-4 hover:shadow-sm transition-shadow text-left"
+              className="bg-white border border-slate-200/60 rounded-xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.012)] space-y-4 hover:shadow-[0_12px_24px_rgba(7,10,19,0.04)] hover:border-slate-350/40 transition-all duration-300 text-left group"
             >
               {/* Header de hora e status */}
-              <div className="flex items-center justify-between border-b border-slate-50 pb-2.5">
+              <div className="flex items-center justify-between border-b border-slate-100/60 pb-2.5">
                 <span className="text-xs font-black text-sky-600 flex items-center gap-1.5 leading-none">
-                  <Clock className="w-4 h-4 text-sky-550" />
+                  <Clock className="w-4 h-4 text-sky-500" />
                   {item.scheduled_date ? new Date(item.scheduled_date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Sem hora'}
                 </span>
                 <StatusBadge
@@ -180,29 +180,29 @@ export default function TecnicoAgendaPage() {
               </div>
 
               {/* Informações da Tarefa */}
-              <div className="space-y-3 text-xs font-semibold text-slate-655">
-                <div className="space-y-1">
-                  <span className="text-[9px] font-mono font-black text-sky-600 block leading-none">
+              <div className="space-y-3 text-xs font-semibold text-slate-600">
+                <div className="space-y-1.5">
+                  <span className="text-[9px] font-mono font-black text-sky-600 bg-sky-50/50 px-2 py-0.5 rounded border border-sky-100/50 tracking-wider inline-block leading-none">
                     OS: #{item.id.slice(0, 8).toUpperCase()}
                   </span>
-                  <h4 className="font-extrabold text-slate-800 text-base leading-snug">
+                  <h4 className="font-extrabold text-slate-800 text-sm leading-snug group-hover:text-sky-700 transition-colors">
                     {item.equipment?.name || 'Equipamento Geral'}
                   </h4>
                   {item.description && (
-                    <p className="text-[11px] text-slate-500 font-medium leading-relaxed italic">
+                    <p className="text-[11px] text-slate-500 font-semibold leading-relaxed bg-slate-50/40 p-3 rounded-lg border border-slate-150/40 italic">
                       "{item.description}"
                     </p>
                   )}
                 </div>
                 
                 {/* Dados do Cliente e Endereço */}
-                <div className="space-y-2 border-t border-slate-50 pt-2.5 text-[11px]">
-                  <p className="text-slate-700">
-                    Cliente: <strong className="text-slate-800">{item.customer?.company_name}</strong>
+                <div className="space-y-2 border-t border-slate-100/60 pt-3 text-[11px]">
+                  <p className="text-slate-500">
+                    Cliente: <strong className="text-slate-700">{item.customer?.company_name}</strong>
                   </p>
                   
                   {item.customer && (
-                    <div className="space-y-1.5">
+                    <div className="space-y-2">
                       <p className="flex items-start gap-1.5 text-slate-400 font-medium leading-relaxed">
                         <MapPin className="w-3.5 h-3.5 text-slate-400 flex-shrink-0 mt-0.5" />
                         <span>
@@ -215,8 +215,8 @@ export default function TecnicoAgendaPage() {
                       
                       {item.customer.phone && (
                         <p className="flex items-center gap-1.5 text-slate-500 font-semibold">
-                          <Phone className="w-3.5 h-3.5 text-slate-400" />
-                          <a href={`tel:${item.customer.phone}`} className="text-sky-650 font-extrabold hover:underline">
+                          <Phone className="w-3.5 h-3.5 text-slate-405" />
+                          <a href={`tel:${item.customer.phone}`} className="text-sky-600 font-extrabold hover:underline">
                             {item.customer.phone}
                           </a>
                         </p>
@@ -226,10 +226,10 @@ export default function TecnicoAgendaPage() {
                 </div>
 
                 {/* Botão para iniciar atendimento */}
-                <Link href={`/tecnico/servicos`} className="block w-full">
+                <Link href={`/tecnico/servicos`} className="block w-full pt-1">
                   <PremiumButton
                     variant="outline"
-                    className="w-full"
+                    className="w-full text-xs py-2.5"
                     icon={<Wrench className="w-3.5 h-3.5" />}
                   >
                     Atualizar Atendimento

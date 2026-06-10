@@ -68,22 +68,22 @@ interface StatusHistory {
 }
 
 const KANBAN_STATUSES = [
-  { id: 'aberta', label: 'Solicitação recebida', color: 'bg-blue-50 text-blue-700 border-blue-200' },
-  { id: 'em_analise', label: 'Em triagem', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
-  { id: 'tecnico_atribuido', label: 'Técnico atribuído', color: 'bg-purple-50 text-purple-700 border-purple-200' },
-  { id: 'visita_agendada', label: 'Visita agendada', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  { id: 'em_atendimento', label: 'Em atendimento', color: 'bg-sky-50 text-sky-700 border-sky-200' },
-  { id: 'aguardando_peca', label: 'Aguardando peça', color: 'bg-orange-50 text-orange-700 border-orange-200' },
-  { id: 'orcamento_pendente', label: 'Aguardando aprovação', color: 'bg-amber-50 text-amber-700 border-amber-200' },
-  { id: 'concluida', label: 'Concluído', color: 'bg-green-50 text-green-700 border-green-200' },
-  { id: 'cancelada', label: 'Cancelado', color: 'bg-rose-50 text-rose-700 border-rose-200' },
+  { id: 'aberta', label: 'Solicitação recebida', color: 'bg-blue-50/60 text-blue-700 border-blue-200/60' },
+  { id: 'em_analise', label: 'Em triagem', color: 'bg-indigo-50/60 text-indigo-700 border-indigo-200/60' },
+  { id: 'tecnico_atribuido', label: 'Técnico atribuído', color: 'bg-purple-50/60 text-purple-700 border-purple-200/60' },
+  { id: 'visita_agendada', label: 'Visita agendada', color: 'bg-emerald-50/60 text-emerald-700 border-emerald-200/60' },
+  { id: 'em_atendimento', label: 'Em atendimento', color: 'bg-sky-50/60 text-sky-700 border-sky-200/60' },
+  { id: 'aguardando_peca', label: 'Aguardando peça', color: 'bg-orange-50/60 text-orange-700 border-orange-200/60' },
+  { id: 'orcamento_pendente', label: 'Aguardando aprovação', color: 'bg-amber-50/60 text-amber-700 border-amber-200/60' },
+  { id: 'concluida', label: 'Concluído', color: 'bg-green-50/60 text-green-700 border-green-200/60' },
+  { id: 'cancelada', label: 'Cancelado', color: 'bg-rose-50/60 text-rose-700 border-rose-200/60' },
 ];
 
 const priorityMap = {
-  baixa: { label: 'Baixa', class: 'bg-slate-100 text-slate-600 border border-slate-200/50' },
-  media: { label: 'Média', class: 'bg-blue-50 text-blue-600 border border-blue-200/50' },
-  alta: { label: 'Alta', class: 'bg-orange-50 text-orange-700 border border-orange-200/50' },
-  urgente: { label: 'Urgente', class: 'bg-rose-50 text-rose-700 font-bold border border-rose-200 animate-pulse' },
+  baixa: { label: 'Baixa', class: 'bg-slate-50 text-slate-650 border border-slate-200/40' },
+  media: { label: 'Média', class: 'bg-blue-50/50 text-blue-650 border border-blue-200/40' },
+  alta: { label: 'Alta', class: 'bg-orange-50/50 text-orange-700 border border-orange-200/40' },
+  urgente: { label: 'Urgente', class: 'bg-rose-50/80 text-rose-700 font-bold border border-rose-200 animate-pulse' },
 };
 
 export default function AdminAgendaPage() {
@@ -485,19 +485,19 @@ export default function AdminAgendaPage() {
                             <>
                               <button
                                 onClick={() => openQuickAction(os, 'status')}
-                                className="text-[8.5px] font-black px-2 py-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-755 transition-colors border border-slate-200/40"
+                                className="text-[8.5px] font-black px-2.5 py-1.5 bg-slate-50 hover:bg-sky-50 hover:text-sky-700 hover:border-sky-200/60 rounded-md text-slate-600 transition-colors border border-slate-200/40"
                               >
                                 Status
                               </button>
                               <button
                                 onClick={() => openQuickAction(os, 'tech')}
-                                className="text-[8.5px] font-black px-2 py-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-755 transition-colors border border-slate-200/40"
+                                className="text-[8.5px] font-black px-2.5 py-1.5 bg-slate-50 hover:bg-sky-50 hover:text-sky-700 hover:border-sky-200/60 rounded-md text-slate-600 transition-colors border border-slate-200/40"
                               >
                                 Técnico
                               </button>
                               <button
                                 onClick={() => openQuickAction(os, 'date')}
-                                className="text-[8.5px] font-black px-2 py-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-755 transition-colors border border-slate-200/40"
+                                className="text-[8.5px] font-black px-2.5 py-1.5 bg-slate-50 hover:bg-sky-50 hover:text-sky-700 hover:border-sky-200/60 rounded-md text-slate-600 transition-colors border border-slate-200/40"
                               >
                                 Agendar
                               </button>

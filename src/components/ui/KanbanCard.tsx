@@ -54,64 +54,64 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
     <div
       draggable
       onDragStart={onDragStart}
-      className="bg-white rounded-2xl p-4 border border-slate-100 hover:border-slate-200/80 hover:shadow-md transition-all duration-300 hover:scale-[1.015] cursor-grab active:cursor-grabbing space-y-3.5 shadow-3xs text-left"
+      className="bg-white rounded-xl p-4.5 border border-slate-150/70 hover:border-sky-350/50 hover:shadow-[0_8px_30px_rgba(7,10,19,0.05)] transition-all duration-300 hover:scale-[1.01] cursor-grab active:cursor-grabbing space-y-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.015)] text-left group"
     >
       {/* Cabecera */}
       <div className="flex justify-between items-start gap-1">
-        <span className="text-[9px] font-mono font-black text-sky-600 bg-sky-50 px-2 py-0.5 rounded-lg border border-sky-105/10 leading-none">
+        <span className="text-[9px] font-mono font-black text-sky-600 bg-sky-50/80 px-2 py-0.5 rounded border border-sky-100/50 leading-none">
           #{id.substring(0, 6).toUpperCase()}
         </span>
         <StatusBadge
           label={priority}
           type={getPriorityBadgeType()}
-          className={priority === 'urgente' ? 'animate-pulse' : ''}
+          className={priority === 'urgente' ? 'animate-pulse font-extrabold' : ''}
         />
       </div>
 
       {/* Cliente y Equipo */}
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <div className={`w-6 h-6 rounded-lg border flex items-center justify-center font-extrabold text-[8.5px] shrink-0 ${initialsColor}`}>
+          <div className={`w-7.5 h-7.5 rounded-lg border flex items-center justify-center font-extrabold text-[9px] shrink-0 shadow-[0_1px_3px_rgba(0,0,0,0.02)] ${initialsColor}`}>
             {initials}
           </div>
-          <h4 className="font-extrabold text-xs text-slate-800 line-clamp-1 leading-snug">
+          <h4 className="font-extrabold text-xs text-slate-800 line-clamp-1 leading-snug group-hover:text-sky-700 transition-colors">
             {customerName}
           </h4>
         </div>
         {equipmentName ? (
-          <p className="text-[10px] font-semibold text-slate-500 flex items-center gap-1.5 pl-8">
+          <p className="text-[10px] font-semibold text-slate-500 flex items-center gap-1.5 pl-9.5">
             <Wrench className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             <span className="line-clamp-1">{equipmentName}</span>
           </p>
         ) : (
-          <span className="text-[9px] text-slate-400 italic font-semibold pl-8 block">Sem equipamento</span>
+          <span className="text-[9px] text-slate-400 italic font-semibold pl-9.5 block">Sem equipamento</span>
         )}
       </div>
 
       {/* Técnico y Fecha */}
-      <div className="pt-3 border-t border-slate-50 space-y-2 text-[10px] text-slate-655 font-semibold leading-relaxed">
-        <div className="flex items-center gap-1.5">
+      <div className="pt-3 border-t border-slate-100/60 space-y-2.5 text-[10px] text-slate-600 font-semibold leading-relaxed">
+        <div className="flex items-center gap-2">
           {technicianName ? (
             <>
-              <div className="w-5 h-5 bg-sky-100 text-sky-700 rounded-full flex items-center justify-center text-[8.5px] font-black shrink-0 border border-sky-200/30">
+              <div className="w-5.5 h-5.5 bg-sky-50 text-sky-700 rounded-full flex items-center justify-center text-[9px] font-black shrink-0 border border-sky-100/50 shadow-3xs">
                 {getInitials(technicianName)}
               </div>
-              <span className="line-clamp-1 text-slate-700">
+              <span className="line-clamp-1 text-slate-700 font-bold">
                 {technicianName}
               </span>
             </>
           ) : (
             <>
-              <div className="w-5 h-5 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center shrink-0 border border-slate-200/40">
-                <User className="w-3 h-3 text-slate-350" />
+              <div className="w-5.5 h-5.5 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center shrink-0 border border-slate-200/50">
+                <User className="w-3 h-3 text-slate-400" />
               </div>
-              <span className="text-slate-400 italic">Não designado</span>
+              <span className="text-slate-400 italic font-medium">Não designado</span>
             </>
           )}
         </div>
         
         {scheduledDate && (
-          <div className="flex items-center gap-1.5 text-[9px] text-slate-400 font-medium">
+          <div className="flex items-center gap-1.5 text-[9px] text-slate-400 font-medium pl-1.5">
             <Clock className="w-3.5 h-3.5 text-slate-400" />
             <span>{scheduledDate}</span>
           </div>
@@ -120,7 +120,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
 
       {/* Acciones Móviles Rápidas */}
       {quickActions && (
-        <div className="flex flex-wrap gap-1.5 pt-3 border-t border-slate-50 md:hidden justify-between">
+        <div className="flex flex-wrap gap-1.5 pt-3 border-t border-slate-100/60 md:hidden justify-between">
           {quickActions}
         </div>
       )}
@@ -128,7 +128,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
       {/* Botón Detalles */}
       <button
         onClick={onDetailClick}
-        className="w-full text-center text-[9.5px] font-extrabold text-slate-500 hover:text-sky-650 bg-slate-50 hover:bg-sky-50/50 py-2 rounded-xl transition-colors duration-300 mt-1.5 border border-slate-100/50 cursor-pointer"
+        className="w-full text-center text-[9.5px] font-extrabold text-slate-500 group-hover:text-sky-650 hover:text-sky-650 bg-slate-50 hover:bg-sky-50/50 py-2.5 rounded-lg transition-all duration-300 mt-1 border border-slate-150/40 cursor-pointer"
       >
         Ver detalhes
       </button>
