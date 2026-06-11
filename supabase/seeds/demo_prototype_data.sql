@@ -266,8 +266,10 @@ WHERE NOT EXISTS (
 
 -- ============================================================
 -- BLOCO 5: VINCULAR cliente@dental.com AO SEU CUSTOMER
--- Se o trigger criou o registro de customer com company_name = 'cliente'
--- (ou o e-mail como nome), atualizar para um nome real de clínica.
+-- Atualiza o customer ligado a cliente@dental.com com identidade
+-- de demonstração independente do nome atual no banco.
+-- Cobre os casos: 'cliente', 'cliente@dental.com', 'Cliente Dental',
+-- valor nulo ou qualquer outro nome genérico criado pelo trigger.
 -- ============================================================
 DO $$
 DECLARE
@@ -279,19 +281,20 @@ BEGIN
   LIMIT 1;
 
   IF v_cliente_profile_id IS NOT NULL THEN
+    -- Sempre sobrescreve company_name/trade_name para identidade demo.
+    -- Os demais campos usam COALESCE para não sobrescrever dados já preenchidos.
     UPDATE customers
     SET
-      company_name = CASE
-        WHEN company_name IN ('cliente', 'cliente@dental.com') THEN 'Clínica Sorriso Prime Ltda'
-        ELSE company_name
-      END,
-      trade_name = COALESCE(trade_name, 'Sorriso Prime'),
-      contact_name = COALESCE(contact_name, 'Dra. Camila Andrade'),
-      email = COALESCE(email, 'contato@sorrisoprime.com.br'),
-      phone = COALESCE(phone, '(11) 3245-8800'),
-      address_city = COALESCE(address_city, 'São Paulo'),
-      address_state = COALESCE(address_state, 'SP'),
-      notes = COALESCE(notes, 'Cliente de demonstração vinculado ao usuário cliente@dental.com.')
+      company_name  = 'Clínica Demo Cliente Ltda',
+      trade_name    = 'Clínica Demo Cliente',
+      cnpj          = COALESCE(NULLIF(cnpj, ''), '99.888.777/0001-66'),
+      contact_name  = 'Dra. Camila Andrade',
+      email         = 'contato@clinicademocliente.com.br',
+      phone         = '(11) 3245-8800',
+      whatsapp      = '(11) 98845-0012',
+      address_city  = COALESCE(NULLIF(address_city, ''), 'São Paulo'),
+      address_state = COALESCE(NULLIF(address_state, ''), 'SP'),
+      notes         = 'Cliente de demonstração vinculado ao usuário cliente@dental.com.'
     WHERE profile_id = v_cliente_profile_id;
   END IF;
 END $$;
@@ -457,11 +460,12 @@ BEGIN
   SELECT id INTO v_prod_ultra_id FROM products WHERE sku = 'DENT-ULTRA-01' LIMIT 1;
 
   -- Pedido 1: Concluído / Faturado — Clínica Sorriso Prime
+  -- total_amount = cadeira (18500) + 2x fotopolimerizador (2*890) + ultrassom (1250) = 21530.00
   IF v_sorriso_id IS NOT NULL AND NOT EXISTS (
     SELECT 1 FROM sales_orders WHERE notes = 'DEMO-PV-001'
   ) THEN
     INSERT INTO sales_orders (customer_id, status, total_amount, notes)
-    VALUES (v_sorriso_id, 'faturado', 23680.00, 'DEMO-PV-001')
+    VALUES (v_sorriso_id, 'faturado', 21530.00, 'DEMO-PV-001')
     RETURNING id INTO v_so1_id;
 
     IF v_prod_cadeira_id IS NOT NULL THEN
@@ -624,6 +628,7 @@ BEGIN
   END IF;
 
   -- OS 2: EM ATENDIMENTO — Compressor com ruído elevado (tecnico@dental.com)
+  -- scheduled_date = now() - 30min (atendimento já iniciado há pouco)
   IF v_cliente_customer_id IS NOT NULL AND NOT EXISTS (
     SELECT 1 FROM service_orders WHERE reported_issues = 'DEMO-OS-002'
   ) THEN
@@ -637,7 +642,7 @@ BEGIN
       'em_atendimento', 'alta',
       'Compressor com ruído elevado e perda de pressão',
       'DEMO-OS-002',
-      current_date::timestamp with time zone
+      now() - interval '30 minutes'
     )
     RETURNING id INTO v_os2_id;
 
@@ -661,6 +666,7 @@ BEGIN
   END IF;
 
   -- OS 3: VISITA AGENDADA PARA HOJE — Manutenção preventiva (Clínica Sorriso Prime)
+  -- scheduled_date = now() + 2h (próxima visita confirmada no dia)
   IF v_sorriso_id IS NOT NULL AND NOT EXISTS (
     SELECT 1 FROM service_orders WHERE reported_issues = 'DEMO-OS-003'
   ) THEN
@@ -674,7 +680,7 @@ BEGIN
       'visita_agendada', 'media',
       'Manutenção preventiva trimestral — revisão geral dos sistemas',
       'DEMO-OS-003',
-      current_date::timestamp with time zone + interval '9 hours'
+      now() + interval '2 hours'
     )
     RETURNING id INTO v_os3_id;
 
@@ -812,32 +818,34 @@ BEGIN
   IF v_tecnico_id IS NOT NULL THEN
 
     -- Agendamento HOJE — OS em atendimento (compressor)
+    -- start: now() - 30min | end: now() + 90min (técnico já está no local)
     IF v_os2_id IS NOT NULL AND NOT EXISTS (
       SELECT 1 FROM appointments WHERE service_order_id = v_os2_id
     ) THEN
       INSERT INTO appointments (technician_id, service_order_id, status, start_time, end_time, notes)
       VALUES (
         v_tecnico_id, v_os2_id, 'em_andamento',
-        current_date::timestamp with time zone + interval '8 hours',
-        current_date::timestamp with time zone + interval '11 hours',
-        'Atendimento de compressor em andamento — cliente Sorriso Prime (Consultório 1).'
+        now() - interval '30 minutes',
+        now() + interval '90 minutes',
+        'Atendimento de compressor em andamento — Clínica Demo Cliente (Consultório 1).'
       );
     END IF;
 
     -- Agendamento HOJE — Manutenção preventiva trimestral
+    -- start: now() + 2h | end: now() + 4h (próxima visita confirmada no dia)
     IF v_os3_id IS NOT NULL AND NOT EXISTS (
       SELECT 1 FROM appointments WHERE service_order_id = v_os3_id
     ) THEN
       INSERT INTO appointments (technician_id, service_order_id, status, start_time, end_time, notes)
       VALUES (
         v_tecnico_id, v_os3_id, 'confirmado',
-        current_date::timestamp with time zone + interval '14 hours',
-        current_date::timestamp with time zone + interval '17 hours',
+        now() + interval '2 hours',
+        now() + interval '4 hours',
         'Manutenção preventiva — revisão geral dos equipamentos da Clínica Sorriso Prime.'
       );
     END IF;
 
-    -- Agendamento AMANHÃ — Visita técnica urgente (autoclave cliente@dental.com)
+    -- Agendamento AMANHÃ — Visita técnica urgente (autoclave Clínica Demo Cliente)
     IF v_os1_id IS NOT NULL AND NOT EXISTS (
       SELECT 1 FROM appointments WHERE service_order_id = v_os1_id
     ) THEN
@@ -861,14 +869,69 @@ END $$;
 -- products:           6 registros (cadeira, compressor, autoclave, fotopolimerizador, ultrassom, bomba de vácuo)
 -- parts:              5 registros (válvula, filtro, mangueira, placa eletrônica, kit vedação)
 -- customers:          4 registros demo (Sorriso Prime, Odonto Center Norte, Dental Vida, Dental Avançada)
+--                     + update do cliente@dental.com -> 'Clínica Demo Cliente Ltda' / CNPJ 99.888.777/0001-66
 -- client_equipment:   7 registros (4 do cliente@dental.com, 3 de outros clientes demo)
--- sales_orders:       4 registros (1 faturado, 1 aprovado, 1 pendente para cliente@dental.com, 1 faturado)
+-- sales_orders:       4 registros (DEMO-PV-001 faturado=21530.00, aprovado, pendente, faturado)
 -- sales_order_items:  até 8 itens
--- service_orders:     6 registros (distribuídos por status: urgente, em_atendimento, visita_agendada, aguardando_peca, concluida, orcamento_pendente)
+-- service_orders:     6 registros (urgente, em_atendimento, visita_agendada, aguardando_peca, concluida, orcamento_pendente)
 -- service_order_status_history: 13 registros históricos
 -- service_order_notes: 5 notas
 -- service_order_parts: 3 registros de peças usadas
 -- service_quotes:     1 orçamento enviado
 -- service_quote_items: 2 itens de orçamento
--- appointments:       3 agendamentos (2 hoje, 1 amanhã)
+-- appointments:       3 agendamentos (datas dinâmicas: now()-30min, now()+2h, amanhã+9h)
+-- ============================================================
+
+-- ============================================================
+-- VALIDAÇÃO PÓS-SEED (executar manualmente no SQL Editor do Supabase)
+-- ============================================================
+-- Copie e cole apenas o bloco que quiser validar, removendo os '--'.
+--
+-- 1. Verificar produtos demo criados:
+-- SELECT sku, name, price FROM products WHERE sku LIKE 'DENT-%' ORDER BY sku;
+--
+-- 2. Verificar peças demo criadas:
+-- SELECT code, name, price, stock_quantity FROM parts WHERE code LIKE 'PEC-%' ORDER BY code;
+--
+-- 3. Verificar clientes demo (incluindo update do cliente@dental.com):
+-- SELECT company_name, trade_name, cnpj, contact_name, email FROM customers
+-- WHERE cnpj IN ('12.345.678/0001-90','23.456.789/0001-01','34.567.890/0001-12','45.678.901/0001-23','99.888.777/0001-66')
+-- ORDER BY company_name;
+--
+-- 4. Verificar equipamentos por número de série:
+-- SELECT serial_number, name, brand, model FROM client_equipment
+-- WHERE serial_number LIKE 'EQ-%' ORDER BY serial_number;
+--
+-- 5. Verificar distribuição de status das OS demo:
+-- SELECT status, priority, description FROM service_orders
+-- WHERE reported_issues LIKE 'DEMO-OS-%' ORDER BY reported_issues;
+--
+-- 6. Verificar total de OS por status:
+-- SELECT status, COUNT(*) FROM service_orders
+-- WHERE reported_issues LIKE 'DEMO-OS-%' GROUP BY status ORDER BY status;
+--
+-- 7. Verificar pedidos de venda e totais:
+-- SELECT notes, status, total_amount FROM sales_orders
+-- WHERE notes LIKE 'DEMO-PV-%' ORDER BY notes;
+--
+-- 8. Verificar agendamentos e horários dinâmicos:
+-- SELECT a.status, a.start_time, a.end_time, so.reported_issues
+-- FROM appointments a
+-- JOIN service_orders so ON so.id = a.service_order_id
+-- WHERE so.reported_issues LIKE 'DEMO-OS-%'
+-- ORDER BY a.start_time;
+--
+-- 9. Verificar orçamento enviado:
+-- SELECT sq.status, sq.total_amount, sq.valid_until, so.reported_issues
+-- FROM service_quotes sq
+-- JOIN service_orders so ON so.id = sq.service_order_id
+-- WHERE so.reported_issues LIKE 'DEMO-OS-%';
+--
+-- 10. Contagem geral do seed:
+-- SELECT COUNT(*) FROM products WHERE sku LIKE 'DENT-%';
+-- SELECT COUNT(*) FROM client_equipment WHERE serial_number LIKE 'EQ-%';
+-- SELECT COUNT(*) FROM service_orders WHERE reported_issues LIKE 'DEMO-OS-%';
+-- SELECT COUNT(*) FROM appointments WHERE service_order_id IN
+--   (SELECT id FROM service_orders WHERE reported_issues LIKE 'DEMO-OS-%');
+-- SELECT COUNT(*) FROM sales_orders WHERE notes LIKE 'DEMO-PV-%';
 -- ============================================================
