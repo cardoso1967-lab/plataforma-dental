@@ -37,10 +37,12 @@ export default function TecnicoLayout({
   const isActive = (href: string) => pathname === href;
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20 lg:pb-0 lg:flex lg:flex-row">
-      {/* Sidebar para telas grandes (opcional para desktop do técnico) */}
+    // h-screen overflow-hidden: o scroll acontece dentro da área de conteúdo.
+    // A sidebar fixed cobre sempre 100% da altura do viewport.
+    <div className="h-screen overflow-hidden bg-slate-50 flex flex-row">
+      {/* Sidebar fixa — Desktop: cobre 100% da altura do viewport */}
       <aside 
-        className={`hidden lg:flex flex-col justify-between bg-[#070A13] border-r border-[#121829] text-white p-4 sticky top-0 h-screen transition-all duration-300 ${
+        className={`hidden lg:flex fixed left-0 top-0 h-screen [height:100dvh] flex-col justify-between bg-[#070A13] border-r border-[#121829] text-white p-4 transition-all duration-300 z-30 ${
           isCollapsed ? 'w-20' : 'w-64'
         }`}
       >
@@ -124,7 +126,7 @@ export default function TecnicoLayout({
       </aside>
 
       {/* Header simplificado para mobile */}
-      <div className="lg:hidden bg-[#070A13] border-b border-[#121829] text-white p-4 sticky top-0 z-40 flex items-center justify-between shadow-md">
+      <div className="lg:hidden bg-[#070A13] border-b border-[#121829] text-white p-4 fixed top-0 left-0 right-0 z-40 flex items-center justify-between shadow-md">
         <Link href="/tecnico/dashboard" className="flex items-center gap-2">
           <div className="bg-sky-500 text-slate-950 p-1.5 rounded-lg">
             <Stethoscope className="w-4 h-4" />
@@ -139,8 +141,14 @@ export default function TecnicoLayout({
         </button>
       </div>
 
-      {/* Área do conteúdo com max-width ~960px */}
-      <div className="flex-1 min-w-0">
+      {/* Área do conteúdo — rola internamente, padding-left compensa a sidebar fixa no desktop */}
+      <div
+        className={`flex-1 min-w-0 overflow-y-auto pb-20 lg:pb-0 transition-all duration-300 ${
+          isCollapsed ? 'lg:pl-20' : 'lg:pl-64'
+        }`}
+      >
+        {/* Espaçador para o header fixo no mobile */}
+        <div className="lg:hidden h-16" />
         <main className="p-4 sm:p-6 lg:p-8 max-w-[960px] w-full mx-auto">
           {children}
         </main>

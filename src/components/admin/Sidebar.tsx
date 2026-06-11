@@ -77,11 +77,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed = true, setIsColla
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed inset-y-0 left-0 bg-[#070A13] border-r border-[#121829] text-white transform lg:translate-x-0 transition-all duration-300 ease-in-out z-50 lg:z-30 flex flex-col justify-between ${
+        className={`fixed left-0 top-0 h-screen [height:100dvh] bg-[#070A13] border-r border-[#121829] text-white transform lg:translate-x-0 transition-all duration-300 ease-in-out z-50 lg:z-30 flex flex-col justify-between ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         } ${isCollapsed ? 'lg:w-20' : 'lg:w-64'}`}
       >
-        <div className="flex flex-col flex-1 overflow-y-auto no-scrollbar relative">
+        <div className="flex flex-col flex-1 h-0 overflow-y-auto no-scrollbar relative">
           {/* Luz difusa de fondo */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/5 rounded-full blur-3xl pointer-events-none"></div>
 

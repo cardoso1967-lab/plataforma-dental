@@ -38,10 +38,14 @@ export default function ClienteLayout({
   const isActive = (href: string) => pathname === href;
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20 lg:pb-0 lg:flex lg:flex-row">
-      {/* Sidebar para telas grandes (opcional para desktop do cliente) */}
-      <aside 
-        className={`hidden lg:flex flex-col justify-between bg-[#070A13] border-r border-[#121829] text-white p-4 sticky top-0 h-screen transition-all duration-300 ${
+    // h-screen overflow-hidden: o container pai tem exatamente a altura do viewport.
+    // O scroll acontece dentro da área de conteúdo, não na página inteira.
+    // Isso impede que a sidebar "pare" antes do fim do conteúdo.
+    <div className="h-screen overflow-hidden bg-slate-50 flex flex-row">
+
+      {/* Sidebar fixa — Desktop: cobre 100% da altura do viewport com position fixed */}
+      <aside
+        className={`hidden lg:flex fixed left-0 top-0 h-screen [height:100dvh] flex-col justify-between bg-[#070A13] border-r border-[#121829] text-white p-4 transition-all duration-300 z-30 ${
           isCollapsed ? 'w-20' : 'w-64'
         }`}
       >
@@ -64,7 +68,7 @@ export default function ClienteLayout({
               )}
             </Link>
 
-            {/* Botón expandir/contraer */}
+            {/* Botão expandir/contraer */}
             <button
               onClick={() => handleSetCollapsed(!isCollapsed)}
               className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#121829] border border-[#121829] transition-all duration-200"
@@ -125,7 +129,7 @@ export default function ClienteLayout({
       </aside>
 
       {/* Header simplificado para mobile */}
-      <div className="lg:hidden bg-[#070A13] border-b border-[#121829] text-white p-4 sticky top-0 z-40 flex items-center justify-between shadow-md">
+      <div className="lg:hidden bg-[#070A13] border-b border-[#121829] text-white p-4 fixed top-0 left-0 right-0 z-40 flex items-center justify-between shadow-md">
         <Link href="/cliente/dashboard" className="flex items-center gap-2">
           <div className="bg-sky-500 text-slate-950 p-1.5 rounded-lg">
             <Stethoscope className="w-4 h-4" />
@@ -140,8 +144,14 @@ export default function ClienteLayout({
         </button>
       </div>
 
-      {/* Área do conteúdo com max-width ~1180px */}
-      <div className="flex-1 min-w-0">
+      {/* Área do conteúdo — rola internamente, padding-left compensa a sidebar fixa no desktop */}
+      <div
+        className={`flex-1 min-w-0 overflow-y-auto pb-20 lg:pb-0 pt-0 transition-all duration-300 ${
+          isCollapsed ? 'lg:pl-20' : 'lg:pl-64'
+        }`}
+      >
+        {/* Espaçador para o header fixo no mobile */}
+        <div className="lg:hidden h-16" />
         <main className="p-4 sm:p-6 lg:p-8 max-w-[1180px] w-full mx-auto">
           {children}
         </main>

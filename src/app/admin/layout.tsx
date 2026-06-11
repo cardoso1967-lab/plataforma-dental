@@ -23,13 +23,13 @@ export default function AdminLayout({
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
+    <div className="h-screen overflow-hidden bg-slate-50 flex flex-row">
       {/* Sidebar Responsiva Colapsável */}
       <Sidebar isCollapsed={isCollapsed} setIsCollapsed={handleSetCollapsed} />
 
-      {/* Main Content Wrapper dinâmico de acordo com o estado do menu */}
-      <div 
-        className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${
+      {/* Main Content Wrapper — ocupa o restante da largura e rola internamente */}
+      <div
+        className={`flex-1 flex flex-col min-w-0 overflow-y-auto transition-all duration-300 ${
           isCollapsed ? 'lg:pl-20' : 'lg:pl-64'
         }`}
       >
