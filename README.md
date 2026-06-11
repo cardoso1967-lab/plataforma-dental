@@ -104,3 +104,58 @@ No painel do Supabase, em **Authentication** > **URL Configuration**, as seguint
 * **Redirect / Callback URL**: `https://plataforma-dental-pi.vercel.app/api/auth/callback`
 
 *(Nota: Caso um domínio personalizado seja configurado futuramente utilizando Cloudflare DNS, devem ser adicionados também `https://seu-dominio-customizado.com` e `https://seu-dominio-customizado.com/api/auth/callback` no Supabase).*
+
+## Seed de Demonstração (Dados para Apresentação)
+
+> [!WARNING]
+> Este seed é exclusivo para fins de demonstração e apresentação do protótipo. NÃO aplicar em ambiente de produção com dados reais.
+
+Para popular o banco de dados com dados de demonstração e tornar as telas do protótipo visualmente completas durante uma apresentação, aplique o seed disponível em:
+
+```txt
+supabase/seeds/demo_prototype_data.sql
+```
+
+### Como Aplicar o Seed
+
+1. Acesse o painel do [Supabase](https://supabase.com).
+2. Selecione o projeto da Plataforma Dental.
+3. Vá em **SQL Editor** no painel lateral esquerdo.
+4. Clique em **New Query**.
+5. Copie e cole o conteúdo do arquivo `supabase/seeds/demo_prototype_data.sql`.
+6. Clique em **Run**.
+
+### Dados Incluídos no Seed
+
+| Tabela | Registros Demo |
+|---|---|
+| `products` | 6 produtos (cadeira, compressor, autoclave, fotopolimerizador, ultrassom, bomba de vácuo) |
+| `parts` | 5 peças de reposição (válvula, filtro, mangueira, placa eletrônica, kit vedação) |
+| `customers` | 4 clínicas demo (Sorriso Prime, Odonto Center Norte, Dental Vida, Dental Avançada) |
+| `client_equipment` | 7 equipamentos instalados |
+| `sales_orders` | 4 pedidos de venda (faturado, aprovado, pendente) |
+| `service_orders` | 6 ordens de serviço distribuídas por status |
+| `service_quotes` | 1 orçamento enviado aguardando aprovação |
+| `appointments` | 3 agendamentos (2 hoje, 1 amanhã) |
+
+### Telas Populadas pelo Seed
+
+* `/admin/dashboard` — Métricas reais de OS, técnicos e faturamento
+* `/admin/clientes` — Lista de clínicas com dados completos
+* `/admin/agenda` — Kanban de OS distribuído por status
+* `/admin/relatorios` — Dados para análise gerencial
+* `/cliente/dashboard` — Portal com dados de chamados do `cliente@dental.com`
+* `/cliente/pedidos` — Histórico de compras do cliente
+* `/cliente/equipamentos` — Equipamentos instalados na clínica
+* `/cliente/suporte` — OS ativa com timeline de progresso
+* `/tecnico/dashboard` — OS ativa e visita de hoje
+* `/tecnico/servicos` — Fila de serviços atribuídos
+* `/tecnico/agenda` — Agendamentos de hoje e amanhã
+
+### Segurança do Seed
+
+* Idempotente: pode ser executado múltiplas vezes sem criar duplicatas.
+* Sem cláusulas `TRUNCATE`, `DELETE`, `DROP`, `ALTER TABLE` ou `CREATE TABLE`.
+* Sem alteração de RLS, enums ou schema.
+* Não cria usuários `auth.users` diretamente.
+* WhatsApp permanece desabilitado.

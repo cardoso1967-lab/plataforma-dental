@@ -187,3 +187,73 @@ As rotas públicas e privadas foram validadas no ambiente de produção do Verce
 * **Sidebar Recolhida**: A barra lateral mantém o estado de colapsado (recolhido) por padrão no carregamento inicial da página.
 * **Integração com Supabase**: Conexão segura e em tempo real estabelecida com sucesso.
 * **Envio WhatsApp**: Mantido desativado (`ZAPI_SEND_ENABLED=false`) para proteção de dados do ambiente de protótipo.
+
+---
+
+## Seed de Dados de Demonstração — Checklist de Validação Pós-Aplicação
+
+> **ATENÇÃO**: Este seed é exclusivamente para fins de demonstração e apresentação do protótipo. NÃO aplicar em banco de produção com dados reais.
+
+### Arquivo do Seed
+* **Caminho**: `supabase/seeds/demo_prototype_data.sql`
+* **Objetivo**: Popular as 11 telas principais do protótipo com dados realistas para garantir uma demonstração completa e profissional.
+* **Idempotente**: Usa `ON CONFLICT DO NOTHING` e `WHERE NOT EXISTS` — pode ser executado múltiplas vezes sem criar duplicatas.
+
+### Instruções para Aplicar
+1. Acesse o painel do Supabase: https://supabase.com
+2. Selecione o projeto da Plataforma Dental.
+3. Vá em **SQL Editor** > **New Query**.
+4. Cole o conteúdo do arquivo `supabase/seeds/demo_prototype_data.sql`.
+5. Clique em **Run**.
+
+### Tabelas Afetadas pelo Seed
+
+| Tabela | Dados de Demo |
+|---|---|
+| `products` | 6 produtos odontológicos (cadeira, compressor, autoclave, fotopolimerizador, ultrassom, bomba de vácuo) |
+| `parts` | 5 peças de reposição (válvula, filtro, mangueira, placa eletrônica, kit vedação) |
+| `customers` | 4 clínicas demo adicionais + atualização do `cliente@dental.com` |
+| `client_equipment` | 7 equipamentos instalados (4 do cliente@dental.com) |
+| `sales_orders` | 4 pedidos (faturado × 2, aprovado × 1, pendente × 1) |
+| `sales_order_items` | Itens vinculados a cada pedido |
+| `service_orders` | 6 OS distribuídas por todos os status operacionais |
+| `service_order_status_history` | 13 registros de histórico de mudanças de status |
+| `service_order_notes` | 5 notas (públicas e internas) |
+| `service_order_parts` | 3 registros de peças usadas nas OS |
+| `service_quotes` | 1 orçamento enviado aguardando aprovação do cliente |
+| `service_quote_items` | 2 itens de orçamento |
+| `appointments` | 3 agendamentos (2 hoje, 1 amanhã) com datas dinâmicas |
+
+### Distribuição de Status das Ordens de Serviço
+
+| OS | Status | Descrição |
+|---|---|---|
+| OS-001 | `tecnico_atribuido` — **URGENTE** | Autoclave não completa ciclo — visível no portal do `cliente@dental.com` |
+| OS-002 | `em_atendimento` | Compressor com ruído elevado — técnico no local hoje |
+| OS-003 | `visita_agendada` | Manutenção preventiva trimestral — visita confirmada para hoje |
+| OS-004 | `aguardando_peca` | Troca de filtro — peça em trânsito |
+| OS-005 | `concluida` | Cadeira com falha no pedal — resolvida há 5 dias |
+| OS-006 | `orcamento_pendente` | Autoclave com vazamento de vapor — orçamento enviado |
+
+### Checklist de Validação nas Telas
+
+Após aplicar o seed, verifique as seguintes telas no protótipo:
+
+1. **[ ] `/admin/dashboard`**: Cards de métricas mostram OS ativas, técnicos e OS urgentes.
+2. **[ ] `/admin/clientes`**: Lista com ao menos 4 clínicas demo cadastradas.
+3. **[ ] `/admin/agenda`**: Colunas do Kanban com OS distribuídas por status.
+4. **[ ] `/admin/relatorios`**: Painéis com dados de faturamento e OS.
+5. **[ ] `/cliente/dashboard`**: Banner com OS urgente ativa e equipamentos da clínica.
+6. **[ ] `/cliente/pedidos`**: Pedido pendente de compra do compressor visível.
+7. **[ ] `/cliente/equipamentos`**: 4 equipamentos instalados da clínica listados.
+8. **[ ] `/cliente/suporte`**: OS urgente (DEMO-OS-001) com timeline de progresso.
+9. **[ ] `/tecnico/dashboard`**: OS ativa e visita agendada para hoje.
+10. **[ ] `/tecnico/servicos`**: Fila com OS-001 e OS-002 atribuídas ao técnico.
+11. **[ ] `/tecnico/agenda`**: Agendamentos de hoje (manhã + tarde) e amanhã.
+
+### Notas de Segurança do Seed
+* Nenhuma cláusula `TRUNCATE`, `DELETE`, `DROP`, `ALTER TABLE` ou `CREATE TABLE` foi utilizada.
+* Sem alteração de RLS, enums ou schema do banco de dados.
+* Usuários `auth.users` não foram criados ou modificados diretamente.
+* Nenhuma chave secreta ou credencial foi incluída no arquivo.
+* WhatsApp permanece desabilitado — nenhuma inserção em `whatsapp_messages` ou `automation_logs`.
