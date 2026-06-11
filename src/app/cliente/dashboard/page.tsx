@@ -64,11 +64,13 @@ export default async function ClienteDashboardPage() {
     status: lastOrderData[0].status,
   } : null;
 
+  const customerDisplayName = customer?.trade_name || customer?.company_name || profile?.name || 'Cliente Dental';
+
   return (
     <div className="space-y-8 text-left animate-in fade-in duration-300">
       {/* Welcome Block Premium */}
       <PageHero
-        title={`Olá, ${profile.name}`}
+        title={`Olá, ${customerDisplayName}`}
         description="Acompanhe a saúde dos seus equipamentos odontológicos, ordens de serviço em tempo real e faturamento de suas compras."
         badge="Portal do Cliente"
         icon={Stethoscope}

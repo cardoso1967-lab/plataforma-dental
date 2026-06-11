@@ -28,6 +28,32 @@ export default function ClienteLayout({
     localStorage.setItem('cliente-sidebar-collapsed', String(collapsed));
   };
 
+  const [customerName, setCustomerName] = useState('');
+
+  useEffect(() => {
+    if (!profile?.id) return;
+    const fetchCustomer = async () => {
+      try {
+        const { createSupabaseBrowserClient } = await import('@/lib/supabase');
+        const supabase = createSupabaseBrowserClient();
+        const { data } = await supabase
+          .from('customers')
+          .select('trade_name, company_name')
+          .eq('profile_id', profile.id)
+          .single();
+        if (data) {
+          setCustomerName(data.trade_name || data.company_name || profile.name || 'Cliente Dental');
+        } else {
+          setCustomerName(profile.name || 'Cliente Dental');
+        }
+      } catch (err) {
+        console.error('Erro ao buscar cliente:', err);
+        setCustomerName(profile.name || 'Cliente Dental');
+      }
+    };
+    fetchCustomer();
+  }, [profile]);
+
   const clientNavItems = [
     { label: 'Início', href: '/cliente/dashboard', icon: LayoutDashboard },
     { label: 'Pedidos', href: '/cliente/pedidos', icon: Receipt },
@@ -105,21 +131,24 @@ export default function ClienteLayout({
         </div>
 
         <div className="flex flex-col gap-3">
-          {profile && (
-            <div className={`flex items-center bg-[#121829]/30 rounded-xl border border-[#121829] text-left relative overflow-hidden transition-all duration-300 ${isCollapsed ? 'p-2 justify-center' : 'p-3 gap-3'}`}>
-              <div className="w-8.5 h-8.5 rounded-lg bg-sky-950/80 text-sky-400 flex items-center justify-center font-bold text-xs border border-sky-500/20 flex-shrink-0 shadow-sm font-mono">
-                {profile.name.substring(0, 2).toUpperCase()}
-              </div>
-              {!isCollapsed && (
-                <div className="overflow-hidden animate-in fade-in duration-300">
-                  <p className="text-[11px] font-bold text-slate-200 truncate leading-none mb-1.5">{profile.name}</p>
-                  <span className="inline-block text-[8px] font-bold text-sky-400 bg-sky-50/50 px-2 py-0.5 rounded border border-sky-500/20 uppercase tracking-wider leading-none font-mono">
-                    {profile.role === 'cliente' ? 'CLIENTE' : profile.role}
-                  </span>
+          {profile && (() => {
+            const displayName = customerName || profile.name || 'Cliente Dental';
+            return (
+              <div className={`flex items-center bg-[#121829]/30 rounded-xl border border-[#121829] text-left relative overflow-hidden transition-all duration-300 ${isCollapsed ? 'p-2 justify-center' : 'p-3 gap-3'}`}>
+                <div className="w-8.5 h-8.5 rounded-lg bg-sky-950/80 text-sky-400 flex items-center justify-center font-bold text-xs border border-sky-500/20 flex-shrink-0 shadow-sm font-mono">
+                  {displayName.substring(0, 2).toUpperCase()}
                 </div>
-              )}
-            </div>
-          )}
+                {!isCollapsed && (
+                  <div className="overflow-hidden animate-in fade-in duration-300">
+                    <p className="text-[11px] font-bold text-slate-200 truncate leading-none mb-1.5">{displayName}</p>
+                    <span className="inline-block text-[8px] font-bold text-sky-400 bg-sky-50/50 px-2 py-0.5 rounded border border-sky-500/20 uppercase tracking-wider leading-none font-mono">
+                      {profile.role === 'cliente' ? 'CLIENTE' : profile.role}
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
           <button
             onClick={logout}
             title={isCollapsed ? "Sair do Portal" : undefined}

@@ -41,14 +41,15 @@ export default async function ClienteSuportePage() {
 
   // Configuração visual de status
   const statusConfig: Record<string, { label: string; bg: string; color: string; step: number }> = {
-    aberta: { label: 'Recebido', bg: 'bg-blue-50/50 text-blue-700 border-blue-100', color: '#0284c7', step: 1 },
-    em_analise: { label: 'Triagem', bg: 'bg-purple-50/50 text-purple-700 border-purple-100', color: '#7c3aed', step: 1 },
-    tecnico_atribuido: { label: 'Técnico Designado', bg: 'bg-indigo-50/50 text-indigo-700 border-indigo-100', color: '#4f46e5', step: 2 },
-    visita_agendada: { label: 'Visita Agendada', bg: 'bg-sky-50 text-sky-700 border-sky-100', color: '#0369a1', step: 2 },
-    em_atendimento: { label: 'Em Atendimento', bg: 'bg-sky-500 text-white border-sky-600', color: '#0ea5e9', step: 3 },
-    aguardando_peca: { label: 'Aguardando Peça', bg: 'bg-orange-50 text-orange-700 border-orange-100', color: '#ea580c', step: 3 },
-    orcamento_pendente: { label: 'Aguardando Aprovação', bg: 'bg-amber-50 text-amber-700 border-amber-100', color: '#d97706', step: 4 },
-    concluida: { label: 'Concluído', bg: 'bg-emerald-50 text-emerald-700 border-emerald-100', color: '#059669', step: 5 },
+    aberta: { label: 'Triagem', bg: 'bg-blue-50/50 text-blue-700 border-blue-100', color: '#0284c7', step: 1 },
+    em_analise: { label: 'Em análise', bg: 'bg-purple-50/50 text-purple-700 border-purple-100', color: '#7c3aed', step: 1 },
+    tecnico_atribuido: { label: 'Técnico atribuído', bg: 'bg-indigo-50/50 text-indigo-700 border-indigo-100', color: '#4f46e5', step: 2 },
+    visita_agendada: { label: 'Visita agendada', bg: 'bg-sky-50 text-sky-700 border-sky-100', color: '#0369a1', step: 2 },
+    em_atendimento: { label: 'Em campo', bg: 'bg-sky-500 text-white border-sky-600', color: '#0ea5e9', step: 3 },
+    aguardando_peca: { label: 'Aguardando peça', bg: 'bg-orange-50 text-orange-700 border-orange-100', color: '#ea580c', step: 3 },
+    orcamento_pendente: { label: 'Orçamento pendente', bg: 'bg-amber-50 text-amber-700 border-amber-100', color: '#d97706', step: 4 },
+    orcamento_aprovado: { label: 'Orçamento aprovado', bg: 'bg-emerald-50 text-emerald-700 border-emerald-100', color: '#10b981', step: 4 },
+    concluida: { label: 'Finalizado', bg: 'bg-emerald-50 text-emerald-700 border-emerald-100', color: '#059669', step: 5 },
     cancelada: { label: 'Cancelado', bg: 'bg-rose-50 text-rose-700 border-rose-100', color: '#e11d48', step: 0 },
   };
 
@@ -104,6 +105,7 @@ export default async function ClienteSuportePage() {
                   case 'em_atendimento': return 'success';
                   case 'aguardando_peca': return 'warning';
                   case 'orcamento_pendente': return 'warning';
+                  case 'orcamento_aprovado': return 'success';
                   case 'concluida': return 'success';
                   case 'cancelada': return 'error';
                   default: return 'neutral';
@@ -142,27 +144,81 @@ export default async function ClienteSuportePage() {
                     </div>
                   </div>
 
-                  {/* Visualizador Gráfico de Progreso (Timeline) Premium */}
+                  {/* Visualizador Gráfico de Progreso (Timeline) Premium e Compacto */}
                   {!isCancelado && (
-                    <div className="bg-slate-50/40 rounded-xl p-5 border border-slate-150/40 mt-1 max-w-xl shadow-[inset_0_1px_2px_rgba(0,0,0,0.015)]">
-                      <div className="space-y-0">
+                    <div className="bg-slate-50/50 rounded-2xl p-4.5 border border-slate-100 max-w-4xl mt-3 text-left">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-4 font-mono">Status do Chamado</span>
+                      
+                      {/* Grid/Flex Horizontal para Desktop e Vertical para Mobile */}
+                      <div className="hidden sm:flex items-center justify-between w-full relative pt-2 pb-2">
+                        {/* Línea conectora de fondo */}
+                        <div className="absolute top-[21px] left-8 right-8 h-0.5 bg-slate-200/80 -z-0" />
+                        
+                        {/* Línea de progreso completado */}
+                        <div 
+                          className="absolute top-[21px] left-8 h-0.5 bg-sky-600 transition-all duration-500 -z-0"
+                          style={{ width: `${Math.max(0, Math.min(90, ((currentStep - 1) / (steps.length - 1)) * 90))}%` }}
+                        />
+
                         {steps.map((st, idx) => {
                           const isDone = currentStep >= st.num;
                           const isCurrent = currentStep === st.num;
                           
-                          let statusVal: 'completed' | 'active' | 'upcoming' = 'upcoming';
-                          if (isCurrent) statusVal = 'active';
-                          else if (isDone) statusVal = 'completed';
-
                           return (
-                            <TimelineStep
-                              key={st.num}
-                              label={st.name}
-                              status={statusVal}
-                              isLast={idx === steps.length - 1}
-                              icon={<span className="text-[9px] font-black">{st.num}</span>}
-                              description={isCurrent ? `Fase atual do seu chamado técnico.` : undefined}
-                            />
+                            <div key={st.num} className="flex flex-col items-center flex-1 relative z-10 text-center">
+                              {/* Círculo */}
+                              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black border transition-all duration-300 ${
+                                isCurrent 
+                                  ? 'bg-white text-sky-600 border-sky-600 ring-4 ring-sky-100 shadow-[0_2px_8px_rgba(2,132,199,0.15)] animate-pulse'
+                                  : isDone
+                                    ? 'bg-sky-600 text-white border-sky-600 shadow-[0_2px_6px_rgba(2,132,199,0.1)]'
+                                    : 'bg-white text-slate-300 border-slate-200'
+                              }`}>
+                                {isDone && !isCurrent ? '✓' : st.num}
+                              </div>
+                              
+                              {/* Texto */}
+                              <span className={`text-[10px] font-extrabold mt-2 tracking-tight ${
+                                isCurrent ? 'text-sky-700 font-black' : isDone ? 'text-slate-700 font-bold' : 'text-slate-400 font-semibold'
+                              }`}>
+                                {st.name}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Timeline Vertical para Mobile */}
+                      <div className="sm:hidden space-y-4 pt-1">
+                        {steps.map((st, idx) => {
+                          const isDone = currentStep >= st.num;
+                          const isCurrent = currentStep === st.num;
+                          
+                          return (
+                            <div key={st.num} className="flex items-center gap-3 relative text-left">
+                              {/* Línea vertical conectora */}
+                              {idx < steps.length - 1 && (
+                                <div className={`absolute left-3 top-6 bottom-[-20px] w-0.5 ${isDone ? 'bg-sky-600' : 'bg-slate-200/80'}`} />
+                              )}
+                              
+                              {/* Círculo */}
+                              <div className={`w-6.5 h-6.5 rounded-full flex items-center justify-center text-[9px] font-black border z-10 transition-all duration-300 shrink-0 ${
+                                isCurrent 
+                                  ? 'bg-white text-sky-600 border-sky-600 ring-4 ring-sky-100 shadow-[0_2px_8px_rgba(2,132,199,0.15)]'
+                                  : isDone
+                                    ? 'bg-sky-600 text-white border-sky-600 shadow-[0_2px_6px_rgba(2,132,199,0.1)]'
+                                    : 'bg-white text-slate-300 border-slate-200'
+                              }`}>
+                                {isDone && !isCurrent ? '✓' : st.num}
+                              </div>
+                              
+                              {/* Texto */}
+                              <span className={`text-[10.5px] font-bold ${
+                                isCurrent ? 'text-sky-700 font-black' : isDone ? 'text-slate-700' : 'text-slate-400 font-semibold'
+                              }`}>
+                                {st.name}
+                              </span>
+                            </div>
                           );
                         })}
                       </div>

@@ -13,6 +13,7 @@ import { PageHero } from '@/components/ui/PageHero';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PremiumButton } from '@/components/ui/PremiumButton';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { formatFriendlyDateTime } from '@/lib/date-utils';
 
 export default function TecnicoAgendaPage() {
   const supabase = createSupabaseBrowserClient();
@@ -173,55 +174,69 @@ export default function TecnicoAgendaPage() {
               <div className="flex items-center justify-between border-b border-slate-100/60 pb-2.5">
                 <span className="text-xs font-black text-sky-600 flex items-center gap-1.5 leading-none">
                   <Clock className="w-4 h-4 text-sky-500" />
-                  {item.scheduled_date ? new Date(item.scheduled_date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Sem hora'}
+                  {item.scheduled_date ? formatFriendlyDateTime(item.scheduled_date) : 'Sem hora'}
                 </span>
                 <StatusBadge
                   label={getStatusLabel(item.status)}
                   type={getStatusBadgeType(item.status)}
                 />
               </div>
-
-              {/* Informações da Tarefa */}
-              <div className="space-y-3 text-xs font-semibold text-slate-600">
-                <div className="space-y-1.5">
-                  <span className="text-[9px] font-mono font-black text-sky-600 bg-sky-50/50 px-2 py-0.5 rounded border border-sky-100/50 tracking-wider inline-block leading-none">
-                    OS: #{item.id.slice(0, 8).toUpperCase()}
-                  </span>
+                 {/* Informações da Tarefa */}
+              <div className="space-y-3 text-xs font-semibold text-slate-650">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-mono font-black text-sky-600 bg-sky-50/50 px-2 py-0.5 rounded border border-sky-100/50 tracking-wider inline-block leading-none">
+                      OS: #{item.id.slice(0, 8).toUpperCase()}
+                    </span>
+                  </div>
                   <h4 className="font-extrabold text-slate-800 text-sm leading-snug group-hover:text-sky-700 transition-colors">
-                    {item.equipment?.name || 'Equipamento Geral'}
+                    {item.equipment?.name || <span className="text-slate-400 italic">Equipamento não informado</span>}
                   </h4>
-                  {item.description && (
-                    <p className="text-[11px] text-slate-500 font-semibold leading-relaxed bg-slate-50/40 p-3 rounded-lg border border-slate-150/40 italic">
-                      "{item.description}"
+                  {item.equipment?.brand && (
+                    <p className="text-[10px] text-slate-400 font-bold -mt-1">
+                      {item.equipment.brand} • {item.equipment.model}
                     </p>
                   )}
                 </div>
-                
-                {/* Dados do Cliente e Endereço */}
+
                 <div className="space-y-2 border-t border-slate-100/60 pt-3 text-[11px]">
-                  <p className="text-slate-500">
-                    Cliente: <strong className="text-slate-700">{item.customer?.company_name}</strong>
-                  </p>
-                  
+                  {/* Nome do Cliente */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block font-mono">Cliente</span>
+                    <span className="text-slate-800 font-extrabold">
+                      {item.customer?.company_name || <span className="text-slate-400 italic font-medium">Cliente não informado</span>}
+                    </span>
+                  </div>
+
+                  {/* Descrição / Problema */}
+                  <div className="text-[10.5px] text-slate-500 font-semibold leading-relaxed bg-slate-50/40 p-2.5 rounded-lg border border-slate-150/40 italic">
+                    <span className="text-[8.5px] text-slate-400 block font-bold uppercase tracking-wider mb-1 font-mono">Descrição do Problema</span>
+                    {item.description ? `"${item.description}"` : <span className="text-slate-400 italic font-medium">Descrição não informada</span>}
+                  </div>
+
+                  {/* Endereço */}
                   {item.customer && (
-                    <div className="space-y-2">
-                      <p className="flex items-start gap-1.5 text-slate-400 font-medium leading-relaxed">
+                    <div className="space-y-2 pt-1">
+                      <div className="flex items-start gap-1.5 text-slate-400 font-medium leading-relaxed">
                         <MapPin className="w-3.5 h-3.5 text-slate-400 flex-shrink-0 mt-0.5" />
                         <span>
-                          {item.customer.address_street}, {item.customer.address_number}
+                          {item.customer.address_street || <span className="text-slate-400 italic font-medium">Endereço não informado</span>}
+                          {item.customer.address_street && item.customer.address_number ? `, ${item.customer.address_number}` : ''}
                           {item.customer.address_complement ? ` - ${item.customer.address_complement}` : ''}
                           <br />
-                          {item.customer.address_neighborhood}, {item.customer.address_city} - {item.customer.address_state}
+                          {item.customer.address_neighborhood ? `${item.customer.address_neighborhood}, ` : ''}
+                          {item.customer.address_city ? `${item.customer.address_city} - ` : ''}
+                          {item.customer.address_state || ''}
                         </span>
-                      </p>
+                      </div>
                       
                       {item.customer.phone && (
-                        <p className="flex items-center gap-1.5 text-slate-500 font-semibold">
-                          <Phone className="w-3.5 h-3.5 text-slate-405" />
+                        <div className="flex items-center gap-1.5 text-slate-500 font-semibold">
+                          <Phone className="w-3.5 h-3.5 text-slate-400" />
                           <a href={`tel:${item.customer.phone}`} className="text-sky-600 font-extrabold hover:underline">
                             {item.customer.phone}
                           </a>
-                        </p>
+                        </div>
                       )}
                     </div>
                   )}

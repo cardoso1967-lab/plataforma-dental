@@ -423,6 +423,21 @@ export default function AdminClientesPage() {
     eq => eq.customer_id === selectedCustomer?.id
   );
 
+  const getClientNames = (client: Customer) => {
+    let mainName = client.trade_name || client.company_name || '';
+    let subName = client.trade_name ? client.company_name : '';
+    
+    if (mainName.toLowerCase() === 'cliente' || mainName.toLowerCase() === 'cliente@dental.com') {
+      if (client.profile?.name) {
+        mainName = client.profile.name;
+        subName = '';
+      } else {
+        mainName = 'Cliente Dental';
+      }
+    }
+    return { mainName, subName };
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       {/* Header Premium */}
@@ -525,7 +540,8 @@ export default function AdminClientesPage() {
                     <tbody className="divide-y divide-slate-50">
                       {filteredCustomers.map((client) => {
                         const isSelected = selectedCustomer?.id === client.id;
-                        const initials = client.company_name.substring(0, 2).toUpperCase();
+                        const { mainName, subName } = getClientNames(client);
+                        const initials = mainName.substring(0, 2).toUpperCase();
                         
                         const colors = [
                           'bg-sky-50 text-brand-clinical border-sky-100',
@@ -535,13 +551,13 @@ export default function AdminClientesPage() {
                           'bg-amber-50 text-amber-600 border-amber-100',
                         ];
                         const colorIndex = initials.charCodeAt(0) % colors.length;
-                        const colorClass = colors[colorIndex];
+                        const colorClass = colors[colorIndex || 0];
 
                         return (
                           <tr 
                             key={client.id} 
                             onClick={() => setSelectedCustomer(client)}
-                            className={`hover:bg-slate-55/30 transition-all duration-150 cursor-pointer ${
+                            className={`hover:bg-slate-50/30 transition-all duration-150 cursor-pointer ${
                               isSelected ? 'bg-sky-50/20 font-semibold border-l-2 border-brand-clinical shadow-2xs' : ''
                             }`}
                           >
@@ -551,36 +567,38 @@ export default function AdminClientesPage() {
                                   {initials}
                                 </div>
                                 <div>
-                                  <div className="font-extrabold text-slate-800 text-xs line-clamp-1">{client.company_name}</div>
-                                  {client.trade_name && (
+                                  <div className="font-extrabold text-slate-800 text-xs line-clamp-1">{mainName}</div>
+                                  {subName && (
                                     <div className="text-[10px] text-slate-400 font-medium font-sans line-clamp-1">
-                                      {client.trade_name}
+                                      {subName}
                                     </div>
                                   )}
                                 </div>
                               </div>
                             </td>
                             <td className="py-4 px-2 text-slate-500 font-bold font-mono">
-                              {client.cnpj || client.cpf || '—'}
+                              {client.cnpj || client.cpf || <span className="text-slate-400 font-sans font-medium italic">Sem documento</span>}
                             </td>
                             <td className="py-4 px-2 text-left">
-                              {client.profile ? (
-                                <div className="space-y-0.5">
-                                  <div className="font-bold text-slate-700 text-xs">{client.profile.name}</div>
-                                  {client.profile.phone && (
-                                    <div className="text-[10px] text-slate-400 flex items-center gap-0.5 font-semibold">
-                                      <Phone className="w-2.5 h-2.5" /> {client.profile.phone}
-                                    </div>
-                                  )}
-                                </div>
-                              ) : (
-                                <span className="text-[10px] text-slate-400 italic font-semibold bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">
-                                  Sem conta associada
-                                </span>
-                              )}
+                              {(() => {
+                                const contactVal = client.contact_name || client.email || (client.profile?.name ? `${client.profile.name} (Conta)` : '') || 'Sem contato';
+                                const phoneVal = client.phone || client.profile?.phone;
+                                return (
+                                  <div className="space-y-0.5">
+                                    <div className="font-bold text-slate-700 text-xs">{contactVal}</div>
+                                    {phoneVal && (
+                                      <div className="text-[10px] text-slate-400 flex items-center gap-0.5 font-semibold">
+                                        <Phone className="w-2.5 h-2.5" /> {phoneVal}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })()}
                             </td>
                             <td className="py-4 px-2 text-slate-500 font-semibold">
-                              {client.address_city ? `${client.address_city} - ${client.address_state || ''}` : '—'}
+                              {client.address_city 
+                                ? `${client.address_city}${client.address_state ? ` - ${client.address_state}` : ''}` 
+                                : <span className="text-slate-400 italic font-medium">Cidade não informada</span>}
                             </td>
                             <td className="py-4 pr-2 text-right" onClick={(e) => e.stopPropagation()}>
                               <div className="flex items-center justify-end gap-1">
@@ -612,7 +630,8 @@ export default function AdminClientesPage() {
                 <div className="grid grid-cols-1 gap-4 md:hidden">
                   {filteredCustomers.map((client) => {
                     const isSelected = selectedCustomer?.id === client.id;
-                    const initials = client.company_name.substring(0, 2).toUpperCase();
+                    const { mainName, subName } = getClientNames(client);
+                    const initials = mainName.substring(0, 2).toUpperCase();
                     
                     const colors = [
                       'bg-sky-50 text-brand-clinical border-sky-100',
@@ -622,7 +641,7 @@ export default function AdminClientesPage() {
                       'bg-amber-50 text-amber-600 border-amber-100',
                     ];
                     const colorIndex = initials.charCodeAt(0) % colors.length;
-                    const colorClass = colors[colorIndex];
+                    const colorClass = colors[colorIndex || 0];
 
                     return (
                       <div 
@@ -638,9 +657,9 @@ export default function AdminClientesPage() {
                               {initials}
                             </div>
                             <div>
-                              <h4 className="font-extrabold text-slate-800 text-xs leading-snug">{client.company_name}</h4>
-                              {client.trade_name && (
-                                <p className="text-[9.5px] text-slate-400 font-bold leading-normal">{client.trade_name}</p>
+                              <h4 className="font-extrabold text-slate-800 text-xs leading-snug">{mainName}</h4>
+                              {subName && (
+                                <p className="text-[9.5px] text-slate-400 font-bold leading-normal">{subName}</p>
                               )}
                             </div>
                           </div>
@@ -649,17 +668,23 @@ export default function AdminClientesPage() {
                         <div className="space-y-1.5 text-[10.5px] font-semibold text-slate-600 border-t border-slate-100/80 pt-3">
                           <div className="flex items-center justify-between">
                             <span className="text-slate-400">Documento:</span>
-                            <span className="font-mono font-bold text-slate-850">{client.cnpj || client.cpf || '—'}</span>
+                            <span className="font-mono font-bold text-slate-850">
+                              {client.cnpj || client.cpf || <span className="text-slate-400 font-sans font-medium italic">Sem documento</span>}
+                            </span>
                           </div>
-                          {client.profile && (
-                            <div className="flex items-center justify-between">
-                              <span className="text-slate-400">Contato:</span>
-                              <span className="text-slate-800">{client.profile.name}</span>
-                            </div>
-                          )}
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-400">Contato:</span>
+                            <span className="text-slate-800">
+                              {client.contact_name || client.email || (client.profile?.name ? `${client.profile.name} (Conta)` : '') || <span className="text-slate-400 italic font-medium">Sem contato</span>}
+                            </span>
+                          </div>
                           <div className="flex items-center justify-between">
                             <span className="text-slate-400">Cidade/UF:</span>
-                            <span className="text-slate-850">{client.address_city ? `${client.address_city} - ${client.address_state || ''}` : '—'}</span>
+                            <span className="text-slate-850">
+                              {client.address_city 
+                                ? `${client.address_city}${client.address_state ? ` - ${client.address_state}` : ''}` 
+                                : <span className="text-slate-400 italic font-medium">Cidade não informada</span>}
+                            </span>
                           </div>
                         </div>
 
@@ -704,8 +729,15 @@ export default function AdminClientesPage() {
                   </div>
                   <span className="text-[9px] font-bold tracking-widest text-sky-400 uppercase font-mono">Ficha do Cliente</span>
                 </div>
-                <h2 className="font-extrabold text-sm leading-tight pr-6">{selectedCustomer.company_name}</h2>
-                <p className="text-[10px] text-slate-350 font-medium">{selectedCustomer.trade_name || 'Sem nome fantasia'}</p>
+                {(() => {
+                  const { mainName, subName } = getClientNames(selectedCustomer);
+                  return (
+                    <>
+                      <h2 className="font-extrabold text-sm leading-tight pr-6">{mainName}</h2>
+                      {subName && <p className="text-[10px] text-slate-350 font-medium">{subName}</p>}
+                    </>
+                  );
+                })()}
               </div>
 
               {/* Endereço e Dados Básicos */}
@@ -715,11 +747,13 @@ export default function AdminClientesPage() {
                 <div className="grid grid-cols-2 gap-4 text-[11px] font-bold text-slate-700">
                   <div>
                     <span className="text-[9px] font-bold text-slate-400 block uppercase tracking-wider mb-0.5 font-mono">Documento</span>
-                    <span className="font-mono text-slate-900">{selectedCustomer.cnpj || selectedCustomer.cpf || '—'}</span>
+                    <span className="font-mono text-slate-900">
+                      {selectedCustomer.cnpj || selectedCustomer.cpf || <span className="text-slate-400 font-sans font-medium italic">Sem documento</span>}
+                    </span>
                   </div>
                   <div>
                     <span className="text-[9px] font-bold text-slate-400 block uppercase tracking-wider mb-0.5 font-mono">Telefone</span>
-                    <span className="text-slate-900">{selectedCustomer.phone || selectedCustomer.profile?.phone || '—'}</span>
+                    <span className="text-slate-900">{selectedCustomer.phone || selectedCustomer.profile?.phone || <span className="text-slate-400 italic font-medium">Sem telefone</span>}</span>
                   </div>
                 </div>
 
@@ -727,19 +761,21 @@ export default function AdminClientesPage() {
                   <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 stroke-[2]" />
                   <div className="space-y-0.5 leading-normal text-slate-600">
                     <span className="text-slate-800">
-                      {selectedCustomer.address_street || '—'}
-                      {selectedCustomer.address_number ? `, ${selectedCustomer.address_number}` : ''}
+                      {selectedCustomer.address_street || <span className="text-slate-400 italic font-medium">Endereço não informado</span>}
+                      {selectedCustomer.address_street && selectedCustomer.address_number ? `, ${selectedCustomer.address_number}` : ''}
                     </span>
                     {selectedCustomer.address_complement && (
                       <span className="block text-slate-450 font-medium text-[10px]">
                         {selectedCustomer.address_complement}
                       </span>
                     )}
-                    <span className="block text-slate-450 font-medium text-[10px]">
-                      {selectedCustomer.address_neighborhood ? `${selectedCustomer.address_neighborhood}, ` : ''}
-                      {selectedCustomer.address_city ? `${selectedCustomer.address_city} - ` : ''}
-                      {selectedCustomer.address_state || ''}
-                    </span>
+                    {(selectedCustomer.address_neighborhood || selectedCustomer.address_city) && (
+                      <span className="block text-slate-450 font-medium text-[10px]">
+                        {selectedCustomer.address_neighborhood ? `${selectedCustomer.address_neighborhood}, ` : ''}
+                        {selectedCustomer.address_city ? `${selectedCustomer.address_city} - ` : ''}
+                        {selectedCustomer.address_state || ''}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

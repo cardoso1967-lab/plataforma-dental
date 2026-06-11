@@ -13,6 +13,7 @@ import { PremiumModal } from '@/components/ui/PremiumModal';
 import { PremiumInput } from '@/components/ui/PremiumInput';
 import { PremiumButton } from '@/components/ui/PremiumButton';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { formatFriendlyDateTime } from '@/lib/date-utils';
 
 export default function TecnicoServicosPage() {
   const supabase = createSupabaseBrowserClient();
@@ -302,7 +303,7 @@ export default function TecnicoServicosPage() {
               {/* Contenido principal */}
               <div className="space-y-1.5 text-left">
                 <h4 className="font-extrabold text-slate-800 text-sm leading-snug">
-                  {os.equipment?.name || 'Equipamento Geral'}
+                  {os.equipment?.name || <span className="text-slate-400 italic">Equipamento não informado</span>}
                 </h4>
                 {os.equipment?.brand && (
                   <p className="text-[10px] text-slate-400 font-bold">
@@ -311,24 +312,38 @@ export default function TecnicoServicosPage() {
                 )}
                 <div className="flex items-center gap-1.5 text-xs text-slate-655 font-semibold pt-1">
                   <User className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                  <span className="line-clamp-1">{os.customer?.company_name}</span>
+                  <span className="line-clamp-1">{os.customer?.company_name || <span className="text-slate-400 italic">Cliente não informado</span>}</span>
                 </div>
+              </div>
+
+              {/* Descrição / Problema Relatado */}
+              <div className="text-xs text-slate-600 font-medium bg-slate-50/40 p-3 rounded-xl border border-slate-100/80">
+                <span className="text-[9px] text-slate-400 block font-bold uppercase tracking-wider mb-1">Problema Relatado</span>
+                <p className="line-clamp-2 leading-relaxed italic">
+                  {os.description ? `"${os.description}"` : <span className="text-slate-400 italic">Descrição não informada</span>}
+                </p>
               </div>
 
               {/* Fecha y Dirección */}
               <div className="bg-slate-50/50 rounded-xl p-4 text-xs font-semibold text-slate-600 space-y-2 text-left border border-slate-150/40 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]">
-                {os.scheduled_date && (
-                  <div className="flex items-center gap-1.5 text-sky-600 font-extrabold text-[11px]">
-                    <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
-                    <span>Agendado: {new Date(os.scheduled_date).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</span>
-                  </div>
-                )}
-                {os.customer && (
-                  <div className="flex items-start gap-1.5 text-[10.5px] text-slate-400 font-medium leading-relaxed">
-                    <MapPin className="w-3.5 h-3.5 text-slate-400 flex-shrink-0 mt-0.5" />
-                    <span>{os.customer.address_street}, {os.customer.address_number} - {os.customer.address_city}</span>
-                  </div>
-                )}
+                <div className="flex items-center gap-1.5 text-sky-600 font-extrabold text-[11px]">
+                  <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>
+                    {os.scheduled_date 
+                      ? `Agendado: ${formatFriendlyDateTime(os.scheduled_date)}` 
+                      : <span className="text-slate-400 italic font-medium">Agendamento não definido</span>
+                    }
+                  </span>
+                </div>
+                <div className="flex items-start gap-1.5 text-[10.5px] text-slate-400 font-medium leading-relaxed">
+                  <MapPin className="w-3.5 h-3.5 text-slate-400 flex-shrink-0 mt-0.5" />
+                  <span>
+                    {os.customer?.address_street 
+                      ? `${os.customer.address_street}${os.customer.address_number ? `, ${os.customer.address_number}` : ''}${os.customer.address_city ? ` - ${os.customer.address_city}` : ''}` 
+                      : <span className="text-slate-400 italic font-medium">Endereço não informado</span>
+                    }
+                  </span>
+                </div>
               </div>
 
               {/* Botón táctil gigante en el card */}
