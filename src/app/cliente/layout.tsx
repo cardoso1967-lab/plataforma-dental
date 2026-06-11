@@ -38,14 +38,17 @@ export default function ClienteLayout({
   const isActive = (href: string) => pathname === href;
 
   return (
-    // h-screen overflow-hidden: o container pai tem exatamente a altura do viewport.
-    // O scroll acontece dentro da área de conteúdo, não na página inteira.
-    // Isso impede que a sidebar "pare" antes do fim do conteúdo.
-    <div className="h-screen overflow-hidden bg-slate-50 flex flex-row">
+    <div className="min-h-dvh bg-slate-50">
+      {/* Riel de fondo oscuro fijo - garantiza continuidad visual de fondo al hacer scroll */}
+      <div
+        className={`fixed inset-y-0 left-0 z-20 hidden lg:block bg-[#070A13] border-r border-[#121829] transition-all duration-300 ${
+          isCollapsed ? 'w-20' : 'w-64'
+        }`}
+      />
 
-      {/* Sidebar fixa — Desktop: cobre 100% da altura do viewport com position fixed */}
+      {/* Sidebar fixa — Desktop: posicionada sobre o riel de fundo */}
       <aside
-        className={`hidden lg:flex fixed left-0 top-0 h-screen [height:100dvh] flex-col justify-between bg-[#070A13] border-r border-[#121829] text-white p-4 transition-all duration-300 z-30 ${
+        className={`hidden lg:flex fixed inset-y-0 left-0 z-30 flex-col justify-between bg-[#070A13] border-r border-[#121829] text-white p-4 transition-all duration-300 ${
           isCollapsed ? 'w-20' : 'w-64'
         }`}
       >
@@ -144,15 +147,15 @@ export default function ClienteLayout({
         </button>
       </div>
 
-      {/* Área do conteúdo — rola internamente, padding-left compensa a sidebar fixa no desktop */}
+      {/* Área do conteúdo — com margin-left correspondente ao sidebar de desktop para evitar sobreposições */}
       <div
-        className={`flex-1 min-w-0 overflow-y-auto pb-20 lg:pb-0 pt-0 transition-all duration-300 ${
-          isCollapsed ? 'lg:pl-20' : 'lg:pl-64'
+        className={`transition-all duration-300 ${
+          isCollapsed ? 'lg:ml-20' : 'lg:ml-64'
         }`}
       >
         {/* Espaçador para o header fixo no mobile */}
         <div className="lg:hidden h-16" />
-        <main className="p-4 sm:p-6 lg:p-8 max-w-[1180px] w-full mx-auto">
+        <main className="p-4 sm:p-6 lg:p-8 pb-20 lg:pb-0 max-w-[1180px] w-full mx-auto">
           {children}
         </main>
       </div>

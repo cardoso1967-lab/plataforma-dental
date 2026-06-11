@@ -23,17 +23,24 @@ export default function AdminLayout({
   };
 
   return (
-    <div className="h-screen overflow-hidden bg-slate-50 flex flex-row">
+    <div className="min-h-dvh bg-slate-50">
+      {/* Riel de fondo oscuro fijo - garantiza continuidad visual de fondo al hacer scroll */}
+      <div
+        className={`fixed inset-y-0 left-0 z-20 hidden lg:block bg-[#070A13] border-r border-[#121829] transition-all duration-300 ${
+          isCollapsed ? 'w-20' : 'w-64'
+        }`}
+      />
+
       {/* Sidebar Responsiva Colapsável */}
       <Sidebar isCollapsed={isCollapsed} setIsCollapsed={handleSetCollapsed} />
 
-      {/* Main Content Wrapper — ocupa o restante da largura e rola internamente */}
+      {/* Main Content Wrapper — ocupa o restante da largura correspondente ao sidebar */}
       <div
-        className={`flex-1 flex flex-col min-w-0 overflow-y-auto transition-all duration-300 ${
-          isCollapsed ? 'lg:pl-20' : 'lg:pl-64'
+        className={`transition-all duration-300 ${
+          isCollapsed ? 'lg:ml-20' : 'lg:ml-64'
         }`}
       >
-        <main className="p-4 sm:p-6 lg:p-8 flex-1 max-w-[1440px] w-full mx-auto">
+        <main className="p-4 sm:p-6 lg:p-8 max-w-[1440px] w-full mx-auto">
           {children}
         </main>
       </div>
