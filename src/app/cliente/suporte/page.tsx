@@ -119,6 +119,23 @@ function normalizeServiceOrder(raw: any): NormalizedServiceOrder {
   };
 }
 
+const isStepCompleted = (stepNumber: number, currentStep: number, status: string) => {
+  const isConcluido = status === 'concluida';
+  if (isConcluido) {
+    return true;
+  }
+  return stepNumber < currentStep;
+};
+
+const isStepActive = (stepNumber: number, currentStep: number, status: string) => {
+  const isConcluido = status === 'concluida';
+  if (isConcluido) {
+    return false;
+  }
+  return stepNumber === currentStep;
+};
+
+
 
 export default async function ClienteSuportePage() {
   const { supabase, customer } = await getCustomerSession();
@@ -240,85 +257,88 @@ export default async function ClienteSuportePage() {
           )}
 
           {/* Visualizador Gráfico de Progreso (Timeline) */}
-          {!isCancelado && (
-            <div className="bg-slate-50/50 rounded-2xl p-4.5 border border-slate-100 max-w-4xl mt-3 text-left">
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-4 font-mono">Status do Chamado</span>
-              
-              {/* Flex Horizontal para Desktop */}
-              <div className="hidden sm:flex items-center justify-between w-full relative pt-2 pb-2">
-                {/* Línea conectora de fondo */}
-                <div className="absolute top-[21px] left-8 right-8 h-0.5 bg-slate-200/80 -z-0" />
+          {!isCancelado && (() => {
+            const progressWidth = os.status === 'concluida' ? 100 : ((stepNum - 1) / (steps.length - 1)) * 90;
+            return (
+              <div className="bg-slate-50/50 rounded-2xl p-4.5 border border-slate-100 max-w-4xl mt-3 text-left">
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-4 font-mono">Status do Chamado</span>
                 
-                {/* Línea de progreso completado */}
-                <div 
-                  className="absolute top-[21px] left-8 h-0.5 bg-sky-600 transition-all duration-500 -z-0"
-                  style={{ width: `${Math.max(0, Math.min(90, ((stepNum - 1) / (steps.length - 1)) * 90))}%` }}
-                />
-
-                {steps.map((st) => {
-                  const isDone = stepNum >= st.num;
-                  const isCurrent = stepNum === st.num;
+                {/* Flex Horizontal para Desktop */}
+                <div className="hidden sm:flex items-center justify-between w-full relative pt-2 pb-2">
+                  {/* Línea conectora de fondo */}
+                  <div className="absolute top-[21px] left-8 right-8 h-0.5 bg-slate-200/80 -z-0" />
                   
-                  return (
-                    <div key={st.num} className="flex flex-col items-center flex-1 relative z-10 text-center">
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black border transition-all duration-300 ${
-                        isCurrent 
-                          ? 'bg-white text-sky-600 border-sky-600 ring-4 ring-sky-100 shadow-[0_2px_8px_rgba(2,132,199,0.15)] animate-pulse'
-                          : isDone
-                            ? 'bg-sky-600 text-white border-sky-600 shadow-[0_2px_6px_rgba(2,132,199,0.1)]'
-                            : 'bg-white text-slate-300 border-slate-200'
-                      }`}>
-                        {isDone && !isCurrent ? '✓' : st.num}
-                      </div>
-                      
-                      <span className={`text-[10px] font-extrabold mt-2 tracking-tight ${
-                        isCurrent ? 'text-sky-700 font-black' : isDone ? 'text-slate-700 font-bold' : 'text-slate-400 font-semibold'
-                      }`}>
-                        {st.name}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
+                  {/* Línea de progreso completado */}
+                  <div 
+                    className="absolute top-[21px] left-8 h-0.5 bg-sky-600 transition-all duration-500 -z-0"
+                    style={{ width: `${Math.max(0, Math.min(100, progressWidth))}%` }}
+                  />
 
-              {/* Timeline Vertical para Mobile */}
-              <div className="sm:hidden space-y-4 pt-1">
-                {steps.map((st, idx) => {
-                  const isDone = stepNum >= st.num;
-                  const isCurrent = stepNum === st.num;
-                  
-                  return (
-                    <div key={st.num} className="flex items-center gap-3 relative text-left">
-                      {idx < steps.length - 1 && (
-                        <div className={`absolute left-3 top-6 bottom-[-20px] w-0.5 ${isDone ? 'bg-sky-600' : 'bg-slate-200/80'}`} />
-                      )}
-                      
-                      <div className={`w-6.5 h-6.5 rounded-full flex items-center justify-center text-[9px] font-black border z-10 transition-all duration-300 shrink-0 ${
-                        isCurrent 
-                          ? 'bg-white text-sky-600 border-sky-600 ring-4 ring-sky-100 shadow-[0_2px_8px_rgba(2,132,199,0.15)]'
-                          : isDone
-                            ? 'bg-sky-600 text-white border-sky-600 shadow-[0_2px_6px_rgba(2,132,199,0.1)]'
-                            : 'bg-white text-slate-300 border-slate-200'
-                      }`}>
-                        {isDone && !isCurrent ? '✓' : st.num}
+                  {steps.map((st) => {
+                    const isDone = isStepCompleted(st.num, stepNum, os.status);
+                    const isCurrent = isStepActive(st.num, stepNum, os.status);
+                    
+                    return (
+                      <div key={st.num} className="flex flex-col items-center flex-1 relative z-10 text-center">
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black border transition-all duration-300 ${
+                          isCurrent 
+                            ? 'bg-white text-sky-600 border-sky-600 ring-4 ring-sky-100 shadow-[0_2px_8px_rgba(2,132,199,0.15)] animate-pulse'
+                            : isDone
+                              ? 'bg-sky-600 text-white border-sky-600 shadow-[0_2px_6px_rgba(2,132,199,0.1)]'
+                              : 'bg-white text-slate-300 border-slate-200'
+                        }`}>
+                          {isDone ? '✓' : st.num}
+                        </div>
+                        
+                        <span className={`text-[10px] font-extrabold mt-2 tracking-tight ${
+                          isCurrent ? 'text-sky-700 font-black' : isDone ? 'text-slate-700 font-bold' : 'text-slate-400 font-semibold'
+                        }`}>
+                          {st.name}
+                        </span>
                       </div>
-                      
-                      <span className={`text-[10.5px] font-bold ${
-                        isCurrent ? 'text-sky-700 font-black' : isDone ? 'text-slate-700' : 'text-slate-400 font-semibold'
-                      }`}>
-                        {st.name}
-                      </span>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
+
+                {/* Timeline Vertical para Mobile */}
+                <div className="sm:hidden space-y-4 pt-1">
+                  {steps.map((st, idx) => {
+                    const isDone = isStepCompleted(st.num, stepNum, os.status);
+                    const isCurrent = isStepActive(st.num, stepNum, os.status);
+                    
+                    return (
+                      <div key={st.num} className="flex items-center gap-3 relative text-left">
+                        {idx < steps.length - 1 && (
+                          <div className={`absolute left-3 top-6 bottom-[-20px] w-0.5 ${isDone ? 'bg-sky-600' : 'bg-slate-200/80'}`} />
+                        )}
+                        
+                        <div className={`w-6.5 h-6.5 rounded-full flex items-center justify-center text-[9px] font-black border z-10 transition-all duration-300 shrink-0 ${
+                          isCurrent 
+                            ? 'bg-white text-sky-600 border-sky-600 ring-4 ring-sky-100 shadow-[0_2px_8px_rgba(2,132,199,0.15)]'
+                            : isDone
+                              ? 'bg-sky-600 text-white border-sky-600 shadow-[0_2px_6px_rgba(2,132,199,0.1)]'
+                              : 'bg-white text-slate-300 border-slate-200'
+                        }`}>
+                          {isDone ? '✓' : st.num}
+                        </div>
+                        
+                        <span className={`text-[10.5px] font-bold ${
+                          isCurrent ? 'text-sky-700 font-black' : isDone ? 'text-slate-700' : 'text-slate-400 font-semibold'
+                        }`}>
+                          {st.name}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {isCancelado && (
             <div className="bg-rose-50/40 text-rose-800 text-[10.5px] font-bold p-4 rounded-xl border border-rose-100/50 flex items-center gap-2">
               <ShieldAlert className="w-4.5 h-4.5 text-rose-550 flex-shrink-0" />
-              <span>Este chamado foi cancelado. Entre em contato com a administração caso julgue necessário.</span>
+              <span>Chamado cancelado. Entre em contato com a administração caso julgue necessário.</span>
             </div>
           )}
 
