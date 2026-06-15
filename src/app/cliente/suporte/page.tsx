@@ -136,6 +136,14 @@ export default async function ClienteSuportePage() {
     queryError = true;
   }
 
+  console.error("[cliente/suporte] diagnostic", {
+    hasCustomer: !!customer,
+    ordersCount: openOS?.length,
+    statuses: openOS?.map(os => os.status),
+    hasHistory: openOS?.some(os => os.service_order_status_history && os.service_order_status_history.length > 0),
+    hasEquipment: openOS?.some(os => os.client_equipment),
+  });
+
   const renderTicket = (os: any) => {
     if (!os) return null;
     try {
