@@ -64,10 +64,9 @@ export default function TecnicoDashboardPage() {
         .select(`
           *,
           customer:customers(
-            id, company_name, trade_name, phone,
+            id, trade_name, company_name, contact_name, email, phone, whatsapp,
             address_street, address_number, address_complement, 
-            address_neighborhood, address_city, address_state, address_zip,
-            profiles(name)
+            address_neighborhood, address_city, address_state, address_zip
           ),
           equipment:client_equipment(id, name, brand, model, serial_number)
         `)
@@ -180,6 +179,9 @@ export default function TecnicoDashboardPage() {
     switch (status) {
       case 'em_atendimento': return 'success';
       case 'concluida': return 'success';
+      case 'orcamento_aprovado': return 'success';
+      case 'aguardando_peca': return 'warning';
+      case 'orcamento_pendente': return 'warning';
       case 'cancelada': return 'error';
       default: return 'neutral';
     }
