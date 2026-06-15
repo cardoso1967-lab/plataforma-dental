@@ -5,6 +5,7 @@ import { getCustomerSession } from '@/lib/customer-data';
 import { PageHero } from '@/components/ui/PageHero';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { formatFriendlyDate, formatFriendlyDateTime } from '@/lib/date-utils';
 
 // Configuração visual de status
 const getStatusInfo = (status: string) => {
@@ -19,7 +20,7 @@ const getStatusInfo = (status: string) => {
     case 'visita_agendada':
       return { label: 'Visita agendada', bg: 'bg-sky-50 text-sky-700 border-sky-100', color: '#0369a1', step: 2 as const, badge: 'info' };
     case 'em_atendimento':
-      return { label: 'Em campo', bg: 'bg-sky-500 text-white border-sky-600', color: '#0ea5e9', step: 3 as const, badge: 'success' };
+      return { label: 'Em atendimento', bg: 'bg-sky-500 text-white border-sky-600', color: '#0ea5e9', step: 3 as const, badge: 'success' };
     case 'aguardando_peca':
       return { label: 'Aguardando peça', bg: 'bg-orange-50 text-orange-700 border-orange-100', color: '#ea580c', step: 3 as const, badge: 'warning' };
     case 'orcamento_pendente':
@@ -27,7 +28,7 @@ const getStatusInfo = (status: string) => {
     case 'orcamento_aprovado':
       return { label: 'Orçamento aprovado', bg: 'bg-emerald-50 text-emerald-700 border-emerald-100', color: '#10b981', step: 4 as const, badge: 'success' };
     case 'concluida':
-      return { label: 'Finalizado', bg: 'bg-emerald-50 text-emerald-700 border-emerald-100', color: '#059669', step: 5 as const, badge: 'success' };
+      return { label: 'Concluído', bg: 'bg-emerald-50 text-emerald-700 border-emerald-100', color: '#059669', step: 5 as const, badge: 'success' };
     case 'cancelada':
       return { label: 'Cancelado', bg: 'bg-rose-50 text-rose-700 border-rose-100', color: '#e11d48', step: 'cancelled' as const, badge: 'error' };
     default:
@@ -36,32 +37,18 @@ const getStatusInfo = (status: string) => {
 };
 
 const formatSafeDate = (dateStr: any) => {
-  if (!dateStr) return 'Data não definida';
-  try {
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return 'Data não definida';
-    return d.toLocaleDateString('pt-BR');
-  } catch (e) {
-    return 'Data não definida';
-  }
+  return formatFriendlyDate(dateStr);
 };
 
 const formatSafeDateTime = (dateStr: any) => {
-  if (!dateStr) return 'Data não definida';
-  try {
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return 'Data não definida';
-    return d.toLocaleString('pt-BR');
-  } catch (e) {
-    return 'Data não definida';
-  }
+  return formatFriendlyDateTime(dateStr);
 };
 
 // Nombres de los pasos en el timeline
 const steps = [
   { num: 1, name: 'Triagem' },
   { num: 2, name: 'Agendado' },
-  { num: 3, name: 'Em Campo' },
+  { num: 3, name: 'Em Atendimento' },
   { num: 4, name: 'Orçamento' },
   { num: 5, name: 'Finalizado' }
 ];
