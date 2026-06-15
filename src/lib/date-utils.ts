@@ -1,8 +1,16 @@
-export function formatFriendlyDateTime(dateInput: string | Date | null | undefined): string {
-  if (!dateInput) return 'Agendamento não definido';
+export function formatFriendlyDateTime(dateInput: any): string {
+  if (!dateInput) return 'Data não definida';
   try {
-    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
-    if (isNaN(date.getTime())) return 'Data inválida';
+    let date: Date;
+    if (dateInput instanceof Date) {
+      date = dateInput;
+    } else if (typeof dateInput === 'string' || typeof dateInput === 'number') {
+      date = new Date(dateInput);
+    } else {
+      return 'Data não definida';
+    }
+
+    if (isNaN(date.getTime())) return 'Data não definida';
 
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -20,15 +28,23 @@ export function formatFriendlyDateTime(dateInput: string | Date | null | undefin
       return `${dateStr}, ${timeStr}`;
     }
   } catch (err) {
-    return 'Data inválida';
+    return 'Data não definida';
   }
 }
 
-export function formatFriendlyDate(dateInput: string | Date | null | undefined): string {
-  if (!dateInput) return 'Não informada';
+export function formatFriendlyDate(dateInput: any): string {
+  if (!dateInput) return 'Data não definida';
   try {
-    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
-    if (isNaN(date.getTime())) return 'Data inválida';
+    let date: Date;
+    if (dateInput instanceof Date) {
+      date = dateInput;
+    } else if (typeof dateInput === 'string' || typeof dateInput === 'number') {
+      date = new Date(dateInput);
+    } else {
+      return 'Data não definida';
+    }
+
+    if (isNaN(date.getTime())) return 'Data não definida';
 
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -43,6 +59,7 @@ export function formatFriendlyDate(dateInput: string | Date | null | undefined):
       return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     }
   } catch (err) {
-    return 'Data inválida';
+    return 'Data não definida';
   }
 }
+

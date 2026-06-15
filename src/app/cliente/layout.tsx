@@ -13,8 +13,16 @@ export default function ClienteLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { logout, profile } = useAuth();
+  const { logout, profile, user } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(true);
+
+  useEffect(() => {
+    console.error("[cliente/layout] diagnostic", {
+      route: "/cliente/*",
+      hasUser: Boolean(user),
+      userId: user?.id ?? null,
+    });
+  }, [user]);
 
   useEffect(() => {
     const saved = localStorage.getItem('cliente-sidebar-collapsed');

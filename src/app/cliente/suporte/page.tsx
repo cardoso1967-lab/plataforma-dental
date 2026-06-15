@@ -8,30 +8,30 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 
 // Configuração visual de status
 const getStatusInfo = (status: string) => {
-  const lowerStatus = (status || '').toLowerCase();
+  const lowerStatus = (status || '').trim().toLowerCase();
   switch (lowerStatus) {
     case 'aberta':
-      return { label: 'Triagem', bg: 'bg-blue-50/50 text-blue-700 border-blue-100', color: '#0284c7', step: 1, badge: 'neutral' };
+      return { label: 'Triagem', bg: 'bg-blue-50/50 text-blue-700 border-blue-100', color: '#0284c7', step: 1 as const, badge: 'neutral' };
     case 'em_analise':
-      return { label: 'Em análise', bg: 'bg-purple-50/50 text-purple-700 border-purple-100', color: '#7c3aed', step: 1, badge: 'indigo' };
+      return { label: 'Em análise', bg: 'bg-purple-50/50 text-purple-700 border-purple-100', color: '#7c3aed', step: 1 as const, badge: 'indigo' };
     case 'tecnico_atribuido':
-      return { label: 'Técnico atribuído', bg: 'bg-indigo-50/50 text-indigo-700 border-indigo-100', color: '#4f46e5', step: 2, badge: 'info' };
+      return { label: 'Técnico atribuído', bg: 'bg-indigo-50/50 text-indigo-700 border-indigo-100', color: '#4f46e5', step: 2 as const, badge: 'info' };
     case 'visita_agendada':
-      return { label: 'Visita agendada', bg: 'bg-sky-50 text-sky-700 border-sky-100', color: '#0369a1', step: 2, badge: 'info' };
+      return { label: 'Visita agendada', bg: 'bg-sky-50 text-sky-700 border-sky-100', color: '#0369a1', step: 2 as const, badge: 'info' };
     case 'em_atendimento':
-      return { label: 'Em campo', bg: 'bg-sky-500 text-white border-sky-600', color: '#0ea5e9', step: 3, badge: 'success' };
+      return { label: 'Em campo', bg: 'bg-sky-500 text-white border-sky-600', color: '#0ea5e9', step: 3 as const, badge: 'success' };
     case 'aguardando_peca':
-      return { label: 'Aguardando peça', bg: 'bg-orange-50 text-orange-700 border-orange-100', color: '#ea580c', step: 3, badge: 'warning' };
+      return { label: 'Aguardando peça', bg: 'bg-orange-50 text-orange-700 border-orange-100', color: '#ea580c', step: 3 as const, badge: 'warning' };
     case 'orcamento_pendente':
-      return { label: 'Orçamento pendente', bg: 'bg-amber-50 text-amber-700 border-amber-100', color: '#d97706', step: 4, badge: 'warning' };
+      return { label: 'Orçamento pendente', bg: 'bg-amber-50 text-amber-700 border-amber-100', color: '#d97706', step: 4 as const, badge: 'warning' };
     case 'orcamento_aprovado':
-      return { label: 'Orçamento aprovado', bg: 'bg-emerald-50 text-emerald-700 border-emerald-100', color: '#10b981', step: 4, badge: 'success' };
+      return { label: 'Orçamento aprovado', bg: 'bg-emerald-50 text-emerald-700 border-emerald-100', color: '#10b981', step: 4 as const, badge: 'success' };
     case 'concluida':
-      return { label: 'Finalizado', bg: 'bg-emerald-50 text-emerald-700 border-emerald-100', color: '#059669', step: 5, badge: 'success' };
+      return { label: 'Finalizado', bg: 'bg-emerald-50 text-emerald-700 border-emerald-100', color: '#059669', step: 5 as const, badge: 'success' };
     case 'cancelada':
-      return { label: 'Cancelado', bg: 'bg-rose-50 text-rose-700 border-rose-100', color: '#e11d48', step: 0, badge: 'error' };
+      return { label: 'Cancelado', bg: 'bg-rose-50 text-rose-700 border-rose-100', color: '#e11d48', step: 'cancelled' as const, badge: 'error' };
     default:
-      return { label: status || 'Triagem', bg: 'bg-slate-50 text-slate-700 border-slate-200', color: '#64748b', step: 1, badge: 'neutral' };
+      return { label: status || 'Triagem', bg: 'bg-slate-50 text-slate-700 border-slate-200', color: '#64748b', step: 1 as const, badge: 'neutral' };
   }
 };
 
@@ -65,6 +65,72 @@ const steps = [
   { num: 4, name: 'Orçamento' },
   { num: 5, name: 'Finalizado' }
 ];
+
+interface NormalizedServiceOrder {
+  id: string;
+  status: string;
+  statusStyle: ReturnType<typeof getStatusInfo>;
+  priority: string;
+  created_at: string;
+  description: string;
+  scheduled_date: string | null;
+  equipmentName: string;
+  latestHistoryNote: string | null;
+}
+
+function normalizeServiceOrder(raw: any): NormalizedServiceOrder {
+  const id = String(raw?.id || Math.random().toString().slice(2, 10));
+  const status = typeof raw?.status === 'string' ? raw.status.trim() : 'aberta';
+  const statusStyle = getStatusInfo(status);
+  
+  const priority = String(raw?.priority || 'media');
+  const created_at = raw?.created_at || new Date().toISOString();
+  const description = raw?.description || 'Descrição não informada';
+  const scheduled_date = raw?.scheduled_date || null;
+
+  // Equipamento nulo-seguro
+  let equipmentName = 'Equipamento Geral';
+  const rawEquip = raw?.client_equipment;
+  if (rawEquip) {
+    if (Array.isArray(rawEquip)) {
+      const first = rawEquip[0];
+      if (first && typeof first === 'object') {
+        equipmentName = first.name || 'Equipamento Geral';
+      }
+    } else if (typeof rawEquip === 'object') {
+      equipmentName = rawEquip.name || 'Equipamento Geral';
+    }
+  }
+
+  // Histórico nulo-seguro
+  let latestHistoryNote: string | null = null;
+  const rawHist = raw?.service_order_status_history;
+  if (rawHist && Array.isArray(rawHist) && rawHist.length > 0) {
+    try {
+      const sortedHistory = [...rawHist].filter(h => h && h.created_at).sort((a: any, b: any) => {
+        const timeA = new Date(a.created_at).getTime();
+        const timeB = new Date(b.created_at).getTime();
+        return timeB - timeA;
+      });
+      latestHistoryNote = sortedHistory[0]?.notes || null;
+    } catch (e) {
+      console.error('Erro ao processar histórico no normalizer:', e);
+    }
+  }
+
+  return {
+    id,
+    status,
+    statusStyle,
+    priority,
+    created_at,
+    description,
+    scheduled_date,
+    equipmentName,
+    latestHistoryNote
+  };
+}
+
 
 export default async function ClienteSuportePage() {
   const { supabase, customer } = await getCustomerSession();
@@ -137,41 +203,18 @@ export default async function ClienteSuportePage() {
   }
 
   console.error("[cliente/suporte] diagnostic", {
-    hasCustomer: !!customer,
-    ordersCount: openOS?.length,
-    statuses: openOS?.map(os => os.status),
-    hasHistory: openOS?.some(os => os.service_order_status_history && os.service_order_status_history.length > 0),
-    hasEquipment: openOS?.some(os => os.client_equipment),
+    hasCustomer: Boolean(customer?.id),
+    customerId: customer?.id ?? null,
+    ordersCount: openOS?.length ?? 0,
+    statuses: openOS?.map((os) => os.status) ?? [],
   });
 
-  const renderTicket = (os: any) => {
-    if (!os) return null;
+  const renderTicket = (rawOs: any) => {
+    if (!rawOs) return null;
     try {
-      const statusStyle = getStatusInfo(os.status);
+      const os = normalizeServiceOrder(rawOs);
       const isCancelado = os.status === 'cancelada';
-      const currentStep = typeof statusStyle.step === 'number' ? statusStyle.step : 1;
-
-      // Equipamento nulo-seguro
-      let equipmentName = 'Equipamento Geral';
-      if (os.client_equipment) {
-        if (Array.isArray(os.client_equipment)) {
-          equipmentName = os.client_equipment[0]?.name || 'Equipamento Geral';
-        } else {
-          equipmentName = (os.client_equipment as any).name || 'Equipamento Geral';
-        }
-      }
-
-      // Descrição nula-segura
-      const description = os.description || 'Descrição não informada';
-
-      // Histórico nulo-seguro
-      let latestHistoryNote = null;
-      if (os.service_order_status_history && Array.isArray(os.service_order_status_history) && os.service_order_status_history.length > 0) {
-        const sortedHistory = [...os.service_order_status_history].sort((a: any, b: any) => {
-          return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
-        });
-        latestHistoryNote = sortedHistory[0]?.notes || null;
-      }
+      const stepNum = typeof os.statusStyle.step === 'number' ? os.statusStyle.step : 1;
 
       return (
         <div 
@@ -185,17 +228,17 @@ export default async function ClienteSuportePage() {
                 OS: #{os.id.slice(0, 8).toUpperCase()} • {formatSafeDate(os.created_at)}
               </span>
               <h4 className="font-extrabold text-slate-800 text-sm mt-1.5 group-hover:text-sky-705 transition-colors">
-                {equipmentName}
+                {os.equipmentName}
               </h4>
               <p className="text-[10.5px] text-slate-500 font-semibold italic mt-1.5 max-w-2xl line-clamp-2 leading-relaxed">
-                "{description}"
+                "{os.description}"
               </p>
             </div>
             
             <div className="flex items-center self-start sm:self-center shrink-0">
               <StatusBadge
-                label={statusStyle.label}
-                type={statusStyle.badge as any}
+                label={os.statusStyle.label}
+                type={os.statusStyle.badge as any}
               />
             </div>
           </div>
@@ -221,12 +264,12 @@ export default async function ClienteSuportePage() {
                 {/* Línea de progreso completado */}
                 <div 
                   className="absolute top-[21px] left-8 h-0.5 bg-sky-600 transition-all duration-500 -z-0"
-                  style={{ width: `${Math.max(0, Math.min(90, ((currentStep - 1) / (steps.length - 1)) * 90))}%` }}
+                  style={{ width: `${Math.max(0, Math.min(90, ((stepNum - 1) / (steps.length - 1)) * 90))}%` }}
                 />
 
                 {steps.map((st) => {
-                  const isDone = currentStep >= st.num;
-                  const isCurrent = currentStep === st.num;
+                  const isDone = stepNum >= st.num;
+                  const isCurrent = stepNum === st.num;
                   
                   return (
                     <div key={st.num} className="flex flex-col items-center flex-1 relative z-10 text-center">
@@ -253,8 +296,8 @@ export default async function ClienteSuportePage() {
               {/* Timeline Vertical para Mobile */}
               <div className="sm:hidden space-y-4 pt-1">
                 {steps.map((st, idx) => {
-                  const isDone = currentStep >= st.num;
-                  const isCurrent = currentStep === st.num;
+                  const isDone = stepNum >= st.num;
+                  const isCurrent = stepNum === st.num;
                   
                   return (
                     <div key={st.num} className="flex items-center gap-3 relative text-left">
@@ -292,34 +335,34 @@ export default async function ClienteSuportePage() {
           )}
 
           {/* Última atualização do técnico (Histórico) */}
-          {latestHistoryNote && (
+          {os.latestHistoryNote && (
             <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-100 text-[11px] text-slate-600 font-medium leading-relaxed mt-2">
               <strong className="text-slate-700 block mb-1">Última atualização do técnico:</strong>
-              "{latestHistoryNote}"
+              "{os.latestHistoryNote}"
             </div>
           )}
         </div>
       );
     } catch (renderErr) {
-      console.error('Erro ao renderizar chamado:', renderErr, os);
+      console.error('Erro ao renderizar chamado:', renderErr, rawOs);
       return (
         <div 
-          key={os?.id || Math.random().toString()} 
+          key={rawOs?.id || Math.random().toString()} 
           className="bg-white border border-slate-200/60 rounded-xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.012)] space-y-3 text-left"
         >
           <div className="pb-3 border-b border-slate-100 flex justify-between items-center">
             <div>
               <span className="text-[9.5px] font-mono font-black text-sky-600 bg-sky-50 px-2 py-0.5 rounded">
-                OS: #{String(os?.id || '').slice(0, 8).toUpperCase()}
+                OS: #{String(rawOs?.id || '').slice(0, 8).toUpperCase()}
               </span>
               <h4 className="font-extrabold text-slate-800 text-sm mt-1">
                 Equipamento Geral
               </h4>
             </div>
-            <StatusBadge label={os?.status || 'aberta'} type="neutral" />
+            <StatusBadge label={rawOs?.status || 'aberta'} type="neutral" />
           </div>
           <p className="text-[10.5px] text-slate-500 font-semibold italic">
-            "{os?.description || 'Descrição não informada'}"
+            "{rawOs?.description || 'Descrição não informada'}"
           </p>
           <div className="bg-amber-50 border border-amber-100 text-amber-700 text-[10px] font-semibold p-3 rounded-xl">
             Não foi possível carregar todos os detalhes do chamado, mas o acompanhamento principal continua disponível.
