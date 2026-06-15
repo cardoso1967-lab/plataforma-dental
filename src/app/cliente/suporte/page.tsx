@@ -12,7 +12,7 @@ const getStatusInfo = (status: string) => {
   const lowerStatus = (status || '').trim().toLowerCase();
   switch (lowerStatus) {
     case 'aberta':
-      return { label: 'Triagem', bg: 'bg-blue-50/50 text-blue-700 border-blue-100', color: '#0284c7', step: 1 as const, badge: 'neutral' };
+      return { label: 'Aberta', bg: 'bg-blue-50/50 text-blue-700 border-blue-100', color: '#0284c7', step: 1 as const, badge: 'neutral' };
     case 'em_analise':
       return { label: 'Em análise', bg: 'bg-purple-50/50 text-purple-700 border-purple-100', color: '#7c3aed', step: 1 as const, badge: 'indigo' };
     case 'tecnico_atribuido':

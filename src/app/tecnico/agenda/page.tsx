@@ -14,6 +14,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { PremiumButton } from '@/components/ui/PremiumButton';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { formatFriendlyDateTime } from '@/lib/date-utils';
+import { getCustomerDisplayName } from '@/lib/customer-utils';
 
 export default function TecnicoAgendaPage() {
   const supabase = createSupabaseBrowserClient();
@@ -53,7 +54,8 @@ export default function TecnicoAgendaPage() {
           customer:customers(
             id, company_name, trade_name, phone,
             address_street, address_number, address_complement, 
-            address_neighborhood, address_city, address_state, address_zip
+            address_neighborhood, address_city, address_state, address_zip,
+            profiles(name)
           ),
           equipment:client_equipment(id, name, brand, model, serial_number)
         `)
@@ -98,13 +100,14 @@ export default function TecnicoAgendaPage() {
 
   const getStatusLabel = (status: string) => {
     const map: Record<string, string> = {
-      aberta: 'Solicitação recebida',
-      em_analise: 'Em triagem',
-      tecnico_atribuido: 'Técnico designado',
+      aberta: 'Aberta',
+      em_analise: 'Em análise',
+      tecnico_atribuido: 'Técnico atribuído',
       visita_agendada: 'Visita agendada',
       em_atendimento: 'Em atendimento',
       aguardando_peca: 'Aguardando peça',
-      orcamento_pendente: 'Aguardando aprovação',
+      orcamento_pendente: 'Orçamento pendente',
+      orcamento_aprovado: 'Orçamento aprovado',
       concluida: 'Concluído',
       cancelada: 'Cancelado',
     };
@@ -204,7 +207,7 @@ export default function TecnicoAgendaPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block font-mono">Cliente</span>
                     <span className="text-slate-800 font-extrabold">
-                      {item.customer?.company_name || <span className="text-slate-400 italic font-medium">Cliente não informado</span>}
+                      {getCustomerDisplayName(item.customer)}
                     </span>
                   </div>
 

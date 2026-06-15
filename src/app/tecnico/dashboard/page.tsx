@@ -14,6 +14,7 @@ import { MetricCard } from '@/components/ui/MetricCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PremiumButton } from '@/components/ui/PremiumButton';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { getCustomerDisplayName } from '@/lib/customer-utils';
 
 export default function TecnicoDashboardPage() {
   const supabase = createSupabaseBrowserClient();
@@ -65,7 +66,8 @@ export default function TecnicoDashboardPage() {
           customer:customers(
             id, company_name, trade_name, phone,
             address_street, address_number, address_complement, 
-            address_neighborhood, address_city, address_state, address_zip
+            address_neighborhood, address_city, address_state, address_zip,
+            profiles(name)
           ),
           equipment:client_equipment(id, name, brand, model, serial_number)
         `)
@@ -185,13 +187,14 @@ export default function TecnicoDashboardPage() {
 
   const getStatusLabel = (status: string) => {
     const map: Record<string, string> = {
-      aberta: 'Solicitação recebida',
-      em_analise: 'Em triagem',
-      tecnico_atribuido: 'Técnico designado',
+      aberta: 'Aberta',
+      em_analise: 'Em análise',
+      tecnico_atribuido: 'Técnico atribuído',
       visita_agendada: 'Visita agendada',
       em_atendimento: 'Em atendimento',
       aguardando_peca: 'Aguardando peça',
-      orcamento_pendente: 'Aguardando aprovação',
+      orcamento_pendente: 'Orçamento pendente',
+      orcamento_aprovado: 'Orçamento aprovado',
       concluida: 'Concluído',
       cancelada: 'Cancelado',
     };
@@ -294,7 +297,7 @@ export default function TecnicoDashboardPage() {
               
               <div className="flex items-center gap-2 text-xs text-slate-600 font-semibold pt-1">
                 <User className="w-4 h-4 text-slate-400" />
-                <span>{activeOS.customer?.company_name}</span>
+                <span>{getCustomerDisplayName(activeOS.customer)}</span>
               </div>
             </div>
 
@@ -417,7 +420,7 @@ export default function TecnicoDashboardPage() {
               <div key={visit.id} className="flex justify-between items-start border-b border-slate-50/50 pb-3 last:border-0 last:pb-0">
                 <div className="space-y-1">
                   <p className="text-slate-800 font-extrabold">
-                    {visit.scheduled_date ? new Date(visit.scheduled_date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Sem hora'} - {visit.customer?.company_name}
+                    {visit.scheduled_date ? new Date(visit.scheduled_date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Sem hora'} - {getCustomerDisplayName(visit.customer)}
                   </p>
                   <p className="text-[10px] text-slate-400 font-medium">
                     {visit.equipment?.name || 'Equipamento geral'} ({visit.description.slice(0, 45)}...)

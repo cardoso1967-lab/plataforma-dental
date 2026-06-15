@@ -14,6 +14,7 @@ import { PremiumInput } from '@/components/ui/PremiumInput';
 import { PremiumButton } from '@/components/ui/PremiumButton';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { formatFriendlyDateTime } from '@/lib/date-utils';
+import { getCustomerDisplayName } from '@/lib/customer-utils';
 
 export default function TecnicoServicosPage() {
   const supabase = createSupabaseBrowserClient();
@@ -69,7 +70,8 @@ export default function TecnicoServicosPage() {
           customer:customers(
             id, company_name, trade_name, phone,
             address_street, address_number, address_complement, 
-            address_neighborhood, address_city, address_state, address_zip
+            address_neighborhood, address_city, address_state, address_zip,
+            profiles(name)
           ),
           equipment:client_equipment(id, name, brand, model, serial_number)
         `)
@@ -109,7 +111,7 @@ export default function TecnicoServicosPage() {
       const term = searchTerm.toLowerCase();
       result = result.filter(os => 
         os.id.toLowerCase().includes(term) ||
-        (os.customer?.company_name || '').toLowerCase().includes(term) ||
+        getCustomerDisplayName(os.customer).toLowerCase().includes(term) ||
         (os.equipment?.name || '').toLowerCase().includes(term) ||
         os.description.toLowerCase().includes(term)
       );
@@ -196,13 +198,14 @@ export default function TecnicoServicosPage() {
 
   const getStatusLabel = (status: string) => {
     const map: Record<string, string> = {
-      aberta: 'Solicitação recebida',
-      em_analise: 'Em triagem',
-      tecnico_atribuido: 'Técnico designado',
+      aberta: 'Aberta',
+      em_analise: 'Em análise',
+      tecnico_atribuido: 'Técnico atribuído',
       visita_agendada: 'Visita agendada',
       em_atendimento: 'Em atendimento',
       aguardando_peca: 'Aguardando peça',
-      orcamento_pendente: 'Aguardando aprovação',
+      orcamento_pendente: 'Orçamento pendente',
+      orcamento_aprovado: 'Orçamento aprovado',
       concluida: 'Concluído',
       cancelada: 'Cancelado',
     };
@@ -332,7 +335,7 @@ export default function TecnicoServicosPage() {
                 )}
                 <div className="flex items-center gap-1.5 text-xs text-slate-655 font-semibold pt-1">
                   <User className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                  <span className="line-clamp-1">{os.customer?.company_name || <span className="text-slate-400 italic">Cliente não informado</span>}</span>
+                  <span className="line-clamp-1">{getCustomerDisplayName(os.customer)}</span>
                 </div>
               </div>
 

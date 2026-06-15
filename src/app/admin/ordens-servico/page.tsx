@@ -54,13 +54,14 @@ interface ServiceOrder {
 }
 
 const statusMap: Record<string, { label: string; class: string }> = {
-  aberta: { label: 'Solicitação recebida', class: 'bg-blue-50 text-blue-700 border border-blue-200' },
-  em_analise: { label: 'Em triagem', class: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
+  aberta: { label: 'Aberta', class: 'bg-blue-50 text-blue-700 border border-blue-200' },
+  em_analise: { label: 'Em análise', class: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
   tecnico_atribuido: { label: 'Técnico atribuído', class: 'bg-purple-50 text-purple-700 border border-purple-200' },
   visita_agendada: { label: 'Visita agendada', class: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
   em_atendimento: { label: 'Em atendimento', class: 'bg-sky-50 text-sky-700 border border-sky-200' },
   aguardando_peca: { label: 'Aguardando peça', class: 'bg-orange-50 text-orange-700 border border-orange-200' },
-  orcamento_pendente: { label: 'Aguardando aprovação', class: 'bg-amber-50 text-amber-700 border border-amber-200' },
+  orcamento_pendente: { label: 'Orçamento pendente', class: 'bg-amber-50 text-amber-700 border border-amber-200' },
+  orcamento_aprovado: { label: 'Orçamento aprovado', class: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
   concluida: { label: 'Concluído', class: 'bg-green-50 text-green-700 border border-green-200' },
   cancelada: { label: 'Cancelado', class: 'bg-rose-50 text-rose-700 border border-rose-200' },
 };
