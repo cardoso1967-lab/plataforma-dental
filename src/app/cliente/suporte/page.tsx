@@ -6,6 +6,7 @@ import { PageHero } from '@/components/ui/PageHero';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { formatFriendlyDate, formatFriendlyDateTime } from '@/lib/date-utils';
+import { OpenTicketButton } from './OpenTicketButton';
 
 // Configuração visual de status
 const getStatusInfo = (status: string) => {
@@ -370,6 +371,9 @@ export default async function ClienteSuportePage() {
         variant="compact"
       />
 
+      {/* Botão de Atalho Rápido para Chamado */}
+      <OpenTicketButton />
+
       {/* Alerta de erro de query parcial se houver */}
       {queryError && (
         <div className="bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-semibold p-4 rounded-xl flex items-center gap-2">
@@ -398,7 +402,7 @@ export default async function ClienteSuportePage() {
       </div>
 
       {/* Formulário de Abertura */}
-      <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-xs text-left">
+      <div id="novo-chamado" className="bg-white rounded-3xl border border-slate-100 p-6 shadow-xs text-left">
         <h3 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest pl-1 mb-4 font-sans">
           Solicitar Nova Assistência Técnica
         </h3>
