@@ -68,7 +68,7 @@ interface NormalizedServiceOrder {
 
 function normalizeServiceOrder(raw: any): NormalizedServiceOrder {
   const id = String(raw?.id || Math.random().toString().slice(2, 10));
-  const status = typeof raw?.status === 'string' ? raw.status.trim() : 'aberta';
+  const status = typeof raw?.status === 'string' ? raw.status.trim().toLowerCase() : 'aberta';
   const statusStyle = getStatusInfo(status);
   
   const priority = String(raw?.priority || 'media');
@@ -119,17 +119,39 @@ function normalizeServiceOrder(raw: any): NormalizedServiceOrder {
   };
 }
 
+const getTimelineStep = (status: string): number => {
+  const cleanStatus = (status || '').trim().toLowerCase();
+  switch (cleanStatus) {
+    case 'aberta':
+    case 'em_analise':
+      return 1;
+    case 'tecnico_atribuido':
+    case 'visita_agendada':
+      return 2;
+    case 'em_atendimento':
+    case 'aguardando_peca':
+      return 3;
+    case 'orcamento_pendente':
+    case 'orcamento_aprovado':
+      return 4;
+    case 'concluida':
+      return 5;
+    default:
+      return 1;
+  }
+};
+
 const isStepCompleted = (stepNumber: number, currentStep: number, status: string) => {
-  const isConcluido = status === 'concluida';
-  if (isConcluido) {
+  const cleanStatus = (status || '').trim().toLowerCase();
+  if (cleanStatus === 'concluida') {
     return true;
   }
   return stepNumber < currentStep;
 };
 
 const isStepActive = (stepNumber: number, currentStep: number, status: string) => {
-  const isConcluido = status === 'concluida';
-  if (isConcluido) {
+  const cleanStatus = (status || '').trim().toLowerCase();
+  if (cleanStatus === 'concluida') {
     return false;
   }
   return stepNumber === currentStep;
@@ -219,7 +241,7 @@ export default async function ClienteSuportePage() {
     try {
       const os = normalizeServiceOrder(rawOs);
       const isCancelado = os.status === 'cancelada';
-      const stepNum = typeof os.statusStyle.step === 'number' ? os.statusStyle.step : 1;
+      const stepNum = getTimelineStep(os.status);
 
       return (
         <div 
@@ -258,21 +280,21 @@ export default async function ClienteSuportePage() {
 
           {/* Visualizador Gráfico de Progreso (Timeline) */}
           {!isCancelado && (() => {
-            const progressWidth = os.status === 'concluida' ? 100 : ((stepNum - 1) / (steps.length - 1)) * 90;
+            const progressWidth = os.status === 'concluida' ? 100 : ((stepNum - 1) / (steps.length - 1)) * 100;
             return (
               <div className="bg-slate-50/50 rounded-2xl p-4.5 border border-slate-100 max-w-4xl mt-3 text-left">
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-4 font-mono">Status do Chamado</span>
                 
                 {/* Flex Horizontal para Desktop */}
                 <div className="hidden sm:flex items-center justify-between w-full relative pt-2 pb-2">
-                  {/* Línea conectora de fondo */}
-                  <div className="absolute top-[21px] left-8 right-8 h-0.5 bg-slate-200/80 -z-0" />
-                  
-                  {/* Línea de progreso completado */}
-                  <div 
-                    className="absolute top-[21px] left-8 h-0.5 bg-sky-600 transition-all duration-500 -z-0"
-                    style={{ width: `${Math.max(0, Math.min(100, progressWidth))}%` }}
-                  />
+                  {/* Linha conectora de fundo com progresso integrado */}
+                  <div className="absolute top-[21px] left-8 right-8 h-0.5 -z-0">
+                    <div className="w-full h-full bg-slate-200/80 rounded" />
+                    <div 
+                      className="absolute top-0 left-0 h-full bg-sky-600 transition-all duration-500 rounded"
+                      style={{ width: `${Math.max(0, Math.min(100, progressWidth))}%` }}
+                    />
+                  </div>
 
                   {steps.map((st) => {
                     const isDone = isStepCompleted(st.num, stepNum, os.status);
