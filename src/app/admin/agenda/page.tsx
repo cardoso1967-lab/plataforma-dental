@@ -4,10 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { 
   Calendar, User, Clock, MapPin, Grid, List, Filter, 
   ChevronRight, Wrench, RefreshCw, X, AlertCircle, 
-  ArrowRight, ShieldCheck, Tag, FileText, UserPlus, SlidersHorizontal, Info, ClipboardList
+  ArrowRight, ShieldCheck, Tag, FileText, UserPlus, SlidersHorizontal, Info, ClipboardList,
+  CheckCircle2
 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
+import { assignTechnicianToOS, scheduleOSVisit } from '@/lib/service-orders';
 
 import { PageHero } from '@/components/ui/PageHero';
 import { KanbanColumn } from '@/components/ui/KanbanColumn';
@@ -96,6 +98,14 @@ export default function AdminAgendaPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  // Feedback de sucesso/erro inline
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const showFeedback = (type: 'success' | 'error', message: string) => {
+    setFeedback({ type, message });
+    setTimeout(() => setFeedback(null), 3500);
+  };
 
   // Estados de visualización
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
@@ -256,46 +266,77 @@ export default function AdminAgendaPage() {
         loadStatusHistory(osId);
       }
 
+      showFeedback('success', 'Status atualizado com sucesso.');
+
     } catch (err: any) {
-      alert('Erro ao atualizar status: ' + err.message);
+      showFeedback('error', 'Não foi possível concluir a ação. Tente novamente.');
+      console.error('Erro ao atualizar status:', err.message);
     } finally {
       setUpdatingId(null);
     }
   };
 
-  // Reasignar técnico
+  // Reasignar técnico com histórico de status
   const assignTechnician = async (osId: string, techId: string | null) => {
+    if (!adminProfile?.id) return;
     try {
       setUpdatingId(osId);
-      const { error } = await supabase
-        .from('service_orders')
-        .update({ technician_id: techId })
-        .eq('id', osId);
-
-      if (error) throw error;
+      
+      if (!techId) {
+        // Remover técnico sem alterar status
+        const { error } = await supabase
+          .from('service_orders')
+          .update({ technician_id: null })
+          .eq('id', osId);
+        if (error) throw error;
+      } else {
+        const currentOS = serviceOrders.find(o => o.id === osId);
+        const currentStatus = currentOS?.status || 'aberta';
+        
+        const { error } = await assignTechnicianToOS(
+          supabase,
+          osId,
+          techId,
+          adminProfile.id,
+          currentStatus
+        );
+        if (error) throw new Error(error);
+      }
+      
       await loadData();
+      showFeedback('success', 'Técnico atribuído com sucesso.');
     } catch (err: any) {
-      alert('Erro ao designar técnico: ' + err.message);
+      showFeedback('error', 'Não foi possível concluir a ação. Tente novamente.');
+      console.error('Erro ao designar técnico:', err.message);
     } finally {
       setUpdatingId(null);
     }
   };
 
-  // Re-programar fecha
+  // Re-programar fecha com histórico de status
   const rescheduleVisit = async (osId: string, dateStr: string) => {
+    if (!adminProfile?.id) return;
     try {
       setUpdatingId(osId);
-      const scheduledDate = dateStr ? new Date(dateStr).toISOString() : null;
+      const currentOS = serviceOrders.find(o => o.id === osId);
+      const currentStatus = currentOS?.status || 'aberta';
+      const technicianId = currentOS?.technician_id || null;
       
-      const { error } = await supabase
-        .from('service_orders')
-        .update({ scheduled_date: scheduledDate })
-        .eq('id', osId);
-
-      if (error) throw error;
+      const { error } = await scheduleOSVisit(
+        supabase,
+        osId,
+        dateStr,
+        adminProfile.id,
+        currentStatus,
+        technicianId
+      );
+      if (error) throw new Error(error);
+      
       await loadData();
+      showFeedback('success', 'Visita agendada com sucesso.');
     } catch (err: any) {
-      alert('Erro ao agendar visita: ' + err.message);
+      showFeedback('error', 'Não foi possível concluir a ação. Tente novamente.');
+      console.error('Erro ao agendar visita:', err.message);
     } finally {
       setUpdatingId(null);
     }
@@ -359,7 +400,8 @@ export default function AdminAgendaPage() {
       setActiveQuickOS(null);
       setQuickActionType(null);
     } catch (err: any) {
-      alert('Erro na ação rápida: ' + err.message);
+      showFeedback('error', 'Não foi possível concluir a ação. Tente novamente.');
+      console.error('Erro na ação rápida:', err.message);
     }
   };
 
@@ -410,6 +452,20 @@ export default function AdminAgendaPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
+      {/* Feedback Toast Inline */}
+      {feedback && (
+        <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl text-xs font-bold animate-in slide-in-from-bottom-4 duration-300 ${
+          feedback.type === 'success'
+            ? 'bg-emerald-600 text-white'
+            : 'bg-rose-600 text-white'
+        }`}>
+          {feedback.type === 'success'
+            ? <CheckCircle2 className="w-4 h-4 shrink-0" />
+            : <AlertCircle className="w-4 h-4 shrink-0" />
+          }
+          {feedback.message}
+        </div>
+      )}
       {/* Header y Alternador Premium */}
       <PageHero
         title="Agenda Operativa"

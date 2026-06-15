@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { 
   Calendar, CheckCircle2, Clock, Wrench, User, MapPin, 
-  Phone, AlertTriangle, ChevronRight, Check, RefreshCw 
+  Phone, AlertTriangle, ChevronRight, Check, RefreshCw, AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
@@ -27,6 +27,12 @@ export default function TecnicoDashboardPage() {
   const [todayVisits, setTodayVisits] = useState<any[]>([]);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const showFeedback = (type: 'success' | 'error', message: string) => {
+    setFeedback({ type, message });
+    setTimeout(() => setFeedback(null), 3500);
+  };
 
   const loadTechData = async () => {
     if (!profile?.id) return;
@@ -149,8 +155,10 @@ export default function TecnicoDashboardPage() {
       if (histError) console.error('Erro ao salvar histórico de status:', histError.message);
 
       await loadTechData();
+      showFeedback('success', 'Status atualizado com sucesso.');
     } catch (err: any) {
-      alert('Erro ao atualizar status: ' + err.message);
+      showFeedback('error', 'Não foi possível concluir a ação. Tente novamente.');
+      console.error('Erro ao atualizar status:', err.message);
     } finally {
       setUpdatingStatus(false);
     }
@@ -224,6 +232,18 @@ export default function TecnicoDashboardPage() {
 
   return (
     <div className="space-y-6 text-left animate-in fade-in duration-300">
+      {/* Feedback Toast */}
+      {feedback && (
+        <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl text-xs font-bold animate-in slide-in-from-bottom-4 duration-300 ${
+          feedback.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'
+        }`}>
+          {feedback.type === 'success'
+            ? <CheckCircle2 className="w-4 h-4 shrink-0" />
+            : <AlertCircle className="w-4 h-4 shrink-0" />
+          }
+          {feedback.message}
+        </div>
+      )}
       {/* Welcome Block */}
       <PageHero
         title={`Olá, ${profile?.name || 'Técnico'}`}

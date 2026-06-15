@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { 
-  Wrench, User, Calendar, Search, Eye, RefreshCw, MapPin, ClipboardList
+  Wrench, User, Calendar, Search, Eye, RefreshCw, MapPin, ClipboardList, CheckCircle2, AlertCircle
 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
@@ -33,6 +33,12 @@ export default function TecnicoServicosPage() {
   const [techNotes, setTechNotes] = useState('');
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const showFeedback = (type: 'success' | 'error', message: string) => {
+    setFeedback({ type, message });
+    setTimeout(() => setFeedback(null), 3500);
+  };
 
   const loadData = async () => {
     if (!profile?.id) return;
@@ -158,8 +164,10 @@ export default function TecnicoServicosPage() {
       setIsModalOpen(false);
       setSelectedOS(null);
       await loadData();
+      showFeedback('success', 'Status atualizado com sucesso.');
     } catch (err: any) {
-      alert('Erro ao atualizar chamado: ' + err.message);
+      showFeedback('error', 'Não foi possível concluir a ação. Tente novamente.');
+      console.error('Erro ao atualizar chamado:', err.message);
     } finally {
       setUpdating(false);
     }
@@ -226,6 +234,18 @@ export default function TecnicoServicosPage() {
 
   return (
     <div className="space-y-6 text-left animate-in fade-in duration-300">
+      {/* Feedback Toast */}
+      {feedback && (
+        <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl text-xs font-bold animate-in slide-in-from-bottom-4 duration-300 ${
+          feedback.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'
+        }`}>
+          {feedback.type === 'success'
+            ? <CheckCircle2 className="w-4 h-4 shrink-0" />
+            : <AlertCircle className="w-4 h-4 shrink-0" />
+          }
+          {feedback.message}
+        </div>
+      )}
       {/* Header */}
       <PageHero
         title="Ordens de Serviço"

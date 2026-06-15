@@ -76,10 +76,13 @@ export function SupportForm({ equipments, customerId }: SupportFormProps) {
       setSuccess(true);
       setDescription('');
       setPriority('media');
+      setEquipmentId(equipments[0]?.id || '');
       setLoading(false);
 
-      // Atualiza os dados da página
-      router.refresh();
+      // Atualiza os dados da página após 1s para garantir exibição do sucesso
+      setTimeout(() => {
+        router.refresh();
+      }, 1200);
     } catch (err: any) {
       setError('Erro de conexão ao enviar chamado.');
       setLoading(false);

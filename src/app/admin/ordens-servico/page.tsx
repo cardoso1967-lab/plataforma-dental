@@ -10,7 +10,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { MetricCard } from '@/components/ui/MetricCard';
 import { 
   Wrench, Plus, User, Calendar, Search, Edit2, 
-  Trash2, X, ClipboardList, AlertCircle, Clock, ShieldAlert, RefreshCw
+  Trash2, X, ClipboardList, AlertCircle, Clock, ShieldAlert, RefreshCw, CheckCircle2
 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
@@ -86,6 +86,14 @@ export default function AdminOrdensServicoPage() {
 
   // Estados de búsqueda
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Feedback inline
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const showFeedback = (type: 'success' | 'error', message: string) => {
+    setFeedback({ type, message });
+    setTimeout(() => setFeedback(null), 3500);
+  };
 
   // Estados de modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -288,11 +296,14 @@ export default function AdminOrdensServicoPage() {
         }
       }
 
+      const wasEditing = !!editingOS;
       setIsModalOpen(false);
       setEditingOS(null);
       await loadData();
+      showFeedback('success', wasEditing ? 'Status atualizado com sucesso.' : 'Chamado aberto com sucesso.');
     } catch (err: any) {
-      alert('Erro ao salvar Ordem de Serviço: ' + err.message);
+      showFeedback('error', 'Não foi possível concluir a ação. Tente novamente.');
+      console.error('Erro ao salvar OS:', err.message);
     } finally {
       setLoading(false);
     }
@@ -311,8 +322,10 @@ export default function AdminOrdensServicoPage() {
 
       if (delError) throw delError;
       await loadData();
+      showFeedback('success', 'Ordem de serviço removida.');
     } catch (err: any) {
-      alert('Erro ao excluir Ordem de Serviço: ' + err.message);
+      showFeedback('error', 'Não foi possível concluir a ação. Tente novamente.');
+      console.error('Erro ao excluir OS:', err.message);
     } finally {
       setLoading(false);
     }
@@ -337,6 +350,18 @@ export default function AdminOrdensServicoPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
+      {/* Feedback Toast */}
+      {feedback && (
+        <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl text-xs font-bold animate-in slide-in-from-bottom-4 duration-300 ${
+          feedback.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'
+        }`}>
+          {feedback.type === 'success'
+            ? <CheckCircle2 className="w-4 h-4 shrink-0" />
+            : <AlertCircle className="w-4 h-4 shrink-0" />
+          }
+          {feedback.message}
+        </div>
+      )}
       {/* Header Premium */}
       <PageHero
         title="Ordens de Serviço (OS)"
