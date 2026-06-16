@@ -1,65 +1,51 @@
 import React from 'react';
 import { ProductCard } from '@/components/ui/ProductCard';
+import { createSupabaseServerClient } from '@/lib/supabase-server';
 
-export default function ProductsPage() {
-  const dummyProducts = [
-    {
-      id: '1',
-      name: 'Cadeira Odontológica Premium S500',
-      slug: 'cadeira-odontologica-premium-s500',
-      price: 24500.00,
-      category: 'Cadeiras',
-      sku: 'CAD-S500',
-      description: 'Cadeira ergonômica com sistema pneumático e estofamento soft comfort de alta durabilidade.',
-    },
-    {
-      id: '2',
-      name: 'Autoclave Digital Biossegurança 12L',
-      slug: 'autoclave-digital-biosseguranca-12l',
-      price: 4200.00,
-      category: 'Autoclaves',
-      sku: 'AUT-12L',
-      description: 'Biossegurança garantida com ciclos automáticos e secagem eficiente com porta assistida.',
-    },
-    {
-      id: '3',
-      name: 'Aparelho de Raio-X Intraoral Parede',
-      slug: 'aparelho-de-raio-x-intraoral-parede',
-      price: 8900.00,
-      category: 'Imagem',
-      sku: 'XRAY-INTRA',
-      description: 'Imagens radiográficas de alta nitidez com braço pantográfico articulado e focalizador preciso.',
-    },
-    {
-      id: '4',
-      name: 'Caneta de Alta Rotação Cobra LED',
-      slug: 'caneta-de-alta-rotacao-cobra-led',
-      price: 1150.00,
-      category: 'Periféricos',
-      sku: 'PEN-LED',
-      description: 'Alta rotação com iluminação LED integrada, spray triplo e baixo nível de ruído operacional.',
-    },
-    {
-      id: '5',
-      name: 'Compressor de Ar Odontológico Isento de Óleo',
-      slug: 'compressor-de-ar-odontologico-isento-de-oleo',
-      price: 3800.00,
-      category: 'Compressores',
-      sku: 'COMP-OILFREE',
-      description: 'Ar comprimido 100% livre de óleo e funcionamento extremamente silencioso com drenagem facilitada.',
-    },
-    {
-      id: '6',
-      name: 'Bomba de Vácuo Odontológica 1/2 HP',
-      slug: 'bomba-de-vacuo-odontologica-12-hp',
-      price: 2900.00,
-      category: 'Compressores',
-      sku: 'VAC-05HP',
-      description: 'Potência e estabilidade de sucção de alta performance para múltiplos consultórios simultâneos.',
-    },
-  ];
+export default async function ProductsPage() {
+  const supabase = await createSupabaseServerClient();
 
-  const categories = ['Todos', 'Cadeiras', 'Autoclaves', 'Imagem', 'Periféricos', 'Compressores'];
+  const { data: dbProducts } = await supabase
+    .from('products')
+    .select(`
+      *,
+      category:product_categories(id, name),
+      images:product_images(url, is_primary)
+    `)
+    .eq('is_active', true)
+    .order('name', { ascending: true });
+
+  const formattedProducts = (dbProducts || []).map((p) => {
+    const primaryImage = p.images?.find((img: any) => img.is_primary)?.url 
+      || p.images?.[0]?.url 
+      || undefined;
+
+    return {
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      price: Number(p.price),
+      category: p.category?.name || 'Geral',
+      imageUrl: primaryImage,
+      sku: p.sku || undefined,
+      description: p.description || undefined,
+    };
+  });
+
+  // Extrair categorias dinamicamente
+  const categories = ['Todos'];
+  formattedProducts.forEach((p) => {
+    if (p.category && !categories.includes(p.category)) {
+      categories.push(p.category);
+    }
+  });
+
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
+  const whatsappUrl = whatsappNumber 
+    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+        'Olá, gostaria de saber mais sobre os equipamentos odontológicos da M.MUNIZ.'
+      )}`
+    : null;
 
   return (
     <div className="py-12 bg-slate-50 flex-1">
@@ -78,28 +64,52 @@ export default function ProductsPage() {
         </div>
 
         {/* Categories Bar */}
-        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
-          {categories.map((cat, idx) => (
-            <button
-              key={cat}
-              className={`text-xs font-bold px-4 py-2.5 rounded-full border transition-all whitespace-nowrap active:scale-95 ${
-                idx === 0
-                  ? 'bg-brand-clinical text-white border-brand-clinical'
-                  : 'bg-white text-slate-600 border-slate-100 hover:border-slate-300'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+        {categories.length > 1 && (
+          <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+            {categories.map((cat, idx) => (
+              <button
+                key={cat}
+                className={`text-xs font-bold px-4 py-2.5 rounded-full border transition-all whitespace-nowrap active:scale-95 ${
+                  idx === 0
+                    ? 'bg-brand-clinical text-white border-brand-clinical'
+                    : 'bg-white text-slate-600 border-slate-100 hover:border-slate-300'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
 
-        {/* Products Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {dummyProducts.map((product) => (
-            <ProductCard key={product.id} {...product} />
-          ))}
-        </div>
+        {/* Products Grid / Empty State */}
+        {formattedProducts.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center max-w-md mx-auto space-y-4 shadow-sm">
+            <h3 className="text-lg font-extrabold text-brand-dark">
+              Em breve novos equipamentos estarão disponíveis
+            </h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Enquanto isso, fale com a M.MUNIZ para receber atendimento consultivo.
+            </p>
+            <div className="pt-2">
+              <a
+                href={whatsappUrl || '/contato'}
+                target={whatsappUrl ? "_blank" : undefined}
+                rel={whatsappUrl ? "noopener noreferrer" : undefined}
+                className="inline-flex items-center bg-brand-clinical text-white text-xs font-extrabold px-6 py-3 rounded-xl uppercase tracking-wider hover:bg-sky-700 transition-colors shadow-xs cursor-pointer"
+              >
+                Falar com consultor
+              </a>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {formattedProducts.map((product) => (
+              <ProductCard key={product.id} {...product} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 }
+

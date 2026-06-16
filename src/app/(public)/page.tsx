@@ -3,38 +3,46 @@ import Link from 'next/link';
 import { ShieldCheck, Wrench, Shield, ShoppingBag, ArrowRight } from 'lucide-react';
 import { MobileButton } from '@/components/ui/MobileButton';
 import { ProductCard } from '@/components/ui/ProductCard';
+import { createSupabaseServerClient } from '@/lib/supabase-server';
 
-const featuredProducts = [
-  {
-    id: '1',
-    name: 'Cadeira Odontológica Premium S500',
-    slug: 'cadeira-odontologica-premium-s500',
-    price: 24500.00,
-    category: 'Cadeiras',
-    sku: 'CAD-S500',
-    description: 'Cadeira ergonômica com sistema pneumático e estofamento soft comfort de alta durabilidade.',
-  },
-  {
-    id: '2',
-    name: 'Autoclave Digital Biossegurança 12L',
-    slug: 'autoclave-digital-biosseguranca-12l',
-    price: 4200.00,
-    category: 'Autoclaves',
-    sku: 'AUT-12L',
-    description: 'Biossegurança garantida com ciclos automáticos e secagem eficiente com porta assistida.',
-  },
-  {
-    id: '3',
-    name: 'Aparelho de Raio-X Intraoral Parede',
-    slug: 'aparelho-de-raio-x-intraoral-parede',
-    price: 8900.00,
-    category: 'Imagem',
-    sku: 'XRAY-INTRA',
-    description: 'Imagens radiográficas de alta nitidez com braço pantográfico articulado e focalizador preciso.',
-  },
-];
+export default async function HomePage() {
+  const supabase = await createSupabaseServerClient();
 
-export default function HomePage() {
+  const { data: dbProducts } = await supabase
+    .from('products')
+    .select(`
+      *,
+      category:product_categories(id, name),
+      images:product_images(url, is_primary)
+    `)
+    .eq('is_active', true)
+    .order('created_at', { ascending: false })
+    .limit(6);
+
+  const formattedProducts = (dbProducts || []).map((p) => {
+    const primaryImage = p.images?.find((img: any) => img.is_primary)?.url 
+      || p.images?.[0]?.url 
+      || undefined;
+
+    return {
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      price: Number(p.price),
+      category: p.category?.name || 'Geral',
+      imageUrl: primaryImage,
+      sku: p.sku || undefined,
+      description: p.description || undefined,
+    };
+  });
+
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
+  const whatsappUrl = whatsappNumber 
+    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+        'Olá, gostaria de saber mais sobre os equipamentos odontológicos da M.MUNIZ.'
+      )}`
+    : null;
+
   return (
     <div className="bg-white">
       {/* Hero Section */}
@@ -131,20 +139,43 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} {...product} />
-            ))}
-          </div>
+          {formattedProducts.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center max-w-md mx-auto space-y-4 shadow-sm">
+              <h3 className="text-lg font-extrabold text-brand-dark">
+                Em breve novos equipamentos estarão disponíveis
+              </h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Enquanto isso, fale com a M.MUNIZ para receber atendimento consultivo.
+              </p>
+              <div className="pt-2">
+                <a
+                  href={whatsappUrl || '/contato'}
+                  target={whatsappUrl ? "_blank" : undefined}
+                  rel={whatsappUrl ? "noopener noreferrer" : undefined}
+                  className="inline-flex items-center bg-brand-clinical text-white text-xs font-extrabold px-6 py-3 rounded-xl uppercase tracking-wider hover:bg-sky-700 transition-colors shadow-xs cursor-pointer"
+                >
+                  Falar com consultor
+                </a>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {formattedProducts.map((product) => (
+                  <ProductCard key={product.id} {...product} />
+                ))}
+              </div>
 
-          <div className="flex justify-center pt-4">
-            <Link href="/produtos">
-              <MobileButton variant="primary">
-                Ver catálogo completo
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </MobileButton>
-            </Link>
-          </div>
+              <div className="flex justify-center pt-4">
+                <Link href="/produtos">
+                  <MobileButton variant="primary">
+                    Ver catálogo completo
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </MobileButton>
+                </Link>
+              </div>
+            </>
+          )}
         </div>
       </section>
 
