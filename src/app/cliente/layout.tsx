@@ -82,7 +82,7 @@ export default function ClienteLayout({
 
       {/* Sidebar fixa — Desktop: posicionada sobre o riel de fundo */}
       <aside
-        className={`hidden lg:flex fixed inset-y-0 left-0 z-30 flex-col justify-between bg-[#070A13] border-r border-[#121829] text-white p-4 transition-all duration-300 ${
+        className={`hidden lg:flex fixed inset-y-0 left-0 z-30 flex-col justify-between bg-[#070A13] border-r border-[#121829] text-white p-4 transition-all duration-300 overflow-y-auto no-scrollbar ${
           isCollapsed ? 'w-20' : 'w-64'
         }`}
       >

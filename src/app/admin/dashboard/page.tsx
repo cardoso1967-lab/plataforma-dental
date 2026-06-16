@@ -12,6 +12,7 @@ import {
 import Link from 'next/link';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
+import { getCustomerDisplayName } from '@/lib/customer-utils';
 
 
 interface SalesOrder {
@@ -381,7 +382,7 @@ export default function AdminDashboardPage() {
                             #{order.id.substring(0, 8).toUpperCase()}
                           </td>
                           <td className="py-4 px-2 font-bold text-slate-700">
-                            {order.customer?.company_name || 'Cliente'}
+                            {getCustomerDisplayName(order.customer)}
                           </td>
                           <td className="py-4 text-right font-extrabold text-slate-900">
                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(order.total_amount)}
@@ -444,8 +445,8 @@ export default function AdminDashboardPage() {
                             {os.priority}
                           </span>
                         </div>
-                        <p className="text-[10px] text-slate-450 font-medium">
-                          {os.customer?.company_name} • <span className="font-mono text-sky-600 font-bold">#{os.id.substring(0, 8).toUpperCase()}</span>
+                        <p className="text-[10px] text-slate-455 font-medium">
+                          {getCustomerDisplayName(os.customer)} • <span className="font-mono text-sky-600 font-bold">#{os.id.substring(0, 8).toUpperCase()}</span>
                         </p>
                       </div>
                       

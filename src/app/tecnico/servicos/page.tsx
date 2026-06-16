@@ -397,7 +397,7 @@ export default function TecnicoServicosPage() {
           <form onSubmit={handleUpdateStatus} className="space-y-4 text-left">
             {/* Información del Cliente */}
             <div className="space-y-1 bg-slate-50 p-4.5 rounded-2xl border border-slate-100 text-xs font-semibold text-slate-655 text-left">
-              <p className="text-slate-800 font-black">{selectedOS.customer?.company_name}</p>
+              <p className="text-slate-800 font-black">{getCustomerDisplayName(selectedOS.customer)}</p>
               <p className="text-slate-400 font-semibold text-[10.5px] leading-relaxed">
                 {selectedOS.customer?.address_street}, {selectedOS.customer?.address_number} - {selectedOS.customer?.address_city}
               </p>

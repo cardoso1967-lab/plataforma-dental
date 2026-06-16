@@ -14,11 +14,13 @@ import {
 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
+import { getCustomerDisplayName } from '@/lib/customer-utils';
 
 interface Customer {
   id: string;
   company_name: string;
   trade_name?: string | null;
+  contact_name?: string | null;
 }
 
 interface ClientEquipment {
@@ -123,7 +125,7 @@ export default function AdminOrdensServicoPage() {
         .from('service_orders')
         .select(`
           *,
-          customer:customers(id, company_name, trade_name),
+          customer:customers(id, company_name, trade_name, contact_name),
           equipment:client_equipment(id, customer_id, name, brand, model),
           technician:technicians(
             id,
@@ -138,7 +140,7 @@ export default function AdminOrdensServicoPage() {
       // 2. Obtener clientes
       const { data: custData, error: custError } = await supabase
         .from('customers')
-        .select('id, company_name')
+        .select('id, company_name, trade_name, contact_name')
         .order('company_name', { ascending: true });
 
       if (custError) throw custError;
@@ -341,7 +343,7 @@ export default function AdminOrdensServicoPage() {
   const filteredOS = serviceOrders.filter(os => {
     const text = searchTerm.toLowerCase();
     const id = os.id.toLowerCase();
-    const customer = (os.customer?.company_name || '').toLowerCase();
+    const customer = getCustomerDisplayName(os.customer).toLowerCase();
     const equip = (os.equipment?.name || '').toLowerCase();
     const tech = (os.technician?.profile?.name || '').toLowerCase();
     const desc = os.description.toLowerCase();
@@ -475,10 +477,9 @@ export default function AdminOrdensServicoPage() {
                         #{os.id.substring(0, 8).toUpperCase()}
                       </td>
                       <td className="py-4 px-2 text-left">
-                        <div className="font-extrabold text-slate-800 text-xs">{os.customer?.company_name || 'Cliente removido'}</div>
-                        {os.customer?.trade_name && (
-                          <div className="text-[9.5px] text-slate-400 font-semibold font-sans">{os.customer.trade_name}</div>
-                        )}
+                        <div className="font-extrabold text-slate-800 text-xs">
+                          {os.customer ? getCustomerDisplayName(os.customer) : 'Cliente removido'}
+                        </div>
                       </td>
                       <td className="py-4 px-2 text-left">
                         {os.equipment ? (
@@ -565,7 +566,9 @@ export default function AdminOrdensServicoPage() {
                   <div className="flex justify-between items-start gap-2">
                     <div>
                       <span className="text-[9px] font-mono font-black text-slate-450 block">#{os.id.substring(0, 8).toUpperCase()}</span>
-                      <h4 className="font-extrabold text-slate-850 text-xs leading-snug">{os.customer?.company_name}</h4>
+                      <h4 className="font-extrabold text-slate-850 text-xs leading-snug">
+                        {os.customer ? getCustomerDisplayName(os.customer) : 'Cliente removido'}
+                      </h4>
                       {os.equipment && (
                         <p className="text-[10px] text-sky-655 font-bold mt-0.5">{os.equipment.name}</p>
                       )}
@@ -641,7 +644,7 @@ export default function AdminOrdensServicoPage() {
             value={formOS.customer_id}
             onChange={(e) => setFormOS({ ...formOS, customer_id: e.target.value, equipment_id: '' })}
             placeholder="Selecione um cliente..."
-            options={customers.map(c => ({ value: c.id, label: c.company_name }))}
+            options={customers.map(c => ({ value: c.id, label: getCustomerDisplayName(c) }))}
           />
 
           {/* Equipamento */}

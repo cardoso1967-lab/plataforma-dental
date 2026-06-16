@@ -10,6 +10,7 @@ import {
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { assignTechnicianToOS, scheduleOSVisit } from '@/lib/service-orders';
+import { getCustomerDisplayName } from '@/lib/customer-utils';
 
 import { PageHero } from '@/components/ui/PageHero';
 import { KanbanColumn } from '@/components/ui/KanbanColumn';
@@ -568,7 +569,7 @@ export default function AdminAgendaPage() {
                           key={os.id}
                           id={os.id}
                           priority={os.priority}
-                          customerName={os.customer?.company_name || 'OS'}
+                          customerName={getCustomerDisplayName(os.customer)}
                           equipmentName={os.equipment?.name}
                           technicianName={os.technician?.profile?.name}
                           scheduledDate={os.scheduled_date ? new Date(os.scheduled_date).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : undefined}
@@ -667,7 +668,7 @@ export default function AdminAgendaPage() {
                       >
                         <option value="">Todos</option>
                         {customers.map(c => (
-                          <option key={c.id} value={c.id}>{c.company_name}</option>
+                          <option key={c.id} value={c.id}>{getCustomerDisplayName(c)}</option>
                         ))}
                       </select>
                     </div>
@@ -761,7 +762,7 @@ export default function AdminAgendaPage() {
                                 #{os.id.substring(0, 8).toUpperCase()}
                               </td>
                               <td className="py-4 px-2 font-bold text-brand-dark">
-                                {os.customer?.company_name}
+                                {getCustomerDisplayName(os.customer)}
                               </td>
                               <td className="py-4 px-2 text-slate-500 font-semibold">
                                 {os.customer?.address_city ? `${os.customer.address_city} - ${os.customer.address_state || ''}` : '—'}
@@ -826,7 +827,7 @@ export default function AdminAgendaPage() {
                           </div>
 
                           <div className="space-y-1">
-                            <h4 className="font-extrabold text-xs text-brand-dark leading-tight">{os.customer?.company_name}</h4>
+                            <h4 className="font-extrabold text-xs text-brand-dark leading-tight">{getCustomerDisplayName(os.customer)}</h4>
                             <p className="text-[10.5px] font-semibold text-slate-500 flex items-center gap-1">
                               <MapPin className="w-3.5 h-3.5 text-slate-400" />
                               <span>{os.customer?.address_city ? `${os.customer.address_city} - ${os.customer.address_state || ''}` : 'Sem cidade'}</span>
@@ -881,7 +882,7 @@ export default function AdminAgendaPage() {
                 type={selectedOS.status === 'concluida' ? 'success' : selectedOS.status === 'cancelada' ? 'error' : 'info'}
               />
               <h3 className="font-extrabold text-sm text-slate-800 leading-tight">
-                {selectedOS.customer?.company_name}
+                {getCustomerDisplayName(selectedOS.customer)}
               </h3>
             </div>
 
@@ -994,7 +995,7 @@ export default function AdminAgendaPage() {
         {activeQuickOS && quickActionType && (
           <form onSubmit={handleSaveQuickAction} className="space-y-4">
             <p className="text-[10px] text-slate-500 font-medium">
-              Atualizando OS de <span className="font-bold text-slate-800">{activeQuickOS.customer?.company_name}</span> (OS #{activeQuickOS.id.substring(0, 6).toUpperCase()})
+              Atualizando OS de <span className="font-bold text-slate-800">{getCustomerDisplayName(activeQuickOS.customer)}</span> (OS #{activeQuickOS.id.substring(0, 6).toUpperCase()})
             </p>
 
             {quickActionType === 'status' && (
