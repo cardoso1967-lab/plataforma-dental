@@ -1,11 +1,10 @@
 import React from 'react';
 import Link from 'next/link';
-import { ShoppingCart, ExternalLink } from 'lucide-react';
 
 interface ProductCardProps {
   id: string;
   name: string;
-  slug: string;
+  slug?: string;
   price: number;
   category: string;
   imageUrl?: string;
@@ -24,6 +23,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     style: 'currency',
     currency: 'BRL',
   }).format(price);
+
+  const targetHref = slug ? `/produtos/${slug}` : '/produtos';
+
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
+  const whatsappText = encodeURIComponent(`Olá, gostaria de saber mais sobre o produto ${name} da M.MUNIZ.`);
+  const whatsappUrl = whatsappNumber 
+    ? `https://wa.me/${whatsappNumber}?text=${whatsappText}`
+    : null;
 
   return (
     <div className="bg-white rounded-xl border border-slate-100 shadow-xs overflow-hidden hover:shadow-lg transition-all flex flex-col h-full group">
@@ -57,7 +64,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               SKU: {sku}
             </span>
           )}
-          <Link href={`/produtos/${slug}`} className="hover:text-brand-clinical transition-colors">
+          <Link href={targetHref} className="hover:text-brand-clinical transition-colors">
             <h4 className="font-bold text-slate-900 text-sm line-clamp-2 leading-snug">
               {name}
             </h4>
@@ -72,19 +79,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             </span>
           </div>
 
-          <div className="grid grid-cols-5 gap-2">
+          <div className="flex flex-col gap-2">
             <Link 
-              href={`/produtos/${slug}`} 
-              className="col-span-4 bg-brand-clinical text-white text-xs font-semibold rounded-lg py-2.5 px-3 flex items-center justify-center gap-1.5 active:scale-98 transition-all hover:bg-sky-700"
+              href={targetHref} 
+              className="w-full bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white text-xs font-bold rounded-lg py-2.5 px-3 flex items-center justify-center gap-1.5 active:scale-98 transition-all shadow-xs cursor-pointer"
             >
-              <ShoppingCart className="w-3.5 h-3.5" />
-              <span>Ver Detalhes</span>
+              Conheça mais
             </Link>
             <Link 
-              href={`/produtos/${slug}`} 
-              className="col-span-1 border border-slate-100 hover:bg-slate-50 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 transition-colors"
+              href={whatsappUrl || '/contato'} 
+              target={whatsappUrl ? "_blank" : undefined}
+              rel={whatsappUrl ? "noopener noreferrer" : undefined}
+              className="w-full border border-slate-200 hover:bg-slate-50 text-slate-700 hover:text-brand-dark text-xs font-semibold rounded-lg py-2.5 px-3 flex items-center justify-center gap-1.5 active:scale-98 transition-all cursor-pointer"
             >
-              <ExternalLink className="w-4 h-4" />
+              Solicitar cotação
             </Link>
           </div>
         </div>

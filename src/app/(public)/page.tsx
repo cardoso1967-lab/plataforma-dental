@@ -2,6 +2,34 @@ import React from 'react';
 import Link from 'next/link';
 import { ShieldCheck, Wrench, Shield, ShoppingBag, ArrowRight } from 'lucide-react';
 import { MobileButton } from '@/components/ui/MobileButton';
+import { ProductCard } from '@/components/ui/ProductCard';
+
+const featuredProducts = [
+  {
+    id: '1',
+    name: 'Cadeira Odontológica Premium S500',
+    slug: 'cadeira-odontologica-premium-s500',
+    price: 24500.00,
+    category: 'Cadeiras',
+    sku: 'CAD-S500',
+  },
+  {
+    id: '2',
+    name: 'Autoclave Digital Biossegurança 12L',
+    slug: 'autoclave-digital-biosseguranca-12l',
+    price: 4200.00,
+    category: 'Autoclaves',
+    sku: 'AUT-12L',
+  },
+  {
+    id: '3',
+    name: 'Aparelho de Raio-X Intraoral Parede',
+    slug: 'aparelho-de-raio-x-intraoral-parede',
+    price: 8900.00,
+    category: 'Imagem',
+    sku: 'XRAY-INTRA',
+  },
+];
 
 export default function HomePage() {
   return (
@@ -84,6 +112,38 @@ export default function HomePage() {
               <span>Abrir chamado técnico</span>
               <ArrowRight className="w-4 h-4 ml-1.5 transition-transform group-hover:translate-x-1" />
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Products Section */}
+      <section className="py-16 bg-slate-50 border-t border-b border-slate-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div className="space-y-3">
+              <span className="text-xs font-bold text-brand-clinical uppercase tracking-wider">
+                Destaques M.MUNIZ
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-brand-dark tracking-tight">
+                Equipamentos em Destaque
+              </h2>
+              <p className="text-sm text-slate-500 max-w-xl">
+                Confira os equipamentos mais requisitados por consultórios odontológicos de alta performance.
+              </p>
+            </div>
+            <Link 
+              href="/produtos" 
+              className="inline-flex items-center text-xs font-bold text-brand-clinical hover:text-sky-700 transition-colors group shrink-0"
+            >
+              <span>Ver catálogo completo</span>
+              <ArrowRight className="w-4 h-4 ml-1.5 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {featuredProducts.map((product) => (
+              <ProductCard key={product.id} {...product} />
+            ))}
           </div>
         </div>
       </section>

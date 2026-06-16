@@ -1,6 +1,7 @@
 import React from 'react';
 import { Header } from '@/components/Header';
 import { Stethoscope } from 'lucide-react';
+import { WhatsAppFloatingButton } from '@/components/WhatsAppFloatingButton';
 
 export default function PublicLayout({
   children,
@@ -26,6 +27,8 @@ export default function PublicLayout({
           </p>
         </div>
       </footer>
+      <WhatsAppFloatingButton />
     </div>
   );
 }
+
