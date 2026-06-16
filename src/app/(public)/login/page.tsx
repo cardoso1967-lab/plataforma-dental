@@ -96,14 +96,14 @@ export default function LoginPage() {
         
         {/* Logo and Intro */}
         <div className="text-center space-y-3">
-          <div className="mx-auto bg-sky-500 text-white p-3 rounded-2xl w-fit shadow-md shadow-sky-500/10">
-            <Stethoscope className="w-8 h-8" />
+          <div className="mx-auto bg-sky-500 text-white p-1 rounded-2xl w-14 h-14 flex items-center justify-center overflow-hidden shadow-md shadow-sky-500/10">
+            <img src="/brand/mmuniz-icon.png" alt="M.MUNIZ" className="w-full h-full object-contain" />
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Plataforma <span className="text-sky-500">Dental</span>
+            M.MUNIZ
           </h2>
           <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
-            Faça login para gerenciar compras, agendamentos de assistência técnica ou atendimentos.
+            Gestão de vendas, assistência técnica e equipamentos odontológicos.
           </p>
         </div>
 

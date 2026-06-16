@@ -3,7 +3,7 @@ import './globals.css';
 import { AuthProvider } from '@/components/AuthProvider';
 
 export const metadata: Metadata = {
-  title: 'Plataforma Dental | Venda e Assistência Técnica Odontológica',
+  title: 'M.MUNIZ | Venda e Assistência Técnica Odontológica',
   description: 'Soluções completas em equipamentos odontológicos, suporte especializado e gestão de manutenção.',
 };
 

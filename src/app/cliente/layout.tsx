@@ -90,16 +90,16 @@ export default function ClienteLayout({
           {/* Header */}
           <div className={`flex items-center transition-all duration-300 ${isCollapsed ? 'justify-center flex-col gap-4' : 'justify-between'}`}>
             <Link href="/cliente/dashboard" className="flex items-center gap-3 group">
-              <div className="bg-sky-500 text-slate-950 p-2.5 rounded-xl transition-all duration-300 group-hover:scale-105 shadow-[0_4px_12px_rgba(14,165,233,0.15)] shrink-0">
-                <Stethoscope className="w-5 h-5 text-slate-950 stroke-[2.5]" />
+              <div className="bg-sky-500 text-slate-950 p-1 rounded-xl w-10 h-10 flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:scale-105 shadow-[0_4px_12px_rgba(14,165,233,0.15)] shrink-0">
+                <img src="/brand/mmuniz-icon.png" alt="M.MUNIZ" className="w-full h-full object-contain" />
               </div>
               {!isCollapsed && (
                 <div className="text-left animate-in fade-in duration-300">
                   <span className="font-extrabold text-white text-sm tracking-tight block">
-                    Área do Cliente
+                    M.MUNIZ
                   </span>
-                  <span className="text-sky-400 font-bold text-[10px] uppercase tracking-widest block -mt-0.5 font-mono">
-                    Plataforma
+                  <span className="text-sky-450 font-bold text-[10px] uppercase tracking-widest block -mt-0.5 font-mono">
+                    Portal do Cliente
                   </span>
                 </div>
               )}

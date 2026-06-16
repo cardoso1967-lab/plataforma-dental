@@ -28,11 +28,11 @@ export const Header: React.FC = () => {
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
             <Link href="/" className="flex items-center gap-2">
-              <div className="bg-brand-clinical text-white p-2 rounded-lg">
-                <Stethoscope className="w-5 h-5" />
+              <div className="bg-brand-clinical text-white p-1 rounded-lg w-9 h-9 flex items-center justify-center overflow-hidden">
+                <img src="/brand/mmuniz-icon.png" alt="M.MUNIZ" className="w-full h-full object-contain" />
               </div>
               <span className="font-extrabold text-brand-dark text-lg tracking-tight">
-                Plataforma<span className="text-brand-clinical">Dental</span>
+                M.MUNIZ
               </span>
             </Link>
           </div>
