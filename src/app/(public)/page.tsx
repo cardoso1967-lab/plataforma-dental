@@ -12,6 +12,7 @@ const featuredProducts = [
     price: 24500.00,
     category: 'Cadeiras',
     sku: 'CAD-S500',
+    description: 'Cadeira ergonômica com sistema pneumático e estofamento soft comfort de alta durabilidade.',
   },
   {
     id: '2',
@@ -20,6 +21,7 @@ const featuredProducts = [
     price: 4200.00,
     category: 'Autoclaves',
     sku: 'AUT-12L',
+    description: 'Biossegurança garantida com ciclos automáticos e secagem eficiente com porta assistida.',
   },
   {
     id: '3',
@@ -28,6 +30,7 @@ const featuredProducts = [
     price: 8900.00,
     category: 'Imagem',
     sku: 'XRAY-INTRA',
+    description: 'Imagens radiográficas de alta nitidez com braço pantográfico articulado e focalizador preciso.',
   },
 ];
 
@@ -119,31 +122,28 @@ export default function HomePage() {
       {/* Featured Products Section */}
       <section className="py-16 bg-slate-50 border-t border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div className="space-y-3">
-              <span className="text-xs font-bold text-brand-clinical uppercase tracking-wider">
-                Destaques M.MUNIZ
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-brand-dark tracking-tight">
-                Equipamentos em Destaque
-              </h2>
-              <p className="text-sm text-slate-500 max-w-xl">
-                Confira os equipamentos mais requisitados por consultórios odontológicos de alta performance.
-              </p>
-            </div>
-            <Link 
-              href="/produtos" 
-              className="inline-flex items-center text-xs font-bold text-brand-clinical hover:text-sky-700 transition-colors group shrink-0"
-            >
-              <span>Ver catálogo completo</span>
-              <ArrowRight className="w-4 h-4 ml-1.5 transition-transform group-hover:translate-x-1" />
-            </Link>
+          <div className="text-center max-w-xl mx-auto space-y-3">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-brand-dark tracking-tight">
+              Equipamentos em destaque
+            </h2>
+            <p className="text-sm text-slate-500 leading-relaxed">
+              Conheça alguns equipamentos disponíveis para venda consultiva e suporte técnico especializado.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredProducts.map((product) => (
               <ProductCard key={product.id} {...product} />
             ))}
+          </div>
+
+          <div className="flex justify-center pt-4">
+            <Link href="/produtos">
+              <MobileButton variant="primary">
+                Ver catálogo completo
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </MobileButton>
+            </Link>
           </div>
         </div>
       </section>

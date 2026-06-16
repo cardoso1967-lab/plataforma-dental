@@ -10,6 +10,7 @@ export default function ProductsPage() {
       price: 24500.00,
       category: 'Cadeiras',
       sku: 'CAD-S500',
+      description: 'Cadeira ergonômica com sistema pneumático e estofamento soft comfort de alta durabilidade.',
     },
     {
       id: '2',
@@ -18,6 +19,7 @@ export default function ProductsPage() {
       price: 4200.00,
       category: 'Autoclaves',
       sku: 'AUT-12L',
+      description: 'Biossegurança garantida com ciclos automáticos e secagem eficiente com porta assistida.',
     },
     {
       id: '3',
@@ -26,6 +28,7 @@ export default function ProductsPage() {
       price: 8900.00,
       category: 'Imagem',
       sku: 'XRAY-INTRA',
+      description: 'Imagens radiográficas de alta nitidez com braço pantográfico articulado e focalizador preciso.',
     },
     {
       id: '4',
@@ -34,6 +37,7 @@ export default function ProductsPage() {
       price: 1150.00,
       category: 'Periféricos',
       sku: 'PEN-LED',
+      description: 'Alta rotação com iluminação LED integrada, spray triplo e baixo nível de ruído operacional.',
     },
     {
       id: '5',
@@ -42,6 +46,7 @@ export default function ProductsPage() {
       price: 3800.00,
       category: 'Compressores',
       sku: 'COMP-OILFREE',
+      description: 'Ar comprimido 100% livre de óleo e funcionamento extremamente silencioso com drenagem facilitada.',
     },
     {
       id: '6',
@@ -50,6 +55,7 @@ export default function ProductsPage() {
       price: 2900.00,
       category: 'Compressores',
       sku: 'VAC-05HP',
+      description: 'Potência e estabilidade de sucção de alta performance para múltiplos consultórios simultâneos.',
     },
   ];
 
