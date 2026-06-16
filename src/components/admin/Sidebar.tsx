@@ -88,7 +88,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed = true, setIsColla
           {/* Header */}
           <div className={`border-b border-[#121829] flex items-center bg-[#070A13] transition-all duration-300 ${isCollapsed ? 'p-4 justify-center flex-col gap-4' : 'p-6 justify-between'}`}>
             <Link href="/admin/dashboard" className="flex items-center gap-3 group">
-              <div className="bg-sky-500 text-slate-950 p-1 rounded-xl w-10 h-10 flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:scale-105 shadow-[0_4px_12px_rgba(14,165,233,0.15)] shrink-0">
+              <div className="bg-white p-1.5 rounded-xl w-10 h-10 flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:scale-105 shadow-[0_4px_12px_rgba(255,255,255,0.03)] shrink-0">
                 <img src="/brand/mmuniz-icon.png" alt="M.MUNIZ" className="w-full h-full object-contain" />
               </div>
               {!isCollapsed && (

@@ -14,7 +14,7 @@ export default function PublicLayout({
       <footer className="bg-brand-dark text-slate-400 py-10 border-t border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
-            <div className="bg-brand-clinical text-white p-1 rounded-lg w-9 h-9 flex items-center justify-center overflow-hidden">
+            <div className="bg-white p-1.5 rounded-lg w-9 h-9 flex items-center justify-center overflow-hidden shadow-sm">
               <img src="/brand/mmuniz-icon.png" alt="M.MUNIZ" className="w-full h-full object-contain" />
             </div>
             <span className="font-extrabold text-white text-base tracking-tight">
