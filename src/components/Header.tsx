@@ -28,8 +28,8 @@ export const Header: React.FC = () => {
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
             <Link href="/" className="flex items-center gap-2">
-              <div className="bg-white border border-slate-100 p-1.5 rounded-lg w-9 h-9 flex items-center justify-center overflow-hidden shadow-sm">
-                <img src="/brand/mmuniz-icon.png" alt="M.MUNIZ" className="w-full h-full object-contain" />
+              <div className="bg-white border border-slate-200 rounded-2xl w-10 h-10 flex items-center justify-center overflow-hidden shadow-sm shrink-0">
+                <img src="/brand/mmuniz-icon.png" alt="M.MUNIZ" className="h-[78%] w-[78%] object-contain" />
               </div>
               <span className="font-extrabold text-brand-dark text-lg tracking-tight">
                 M.MUNIZ

@@ -96,8 +96,8 @@ export default function LoginPage() {
         
         {/* Logo and Intro */}
         <div className="text-center space-y-3">
-          <div className="mx-auto bg-white border border-slate-100 p-2 rounded-2xl w-14 h-14 flex items-center justify-center overflow-hidden shadow-md shadow-slate-200/50">
-            <img src="/brand/mmuniz-icon.png" alt="M.MUNIZ" className="w-full h-full object-contain" />
+          <div className="mx-auto bg-white border border-slate-100 rounded-2xl w-16 h-16 flex items-center justify-center overflow-hidden shadow-md shadow-slate-200/50">
+            <img src="/brand/mmuniz-icon.png" alt="M.MUNIZ" className="h-[78%] w-[78%] object-contain" />
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
             M.MUNIZ

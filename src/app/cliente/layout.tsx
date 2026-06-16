@@ -90,17 +90,17 @@ export default function ClienteLayout({
           {/* Header */}
           <div className={`flex items-center transition-all duration-300 ${isCollapsed ? 'justify-center flex-col gap-4' : 'justify-between'}`}>
             <Link href="/cliente/dashboard" className="flex items-center gap-3 group">
-              <div className="bg-white p-1.5 rounded-xl w-10 h-10 flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:scale-105 shadow-[0_4px_12px_rgba(255,255,255,0.03)] shrink-0">
-                <img src="/brand/mmuniz-icon.png" alt="M.MUNIZ" className="w-full h-full object-contain" />
+              <div className={`bg-white shadow-[0_10px_30px_rgba(0,0,0,0.25)] rounded-2xl border border-white/20 flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:scale-105 shrink-0 ${
+                isCollapsed ? 'w-11 h-11' : 'w-12 h-12'
+              }`}>
+                <img src="/brand/mmuniz-icon.png" alt="M.MUNIZ" className="h-[78%] w-[78%] object-contain" />
               </div>
               {!isCollapsed && (
                 <div className="text-left animate-in fade-in duration-300">
-                  <span className="font-extrabold text-white text-sm tracking-tight block">
-                    M.MUNIZ
-                  </span>
-                  <span className="text-sky-450 font-bold text-[10px] uppercase tracking-widest block -mt-0.5 font-mono">
+                  <h1 className="text-base font-black tracking-tight text-white leading-none">M.MUNIZ</h1>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-sky-400 mt-1 whitespace-nowrap">
                     Portal do Cliente
-                  </span>
+                  </p>
                 </div>
               )}
             </Link>
