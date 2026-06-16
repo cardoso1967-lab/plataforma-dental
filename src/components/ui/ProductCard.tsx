@@ -36,14 +36,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <div className="bg-white rounded-2xl border border-slate-100/70 shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group overflow-hidden">
-      {/* Imagen del Producto / Placeholder Premium */}
-      <div className="aspect-square bg-gradient-to-br from-slate-50 via-sky-50/20 to-slate-100 relative flex flex-col items-center justify-center border-b border-slate-100/50 group-hover:opacity-95 transition-opacity overflow-hidden">
+      {/* Imagen del Produto / Placeholder Premium */}
+      <div className={`aspect-square relative flex flex-col items-center justify-center border-b border-slate-100/50 group-hover:opacity-95 transition-opacity overflow-hidden ${
+        imageUrl 
+          ? 'bg-white' 
+          : 'bg-gradient-to-br from-slate-50 via-sky-50/20 to-slate-100'
+      }`}>
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={imageUrl}
             alt={name}
-            className="object-cover w-full h-full"
+            className="object-contain w-full h-full p-4"
           />
         ) : (
           <div className="flex flex-col items-center justify-center space-y-3 p-4">

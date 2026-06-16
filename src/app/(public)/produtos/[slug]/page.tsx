@@ -93,13 +93,17 @@ export default async function ProductDetailPage({ params }: PageProps) {
         {/* Product Card Details */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden grid md:grid-cols-2 gap-6 p-6">
           {/* Gallery placeholder */}
-          <div className="aspect-square bg-gradient-to-br from-slate-50 via-sky-50/20 to-slate-100 rounded-xl border border-slate-100/50 relative flex flex-col items-center justify-center overflow-hidden">
+          <div className={`aspect-square rounded-xl border border-slate-100/50 relative flex flex-col items-center justify-center overflow-hidden ${
+            primaryImage 
+              ? 'bg-white' 
+              : 'bg-gradient-to-br from-slate-50 via-sky-50/20 to-slate-100'
+          }`}>
             {primaryImage ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={primaryImage}
                 alt={product.name}
-                className="object-cover w-full h-full"
+                className="object-contain w-full h-full p-4"
               />
             ) : (
               <div className="flex flex-col items-center justify-center space-y-3 p-4">

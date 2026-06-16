@@ -33,6 +33,7 @@ interface Product {
   is_active: boolean;
   created_at: string;
   category?: Category | null;
+  primaryImageUrl?: string | null;
 }
 
 export default function AdminProdutosPage() {
@@ -62,6 +63,7 @@ export default function AdminProdutosPage() {
     product_type: 'equipamento' as Product['product_type'],
     category_id: '',
     is_active: true,
+    imageUrl: '',
   });
 
   // Generar Slug automáticamente
@@ -84,17 +86,26 @@ export default function AdminProdutosPage() {
       setLoading(true);
       setError(null);
 
-      // 1. Obtener productos con categorías
+      // 1. Obtener productos con categorías e imagem primária
       const { data: prodData, error: prodError } = await supabase
         .from('products')
         .select(`
           *,
-          category:product_categories(id, name)
+          category:product_categories(id, name),
+          images:product_images(url, is_primary)
         `)
         .order('name', { ascending: true });
 
       if (prodError) throw prodError;
-      setProducts(prodData || []);
+
+      // Enriquecer com URL da imagem primária
+      const enriched = (prodData || []).map((p: any) => ({
+        ...p,
+        primaryImageUrl: p.images?.find((img: any) => img.is_primary)?.url
+          || p.images?.[0]?.url
+          || null,
+      }));
+      setProducts(enriched);
 
       // 2. Obtener categorías
       const { data: catData, error: catError } = await supabase
@@ -130,6 +141,7 @@ export default function AdminProdutosPage() {
         product_type: product.product_type || 'equipamento',
         category_id: product.category_id || '',
         is_active: product.is_active,
+        imageUrl: product.primaryImageUrl || '',
       });
     } else {
       setFormProduct({
@@ -141,6 +153,7 @@ export default function AdminProdutosPage() {
         product_type: 'equipamento',
         category_id: '',
         is_active: true,
+        imageUrl: '',
       });
     }
     setIsModalOpen(true);
@@ -197,11 +210,50 @@ export default function AdminProdutosPage() {
           .update(payload)
           .eq('id', editingProduct.id);
         if (saveError) throw saveError;
+
+        // Salvar imagem primária — upsert na product_images do produto editado
+        if (formProduct.imageUrl.trim()) {
+          // Atualizar registro existente ou criar novo
+          const { data: existingImg } = await supabase
+            .from('product_images')
+            .select('id')
+            .eq('product_id', editingProduct.id)
+            .eq('is_primary', true)
+            .maybeSingle();
+
+          if (existingImg) {
+            await supabase
+              .from('product_images')
+              .update({ url: formProduct.imageUrl.trim() })
+              .eq('id', existingImg.id);
+          } else {
+            await supabase
+              .from('product_images')
+              .insert({
+                product_id: editingProduct.id,
+                url: formProduct.imageUrl.trim(),
+                is_primary: true,
+              });
+          }
+        }
       } else {
-        const { error: saveError } = await supabase
+        const { data: newProd, error: saveError } = await supabase
           .from('products')
-          .insert(payload);
+          .insert(payload)
+          .select('id')
+          .single();
         if (saveError) throw saveError;
+
+        // Salvar imagem primária para o produto recém-criado
+        if (formProduct.imageUrl.trim() && newProd?.id) {
+          await supabase
+            .from('product_images')
+            .insert({
+              product_id: newProd.id,
+              url: formProduct.imageUrl.trim(),
+              is_primary: true,
+            });
+        }
       }
 
       setIsModalOpen(false);
@@ -541,6 +593,36 @@ export default function AdminProdutosPage() {
             placeholder="Detalhamento técnico, voltagem, garantias e demais especificações..."
             rows={3}
           />
+
+          {/* Campo de URL da Imagem Principal */}
+          <div className="space-y-1.5">
+            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
+              URL da Imagem Principal
+              <span className="ml-1 text-slate-400 font-medium normal-case">(opcional)</span>
+            </label>
+            <input
+              type="url"
+              name="imageUrl"
+              value={formProduct.imageUrl || ''}
+              onChange={(e) => setFormProduct({ ...formProduct, imageUrl: e.target.value })}
+              placeholder="https://exemplo.com/imagem-produto.jpg"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-400 transition-all"
+            />
+            {formProduct.imageUrl && (
+              <div className="mt-2 flex items-center gap-3 p-2 bg-slate-50 rounded-xl border border-slate-100">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={formProduct.imageUrl}
+                  alt="Pré-visualização"
+                  className="w-12 h-12 object-contain rounded-lg border border-slate-200 bg-white flex-shrink-0"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                />
+                <span className="text-[10px] text-slate-500 break-all leading-relaxed">
+                  Pré-visualização da imagem
+                </span>
+              </div>
+            )}
+          </div>
 
           <div className="flex items-center gap-2 pt-2">
             <input
