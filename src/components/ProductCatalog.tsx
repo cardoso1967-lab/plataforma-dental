@@ -171,7 +171,9 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
           <div className="flex items-center justify-between">
             <span className="text-xs text-slate-500 font-medium bg-slate-100/80 px-3 py-1.5 rounded-lg border border-slate-200/40">
               {filteredProducts.length === 0 ? (
-                'Nenhum equipamento'
+                <>
+                  <span className="font-extrabold text-brand-dark">0</span> equipamentos encontrados
+                </>
               ) : filteredProducts.length === 1 ? (
                 <>
                   <span className="font-extrabold text-brand-dark">1</span> equipamento encontrado
@@ -186,8 +188,9 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
 
           {/* Listagem ou Estado Vazio */}
           {filteredProducts.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-slate-100 p-8 md:p-16 text-center max-w-lg mx-auto w-full my-8 shadow-xs flex flex-col items-center justify-center space-y-5">
-              <div className="bg-amber-50 text-amber-500 w-16 h-16 rounded-2xl flex items-center justify-center border border-amber-100 shadow-xs">
+            <div className="bg-white rounded-2xl border border-slate-100 p-8 md:p-16 text-center max-w-lg mx-auto w-full my-8 shadow-xs flex flex-col items-center justify-center space-y-6">
+              {/* Ícono clínico decorativo */}
+              <div className="bg-sky-50 text-brand-clinical w-16 h-16 rounded-2xl flex items-center justify-center border border-sky-100/30 shadow-xs">
                 <Search className="w-8 h-8 stroke-[1.5]" />
               </div>
               <div className="space-y-2 max-w-sm">
@@ -203,7 +206,7 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
                   href={urlFalarEspecialista}
                   target={whatsappNumber ? '_blank' : undefined}
                   rel={whatsappNumber ? 'noopener noreferrer' : undefined}
-                  className="inline-flex items-center justify-center bg-brand-clinical hover:bg-sky-600 text-white text-xs font-bold px-6 py-3.5 rounded-xl uppercase tracking-wider transition-colors shadow-xs cursor-pointer gap-2"
+                  className="inline-flex items-center justify-center bg-brand-clinical hover:bg-sky-600 text-white text-xs font-bold px-6 py-3.5 rounded-xl uppercase tracking-wider transition-all shadow-xs cursor-pointer gap-2 active:scale-98"
                 >
                   <MessageCircle className="w-4 h-4 text-emerald-400" />
                   Falar com especialista
