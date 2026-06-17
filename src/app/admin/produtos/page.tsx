@@ -52,6 +52,7 @@ export default function AdminProdutosPage() {
   // Estados de modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [imageLoadError, setImageLoadError] = useState(false);
 
   // Formulario
   const [formProduct, setFormProduct] = useState({
@@ -131,6 +132,7 @@ export default function AdminProdutosPage() {
   // Abrir modal
   const openModal = (product: Product | null = null) => {
     setEditingProduct(product);
+    setImageLoadError(false);
     if (product) {
       setFormProduct({
         sku: product.sku || '',
@@ -163,6 +165,21 @@ export default function AdminProdutosPage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formProduct.name.trim() || !formProduct.price) return;
+
+    // Validação da URL da imagem
+    const url = formProduct.imageUrl.trim();
+    if (url) {
+      if (!/^https?:\/\//i.test(url)) {
+        alert("Informe o link direto da imagem. O link informado parece ser uma página de produto, não uma imagem.");
+        return;
+      }
+      const cleanUrl = url.split(/[?#]/)[0];
+      const hasValidExt = /\.(jpg|jpeg|png|webp|avif)$/i.test(cleanUrl);
+      if (!hasValidExt) {
+        alert("Informe o link direto da imagem. O link informado parece ser uma página de produto, não uma imagem.");
+        return;
+      }
+    }
 
     try {
       setLoading(true);
@@ -214,26 +231,50 @@ export default function AdminProdutosPage() {
         // Salvar imagem primária — upsert na product_images do produto editado
         if (formProduct.imageUrl.trim()) {
           // Atualizar registro existente ou criar novo
-          const { data: existingImg } = await supabase
+          const { data: existingImg, error: checkImgError } = await supabase
             .from('product_images')
             .select('id')
             .eq('product_id', editingProduct.id)
             .eq('is_primary', true)
             .maybeSingle();
 
+          if (checkImgError) {
+            console.error("Erro ao verificar imagem existente no Supabase:", checkImgError);
+            throw new Error(`Erro ao verificar imagem existente: ${checkImgError.message}`);
+          }
+
           if (existingImg) {
-            await supabase
+            const { error: updateImgError } = await supabase
               .from('product_images')
               .update({ url: formProduct.imageUrl.trim() })
               .eq('id', existingImg.id);
+            if (updateImgError) {
+              console.error("Erro ao atualizar imagem no Supabase:", updateImgError);
+              throw new Error(`Erro ao atualizar imagem do produto: ${updateImgError.message}`);
+            }
           } else {
-            await supabase
+            const { error: insertImgError } = await supabase
               .from('product_images')
               .insert({
                 product_id: editingProduct.id,
                 url: formProduct.imageUrl.trim(),
                 is_primary: true,
               });
+            if (insertImgError) {
+              console.error("Erro ao inserir imagem no Supabase:", insertImgError);
+              throw new Error(`Erro ao salvar imagem do produto: ${insertImgError.message}`);
+            }
+          }
+        } else {
+          // Se a URL estiver vazia, mas existia imagem, podemos removê-la para sincronizar com o admin
+          const { error: deleteImgError } = await supabase
+            .from('product_images')
+            .delete()
+            .eq('product_id', editingProduct.id)
+            .eq('is_primary', true);
+          if (deleteImgError) {
+            console.error("Erro ao remover imagem do Supabase:", deleteImgError);
+            throw new Error(`Erro ao remover imagem do produto: ${deleteImgError.message}`);
           }
         }
       } else {
@@ -246,13 +287,17 @@ export default function AdminProdutosPage() {
 
         // Salvar imagem primária para o produto recém-criado
         if (formProduct.imageUrl.trim() && newProd?.id) {
-          await supabase
+          const { error: insertImgError } = await supabase
             .from('product_images')
             .insert({
               product_id: newProd.id,
               url: formProduct.imageUrl.trim(),
               is_primary: true,
             });
+          if (insertImgError) {
+            console.error("Erro ao salvar imagem para novo produto no Supabase:", insertImgError);
+            throw new Error(`Erro ao salvar imagem do novo produto: ${insertImgError.message}`);
+          }
         }
       }
 
@@ -604,22 +649,38 @@ export default function AdminProdutosPage() {
               type="url"
               name="imageUrl"
               value={formProduct.imageUrl || ''}
-              onChange={(e) => setFormProduct({ ...formProduct, imageUrl: e.target.value })}
+              onChange={(e) => {
+                setFormProduct({ ...formProduct, imageUrl: e.target.value });
+                setImageLoadError(false);
+              }}
               placeholder="https://exemplo.com/imagem-produto.jpg"
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-400 transition-all"
             />
+            <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
+              Use o link direto da imagem, terminando em .jpg, .jpeg, .png, .webp ou .avif. Não use o link da página do produto.
+            </p>
             {formProduct.imageUrl && (
-              <div className="mt-2 flex items-center gap-3 p-2 bg-slate-50 rounded-xl border border-slate-100">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={formProduct.imageUrl}
-                  alt="Pré-visualização"
-                  className="w-12 h-12 object-contain rounded-lg border border-slate-200 bg-white flex-shrink-0"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                />
-                <span className="text-[10px] text-slate-500 break-all leading-relaxed">
-                  Pré-visualização da imagem
-                </span>
+              <div className="mt-2 space-y-2">
+                <div className="flex items-center gap-3 p-2 bg-slate-50 rounded-xl border border-slate-100">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  {!imageLoadError && (
+                    <img
+                      src={formProduct.imageUrl}
+                      alt="Pré-visualização"
+                      className="w-12 h-12 object-contain rounded-lg border border-slate-200 bg-white flex-shrink-0"
+                      onError={() => setImageLoadError(true)}
+                      onLoad={() => setImageLoadError(false)}
+                    />
+                  )}
+                  <span className="text-[10px] text-slate-500 break-all leading-relaxed">
+                    {!imageLoadError ? "Pré-visualização da imagem" : "Link da imagem informado"}
+                  </span>
+                </div>
+                {imageLoadError && (
+                  <div className="text-xs text-rose-650 font-bold bg-rose-50 border border-rose-100 rounded-xl p-3">
+                    Não foi possível carregar esta imagem. Verifique se o link é direto para um arquivo de imagem.
+                  </div>
+                )}
               </div>
             )}
           </div>
