@@ -53,6 +53,7 @@ export default function AdminProdutosPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [imageLoadError, setImageLoadError] = useState(false);
+  const [urlValidationError, setUrlValidationError] = useState<string | null>(null);
 
   // Formulario
   const [formProduct, setFormProduct] = useState({
@@ -66,6 +67,8 @@ export default function AdminProdutosPage() {
     is_active: true,
     imageUrl: '',
   });
+
+  const isImageFieldInvalid = formProduct.imageUrl.trim() !== "" && (urlValidationError !== null || imageLoadError);
 
   // Generar Slug automáticamente
   const generateSlug = (text: string) => {
@@ -133,6 +136,7 @@ export default function AdminProdutosPage() {
   const openModal = (product: Product | null = null) => {
     setEditingProduct(product);
     setImageLoadError(false);
+    setUrlValidationError(null);
     if (product) {
       setFormProduct({
         sku: product.sku || '',
@@ -166,20 +170,8 @@ export default function AdminProdutosPage() {
     e.preventDefault();
     if (!formProduct.name.trim() || !formProduct.price) return;
 
-    // Validação da URL da imagem
-    const url = formProduct.imageUrl.trim();
-    if (url) {
-      if (!/^https?:\/\//i.test(url)) {
-        alert("Informe o link direto da imagem. O link informado parece ser uma página de produto, não uma imagem.");
-        return;
-      }
-      const cleanUrl = url.split(/[?#]/)[0];
-      const hasValidExt = /\.(jpg|jpeg|png|webp|avif)$/i.test(cleanUrl);
-      if (!hasValidExt) {
-        alert("Informe o link direto da imagem. O link informado parece ser uma página de produto, não uma imagem.");
-        return;
-      }
-    }
+    // Impedir salvamento se o campo de imagem for inválido
+    if (isImageFieldInvalid) return;
 
     try {
       setLoading(true);
@@ -650,39 +642,87 @@ export default function AdminProdutosPage() {
               name="imageUrl"
               value={formProduct.imageUrl || ''}
               onChange={(e) => {
-                setFormProduct({ ...formProduct, imageUrl: e.target.value });
+                const val = e.target.value;
+                setFormProduct({ ...formProduct, imageUrl: val });
                 setImageLoadError(false);
+
+                const trimmed = val.trim();
+                if (!trimmed) {
+                  setUrlValidationError(null);
+                } else {
+                  if (!/^https?:\/\//i.test(trimmed)) {
+                    setUrlValidationError("Informe o link direto da imagem. O link informado parece ser uma página de produto, não uma imagem.");
+                  } else {
+                    const cleanUrl = trimmed.split(/[?#]/)[0];
+                    const hasValidExt = /\.(jpg|jpeg|png|webp|avif)$/i.test(cleanUrl);
+                    if (!hasValidExt) {
+                      setUrlValidationError("Informe o link direto da imagem. O link informado parece ser uma página de produto, não uma imagem.");
+                    } else {
+                      setUrlValidationError(null);
+                    }
+                  }
+                }
               }}
               placeholder="https://exemplo.com/imagem-produto.jpg"
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-400 transition-all"
+              className={`w-full bg-slate-50 border rounded-xl px-3 py-2.5 text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all ${
+                urlValidationError
+                  ? 'border-rose-300 focus:ring-rose-500 focus:border-rose-400'
+                  : 'border-slate-200 focus:ring-sky-500 focus:border-sky-400'
+              }`}
             />
-            <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
+            <p className="text-[10px] text-slate-450 font-medium leading-relaxed">
               Use o link direto da imagem, terminando em .jpg, .jpeg, .png, .webp ou .avif. Não use o link da página do produto.
             </p>
-            {formProduct.imageUrl && (
-              <div className="mt-2 space-y-2">
-                <div className="flex items-center gap-3 p-2 bg-slate-50 rounded-xl border border-slate-100">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  {!imageLoadError && (
-                    <img
-                      src={formProduct.imageUrl}
-                      alt="Pré-visualização"
-                      className="w-12 h-12 object-contain rounded-lg border border-slate-200 bg-white flex-shrink-0"
-                      onError={() => setImageLoadError(true)}
-                      onLoad={() => setImageLoadError(false)}
-                    />
-                  )}
-                  <span className="text-[10px] text-slate-500 break-all leading-relaxed">
-                    {!imageLoadError ? "Pré-visualização da imagem" : "Link da imagem informado"}
-                  </span>
+            
+            {/* Área de Preview e Estado */}
+            <div className="mt-2 space-y-2">
+              {!formProduct.imageUrl.trim() ? (
+                <div className="text-[11px] text-slate-400 font-medium bg-slate-50 border border-slate-100 rounded-xl p-2.5">
+                  Nenhuma imagem informada. O produto usará o placeholder da vitrine.
                 </div>
-                {imageLoadError && (
-                  <div className="text-xs text-rose-650 font-bold bg-rose-50 border border-rose-100 rounded-xl p-3">
-                    Não foi possível carregar esta imagem. Verifique se o link é direto para um arquivo de imagem.
-                  </div>
-                )}
-              </div>
-            )}
+              ) : (
+                <div className="space-y-2">
+                  {/* Se não houver erro de validação da URL, mostramos a imagem e o status de carregamento */}
+                  {!urlValidationError && (
+                    <div className="flex items-center gap-3 p-2 bg-slate-50 rounded-xl border border-slate-100">
+                      {!imageLoadError ? (
+                        <>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={formProduct.imageUrl}
+                            alt="Pré-visualização"
+                            className="w-12 h-12 object-contain rounded-lg border border-slate-200 bg-white flex-shrink-0"
+                            onError={() => setImageLoadError(true)}
+                            onLoad={() => setImageLoadError(false)}
+                          />
+                          <span className="text-[10px] text-emerald-600 font-bold leading-relaxed">
+                            Imagem carregada com sucesso.
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-[10px] text-rose-650 font-bold leading-relaxed">
+                          Falha no carregamento.
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Alerta de Erro de Validação de URL (Página HTML, etc.) */}
+                  {urlValidationError && (
+                    <div className="text-xs text-rose-650 font-bold bg-rose-50 border border-rose-100 rounded-xl p-3">
+                      {urlValidationError}
+                    </div>
+                  )}
+
+                  {/* Alerta de Falha de Carregamento Físico da Imagem */}
+                  {!urlValidationError && imageLoadError && (
+                    <div className="text-xs text-rose-650 font-bold bg-rose-50 border border-rose-100 rounded-xl p-3">
+                      Não foi possível carregar esta imagem. Verifique se o link é direto para um arquivo de imagem.
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-2 pt-2">
@@ -698,6 +738,13 @@ export default function AdminProdutosPage() {
             </label>
           </div>
 
+          {/* Mensagem informativa antes do rodapé de ações, se houver erro */}
+          {isImageFieldInvalid && (
+            <div className="text-xs text-rose-650 font-bold bg-rose-50 border border-rose-100 rounded-xl p-3 text-center">
+              Corrija os erros na URL da imagem antes de salvar o produto.
+            </div>
+          )}
+
           {/* Botões Ação */}
           <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 bg-slate-50 -mx-6 -mb-6 p-6 rounded-b-3xl">
             <PremiumButton
@@ -710,6 +757,7 @@ export default function AdminProdutosPage() {
               type="submit"
               loading={loading}
               variant="primary"
+              disabled={isImageFieldInvalid}
             >
               Salvar Produto
             </PremiumButton>
