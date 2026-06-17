@@ -357,12 +357,17 @@ export default async function ProductDetailPage({ params }: PageProps) {
         {/* Produtos Relacionados */}
         {relatedProducts.length > 0 && (
           <div className="space-y-6 pt-6">
-            <div className="border-b border-slate-200/80 pb-3 flex items-center justify-between text-left">
-              <div className="flex items-center gap-2">
-                <Layers className="w-5 h-5 text-[#0284c7]" />
-                <h3 className="font-extrabold text-lg text-brand-dark">Equipamentos Relacionados</h3>
+            <div className="border-b border-slate-200/80 pb-4 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 text-left">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Layers className="w-5 h-5 text-[#0284c7]" />
+                  <h3 className="font-extrabold text-lg text-brand-dark">Complete seu consultório</h3>
+                </div>
+                <p className="text-xs text-slate-500 font-medium">
+                  Veja equipamentos que combinam com esta solução e ajudam a estruturar melhor sua clínica.
+                </p>
               </div>
-              <Link href="/produtos" className="text-xs font-bold text-[#0284c7] hover:underline uppercase tracking-wider">
+              <Link href="/produtos" className="text-xs font-bold text-[#0284c7] hover:underline uppercase tracking-wider self-start sm:self-auto shrink-0">
                 Ver todos
               </Link>
             </div>
