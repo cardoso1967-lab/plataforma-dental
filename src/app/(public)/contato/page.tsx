@@ -4,8 +4,6 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { 
   Mail, 
-  MapPin, 
-  Phone, 
   HelpCircle, 
   MessageCircle, 
   FileText, 
@@ -193,36 +191,37 @@ export default function ContactPage() {
             </Link>
           </div>
 
-          {/* Bloco de Informações de Contato / Comercial */}
+          {/* Bloco de Atendimento e Compromisso Comercial */}
           <div className="bg-slate-900 text-white rounded-2xl p-6 md:p-8 space-y-6">
-            <h3 className="text-base font-extrabold tracking-tight">Canais de Atendimento Oficial</h3>
+            <h3 className="text-base font-extrabold tracking-tight">Atendimento M.MUNIZ</h3>
             
-            <div className="grid sm:grid-cols-3 gap-6">
-              <div className="space-y-2 flex flex-col">
-                <div className="text-sky-400 flex items-center gap-1.5">
-                  <Phone className="w-4 h-4" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider">Central de Vendas</span>
-                </div>
-                <span className="text-sm font-black text-white">0800-456-7890</span>
-                <span className="text-[10px] text-slate-400 leading-normal">Segunda a Sexta, das 8h às 18h</span>
+            <div className="grid sm:grid-cols-2 gap-6 text-xs">
+              <div className="space-y-1">
+                <h4 className="font-bold text-sky-400">Atendimento comercial especializado</h4>
+                <p className="text-[11px] text-slate-300 leading-relaxed font-normal">
+                  Suporte completo para a escolha de equipamentos e produtos odontológicos com assessoria técnica sob medida.
+                </p>
               </div>
 
-              <div className="space-y-2 flex flex-col">
-                <div className="text-sky-400 flex items-center gap-1.5">
-                  <Mail className="w-4 h-4" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider">E-mail Comercial</span>
-                </div>
-                <span className="text-xs font-bold text-white break-all">vendas@plataformadental.com.br</span>
-                <span className="text-[10px] text-slate-400 leading-normal">Retorno rápido comercial em até 2 horas</span>
+              <div className="space-y-1">
+                <h4 className="font-bold text-sky-400">Cotação para clínicas e consultórios</h4>
+                <p className="text-[11px] text-slate-300 leading-relaxed font-normal">
+                  Propostas comerciais personalizadas e planejadas para estruturar, modernizar e equipar seu espaço clínico.
+                </p>
               </div>
 
-              <div className="space-y-2 flex flex-col">
-                <div className="text-sky-400 flex items-center gap-1.5">
-                  <MapPin className="w-4 h-4" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider">Sede Corporativa</span>
-                </div>
-                <span className="text-xs font-bold text-white">Av. Paulista, 1000</span>
-                <span className="text-[10px] text-slate-400 leading-normal">Bela Vista - São Paulo / SP</span>
+              <div className="space-y-1">
+                <h4 className="font-bold text-sky-400">Catálogo online disponível</h4>
+                <p className="text-[11px] text-slate-300 leading-relaxed font-normal">
+                  Navegue pela seleção de equipamentos ativos e conheça as especificações de cada produto diretamente em nosso portal.
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <h4 className="font-bold text-sky-400">Compromisso e Agilidade</h4>
+                <p className="text-[11px] text-slate-300 leading-relaxed font-normal">
+                  Retorno rápido de solicitações comerciais via formulário ou canais integrados de atendimento em dias úteis.
+                </p>
               </div>
             </div>
           </div>
