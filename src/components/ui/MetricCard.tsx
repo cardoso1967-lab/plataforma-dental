@@ -67,10 +67,10 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
   return (
     <div 
-      className={`p-4.5 rounded-xl border flex items-center justify-between transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.04)] active:scale-[0.99] group text-left h-auto lg:h-[120px] ${styles.bg} ${className}`}
+      className={`p-4.5 rounded-xl border flex items-center justify-between transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.04)] active:scale-[0.99] group text-left h-auto min-h-[120px] py-5 ${styles.bg} ${className}`}
     >
       <div className="space-y-1.5 flex-1 min-w-0 pr-2">
-        <span className={`text-[8.5px] font-bold uppercase tracking-wider block font-sans ${styles.titleColor}`}>
+        <span className={`text-[11px] font-extrabold uppercase tracking-wider block font-sans ${styles.titleColor}`}>
           {title}
         </span>
         <h3 className={`text-lg md:text-xl font-black tracking-tight leading-none truncate ${styles.text}`}>
@@ -78,7 +78,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         </h3>
         
         {trend && (
-          <p className={`text-[9.5px] font-bold flex items-center gap-1 mt-1 ${
+          <p className={`text-[11px] font-bold flex items-center gap-1 mt-1 ${
             trend.type === 'up' ? 'text-emerald-600' :
             trend.type === 'down' ? 'text-rose-600' : 'text-slate-500'
           }`}>
@@ -90,7 +90,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         )}
         
         {!trend && description && (
-          <p className="text-[10px] text-slate-450 font-medium leading-normal truncate block">
+          <p className="text-xs text-slate-500 font-semibold leading-normal block">
             {description}
           </p>
         )}
