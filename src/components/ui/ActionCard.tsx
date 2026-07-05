@@ -7,6 +7,8 @@ interface ActionCardProps {
   icon: React.ReactNode;
   href: string;
   variant?: 'sky' | 'emerald' | 'purple' | 'indigo';
+  titleClassName?: string;
+  descriptionClassName?: string;
 }
 
 export const ActionCard: React.FC<ActionCardProps> = ({
@@ -15,6 +17,8 @@ export const ActionCard: React.FC<ActionCardProps> = ({
   icon,
   href,
   variant = 'sky',
+  titleClassName = '',
+  descriptionClassName = '',
 }) => {
   const getStyles = () => {
     switch (variant) {
@@ -52,10 +56,10 @@ export const ActionCard: React.FC<ActionCardProps> = ({
         {icon}
       </div>
       <div className="text-left space-y-0.5">
-        <p className="text-[12px] font-extrabold text-slate-800 tracking-tight leading-none group-hover:text-slate-950 transition-colors">
+        <p className={`text-[12px] tracking-tight leading-none group-hover:text-slate-950 transition-colors ${titleClassName || 'font-extrabold text-slate-800'}`}>
           {title}
         </p>
-        <p className="text-[10px] text-slate-450 font-medium leading-relaxed">
+        <p className={`text-[10px] leading-relaxed ${descriptionClassName || 'text-slate-450 font-medium'}`}>
           {description}
         </p>
       </div>

@@ -182,7 +182,7 @@ export default function AdminDashboardPage() {
         <>
           {/* Área de Ações Rápidas Premium */}
           <div className="space-y-4">
-            <h3 className="text-xs leading-4 font-semibold tracking-[0.08em] uppercase text-slate-500 pl-1 font-mono">
+            <h3 className="text-xs leading-4 font-bold tracking-[0.06em] uppercase text-slate-700 pl-1 font-sans">
               Ações Rápidas Operacionais
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -192,6 +192,8 @@ export default function AdminDashboardPage() {
                 icon={<Wrench className="w-5 h-5 stroke-[2]" />}
                 href="/admin/ordens-servico"
                 variant="sky"
+                titleClassName="font-semibold text-slate-950"
+                descriptionClassName="text-slate-700 font-medium"
               />
               <ActionCard
                 title="Novo Cliente"
@@ -199,6 +201,8 @@ export default function AdminDashboardPage() {
                 icon={<Users className="w-5 h-5 stroke-[2]" />}
                 href="/admin/clientes"
                 variant="emerald"
+                titleClassName="font-semibold text-slate-950"
+                descriptionClassName="text-slate-700 font-medium"
               />
               <ActionCard
                 title="Novo Produto"
@@ -206,6 +210,8 @@ export default function AdminDashboardPage() {
                 icon={<Package className="w-5 h-5 stroke-[2]" />}
                 href="/admin/produtos"
                 variant="purple"
+                titleClassName="font-semibold text-slate-950"
+                descriptionClassName="text-slate-700 font-medium"
               />
               <ActionCard
                 title="Agenda Kanban"
@@ -213,13 +219,15 @@ export default function AdminDashboardPage() {
                 icon={<Calendar className="w-5 h-5 stroke-[2]" />}
                 href="/admin/agenda"
                 variant="indigo"
+                titleClassName="font-semibold text-slate-950"
+                descriptionClassName="text-slate-700 font-medium"
               />
             </div>
           </div>
 
           {/* Grid de Indicadores Principais Premium */}
           <div className="space-y-4 pt-2">
-            <h3 className="text-xs leading-4 font-semibold tracking-[0.08em] uppercase text-slate-500 pl-1 font-mono">
+            <h3 className="text-xs leading-4 font-bold tracking-[0.06em] uppercase text-slate-700 pl-1 font-sans">
               Indicadores de Desempenho SaaS
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -227,29 +235,37 @@ export default function AdminDashboardPage() {
                 title="Receita Mensal"
                 value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(metrics.billingMonthly)}
                 trend={{ label: 'Faturamento deste mês', type: 'up' }}
-                icon={<TrendingUp className="w-5 h-5 text-sky-655 stroke-[2.5]" />}
+                icon={<TrendingUp className="w-5 h-5 text-sky-700 stroke-[2.5]" />}
                 variant="default"
+                titleClassName="text-sky-700 font-semibold tracking-[0.04em]"
+                descriptionClassName="text-slate-700 font-medium"
               />
               <MetricCard
                 title="Atendimentos Ativos"
                 value={`${metrics.activeOS} chamados`}
                 description={`${metrics.noTechOS} aguardando delegação`}
-                icon={<Wrench className="w-5 h-5 text-amber-600 stroke-[2]" />}
+                icon={<Wrench className="w-5 h-5 text-amber-700 stroke-[2]" />}
                 variant="amber"
+                titleClassName="text-amber-700 font-semibold tracking-[0.04em]"
+                descriptionClassName="text-slate-700 font-medium"
               />
               <MetricCard
                 title="Equipe de Campo"
                 value={`${metrics.activeTechs} técnicos`}
                 description="Operando ativamente hoje"
-                icon={<ShieldCheck className="w-5 h-5 text-emerald-600 stroke-[2]" />}
+                icon={<ShieldCheck className="w-5 h-5 text-emerald-700 stroke-[2]" />}
                 variant="emerald"
+                titleClassName="text-emerald-700 font-semibold tracking-[0.04em]"
+                descriptionClassName="text-slate-700 font-medium"
               />
               <MetricCard
                 title="Clientes Cadastrados"
                 value={`${metrics.totalCustomers} clínicas`}
                 description="Consultórios ativos cadastrados"
-                icon={<Users className="w-5 h-5 text-indigo-600 stroke-[2]" />}
+                icon={<Users className="w-5 h-5 text-indigo-700 stroke-[2]" />}
                 variant="indigo"
+                titleClassName="text-indigo-700 font-semibold tracking-[0.04em]"
+                descriptionClassName="text-slate-700 font-medium"
               />
             </div>
           </div>
@@ -260,29 +276,37 @@ export default function AdminDashboardPage() {
               title="Sem Técnico Designado"
               value={`${metrics.noTechOS} OS`}
               description="Pendentes de equipe"
-              icon={<UserPlus className="w-4.5 h-4.5 text-amber-600 stroke-[2]" />}
+              icon={<UserPlus className="w-4.5 h-4.5 text-amber-700 stroke-[2]" />}
               variant="amber"
+              titleClassName="text-amber-700 font-semibold tracking-[0.04em]"
+              descriptionClassName="text-slate-700 font-medium"
             />
             <MetricCard
               title="Chamados Urgentes"
               value={`${metrics.urgentOSCount} chamados`}
               description="Atenção cirúrgica imediata"
-              icon={<AlertCircle className="w-4.5 h-4.5 text-rose-655 stroke-[2]" />}
+              icon={<AlertCircle className="w-4.5 h-4.5 text-rose-700 stroke-[2]" />}
               variant="rose"
+              titleClassName="text-rose-700 font-semibold tracking-[0.04em]"
+              descriptionClassName="text-slate-700 font-medium"
             />
             <MetricCard
               title="Visitas Agendadas Hoje"
               value={`${metrics.todayVisits} visitas`}
               description="Planejamento diário ativo"
-              icon={<Calendar className="w-4.5 h-4.5 text-slate-500 stroke-[2]" />}
+              icon={<Calendar className="w-4.5 h-4.5 text-slate-700 stroke-[2]" />}
               variant="default"
+              titleClassName="text-slate-600 font-semibold tracking-[0.04em]"
+              descriptionClassName="text-slate-700 font-medium"
             />
             <MetricCard
               title="Orçamentos Pendentes"
               value={`${metrics.pendingQuotes} propostas`}
               description="Aguardando validação do cliente"
-              icon={<FileText className="w-4.5 h-4.5 text-indigo-655 stroke-[2]" />}
+              icon={<FileText className="w-4.5 h-4.5 text-indigo-700 stroke-[2]" />}
               variant="indigo"
+              titleClassName="text-indigo-700 font-semibold tracking-[0.04em]"
+              descriptionClassName="text-slate-700 font-medium"
             />
           </div>
 
@@ -307,25 +331,25 @@ export default function AdminDashboardPage() {
 
             {/* Próximas Ações Card */}
             <div className="md:col-span-2 bg-white border border-slate-200/60 p-4.5 rounded-2xl shadow-3xs text-left">
-              <h4 className="text-xs leading-4 font-semibold tracking-[0.08em] uppercase text-slate-500 font-mono">Próximas Ações Recomendadas</h4>
+              <h4 className="text-xs leading-4 font-bold tracking-[0.06em] uppercase text-slate-700 font-sans">Próximas Ações Recomendadas</h4>
               
-              <div className="mt-3.5 space-y-2.5 text-[13px] leading-[18px] font-medium text-slate-600">
+              <div className="mt-3.5 space-y-2.5 text-[13px] leading-[18px] font-medium text-slate-800">
                 {metrics.noTechOS > 0 && (
                   <div className="flex items-center gap-2 bg-slate-50/50 p-2 rounded-lg border border-slate-100">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
-                    <span>Designar técnicos para as <strong className="text-slate-800">{metrics.noTechOS} OS</strong> pendentes de equipe.</span>
+                    <span>Designar técnicos para as <strong className="text-slate-900 font-semibold">{metrics.noTechOS} OS</strong> pendentes de equipe.</span>
                   </div>
                 )}
                 {metrics.urgentOSCount > 0 && (
                   <div className="flex items-center gap-2 bg-slate-50/50 p-2 rounded-lg border border-slate-100">
                     <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0 animate-pulse"></span>
-                    <span>Acompanhar com prioridade as <strong className="text-slate-800">{metrics.urgentOSCount} OS urgentes</strong> ativas hoje.</span>
+                    <span>Acompanhar com prioridade as <strong className="text-slate-900 font-semibold">{metrics.urgentOSCount} OS urgentes</strong> ativas hoje.</span>
                   </div>
                 )}
                 {metrics.pendingQuotes > 0 && (
                   <div className="flex items-center gap-2 bg-slate-50/50 p-2 rounded-lg border border-slate-100">
                     <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0"></span>
-                    <span>Revisar propostas e orçamentos para os <strong className="text-slate-800">{metrics.pendingQuotes} chamados</strong> sob aprovação.</span>
+                    <span>Revisar propostas e orçamentos para los <strong className="text-slate-900 font-semibold">{metrics.pendingQuotes} chamados</strong> sob aprovação.</span>
                   </div>
                 )}
                 {metrics.noTechOS === 0 && metrics.urgentOSCount === 0 && metrics.pendingQuotes === 0 && (
