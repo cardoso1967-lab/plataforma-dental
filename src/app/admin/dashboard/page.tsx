@@ -293,16 +293,15 @@ export default function AdminDashboardPage() {
               <div>
                 <h4 className="font-extrabold text-[10px] text-slate-400 uppercase tracking-widest font-mono">Saúde Operacional</h4>
                 <div className="flex items-baseline gap-2 mt-3">
-                  <span className="text-xl font-black text-slate-900 leading-none">94.2%</span>
-                  <span className="text-[10px] font-bold text-emerald-600">SLA Conforme</span>
+                  <span className="text-xl font-black text-slate-400 leading-none">Ainda não calculada</span>
                 </div>
                 <p className="text-[10px] text-slate-500 font-semibold mt-2 leading-relaxed">
-                  Eficiência geral de campo está em conformidade com as metas da clínica.
+                  Este indicador será exibido quando houver dados suficientes para cálculo do SLA.
                 </p>
               </div>
-              <div className="flex items-center gap-2 pt-3 border-t border-slate-100/60 mt-3 text-[9.5px] font-extrabold text-slate-450">
-                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
-                <span>Status da Operação: Saudável</span>
+              <div className="flex items-center gap-2 pt-3 border-t border-slate-100/60 mt-3 text-[9.5px] font-extrabold text-slate-400">
+                <div className="w-1.5 h-1.5 bg-slate-300 rounded-full"></div>
+                <span>SLA em configuração</span>
               </div>
             </div>
 
