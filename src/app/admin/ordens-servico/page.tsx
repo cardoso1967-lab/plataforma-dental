@@ -235,12 +235,7 @@ export default function AdminOrdensServicoPage() {
       // Determinar status: si se asigna técnico y el status original es 'aberta',
       // cambiar a 'tecnico_atribuido' automáticamente, o si hay fecha agendada, pasar a 'visita_agendada'.
       let currentStatus = formOS.status;
-      if (formOS.technician_id && currentStatus === 'aberta') {
-        currentStatus = 'tecnico_atribuido';
-      }
-      if (formOS.scheduled_date && (currentStatus === 'aberta' || currentStatus === 'tecnico_atribuido')) {
-        currentStatus = 'visita_agendada';
-      }
+
 
       const payload = {
         customer_id: formOS.customer_id,
@@ -496,12 +491,12 @@ export default function AdminOrdensServicoPage() {
                         )}
                       </td>
                       <td className="py-4 px-2 text-left">
-                        {os.technician?.profile ? (
+                        {os.technician ? (
                           <span className="flex items-center gap-1 font-extrabold text-slate-700">
                             <div className="w-5 h-5 rounded-full bg-sky-50 border border-sky-100 flex items-center justify-center font-black text-[9px] text-brand-clinical flex-shrink-0">
-                              {os.technician.profile.name.substring(0, 1).toUpperCase()}
+                              {(os.technician.profile?.name || 'Técnico sem nome').substring(0, 1).toUpperCase()}
                             </div>
-                            {os.technician.profile.name}
+                            {os.technician.profile?.name || 'Técnico sem nome'}
                           </span>
                         ) : (
                           <span className="flex items-center gap-1 font-bold text-rose-500 italic bg-rose-50 px-2 py-0.5 rounded-md border border-rose-100/50 inline-flex">
@@ -585,7 +580,7 @@ export default function AdminOrdensServicoPage() {
                       <User className="w-3.5 h-3.5 text-slate-400" />
                       <span>Técnico: </span>
                       <span className="text-slate-800">
-                        {os.technician?.profile?.name || 'Não designado'}
+                        {os.technician ? (os.technician.profile?.name || 'Técnico sem nome') : 'Não designado'}
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5">
