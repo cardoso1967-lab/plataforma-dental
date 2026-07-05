@@ -22,7 +22,7 @@ export default function TecnicoDashboardPage() {
 
   const [loading, setLoading] = useState(true);
   const [technician, setTechnician] = useState<any>(null);
-  const [activeOS, setActiveOS] = useState<any>(null);
+  const [activeOS, setActiveOS] = useState<any[]>([]);
   const [todayScheduledCount, setTodayScheduledCount] = useState(0);
   const [todayCompletedCount, setTodayCompletedCount] = useState(0);
   const [todayVisits, setTodayVisits] = useState<any[]>([]);
@@ -77,14 +77,14 @@ export default function TecnicoDashboardPage() {
 
       const allOS = osData || [];
 
-      // Identificar servicio activo (em_atendimento)
-      const inProgress = allOS.find(os => os.status === 'em_atendimento');
+      // Identificar todos los servicios activos (em_atendimento)
+      const inProgress = allOS.filter(os => os.status === 'em_atendimento');
       
       // O en su defecto, el servicio con mayor prioridad no concluido
       const urgentOrNext = allOS.find(os => os.status !== 'concluida' && os.status !== 'cancelada' && os.priority === 'urgente') || 
                            allOS.find(os => os.status !== 'concluida' && os.status !== 'cancelada');
       
-      setActiveOS(inProgress || urgentOrNext || null);
+      setActiveOS(inProgress.length > 0 ? inProgress : (urgentOrNext ? [urgentOrNext] : []));
 
       // Calcular hoy
       const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
@@ -122,9 +122,9 @@ export default function TecnicoDashboardPage() {
     loadTechData();
   }, [profile]);
 
-  // Cambiar estatus rápidamente del servicio activo desde el Dashboard
-  const handleUpdateActiveStatus = async (newStatus: string) => {
-    if (!activeOS || !profile?.id) return;
+  // Cambiar estatus rápidamente de un servicio activo desde el Dashboard
+  const handleUpdateActiveStatus = async (os: any, newStatus: string) => {
+    if (!os || !profile?.id) return;
     try {
       setUpdatingStatus(true);
       const isConcluido = newStatus === 'concluida';
@@ -139,7 +139,7 @@ export default function TecnicoDashboardPage() {
       const { error: updateError } = await supabase
         .from('service_orders')
         .update(updatePayload)
-        .eq('id', activeOS.id);
+        .eq('id', os.id);
 
       if (updateError) throw updateError;
 
@@ -147,7 +147,7 @@ export default function TecnicoDashboardPage() {
       const { error: histError } = await supabase
         .from('service_order_status_history')
         .insert({
-          service_order_id: activeOS.id,
+          service_order_id: os.id,
           status: newStatus,
           changed_by: profile.id,
           notes: `Status atualizado em campo pelo técnico para: ${getStatusLabel(newStatus)}.`
@@ -258,126 +258,128 @@ export default function TecnicoDashboardPage() {
         variant="compact"
       />
 
-      {/* OS ativa designada */}
-      {activeOS ? (
+      {/* OS ativas designadas */}
+      {activeOS.length > 0 ? (
         <div className="space-y-3">
           <h3 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest pl-1 font-sans flex items-center gap-1.5">
-            <Clock className={`w-3.5 h-3.5 ${activeOS.status === 'em_atendimento' ? 'text-rose-500 animate-pulse' : 'text-slate-400'}`} />
-            {activeOS.status === 'em_atendimento' ? 'Serviço Ativo (Em andamento)' : 'Próximo Serviço da Lista'}
+            <Clock className={`w-3.5 h-3.5 ${activeOS.some(os => os.status === 'em_atendimento') ? 'text-rose-500 animate-pulse' : 'text-slate-400'}`} />
+            {activeOS.some(os => os.status === 'em_atendimento') ? 'Serviço Ativo (Em andamento)' : 'Próximo Serviço da Lista'}
           </h3>
           
-          <div className={`bg-white border rounded-xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.012)] space-y-4 transition-all duration-300 hover:shadow-[0_12px_30px_rgba(7,10,19,0.04)] hover:border-sky-350/30 ${
-            activeOS.priority === 'urgente' ? 'border-rose-300 ring-2 ring-rose-50/50' : 'border-slate-200/60'
-          }`}>
-            {/* Status y Prioridad */}
-            <div className="flex items-center justify-between">
-              <StatusBadge
-                label={getStatusLabel(activeOS.status)}
-                type={getStatusBadgeType(activeOS.status)}
-              />
+          {activeOS.map((currentOS) => (
+            <div key={currentOS.id} className={`bg-white border rounded-xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.012)] space-y-4 transition-all duration-300 hover:shadow-[0_12px_30px_rgba(7,10,19,0.04)] hover:border-sky-350/30 ${
+              currentOS.priority === 'urgente' ? 'border-rose-300 ring-2 ring-rose-50/50' : 'border-slate-200/60'
+            }`}>
+              {/* Status y Prioridad */}
+              <div className="flex items-center justify-between">
+                <StatusBadge
+                  label={getStatusLabel(currentOS.status)}
+                  type={getStatusBadgeType(currentOS.status)}
+                />
 
-              <StatusBadge
-                label={activeOS.priority}
-                type={getPriorityBadgeType(activeOS.priority)}
-                className={activeOS.priority === 'urgente' ? 'animate-pulse font-extrabold' : ''}
-              />
-            </div>
-
-            {/* Equipamiento y Cliente */}
-            <div className="space-y-2">
-              <span className="text-[10px] font-mono font-black text-sky-600 bg-sky-50/50 px-2 py-0.5 rounded border border-sky-105/20 inline-block leading-none">
-                OS: #{activeOS.id.slice(0, 8).toUpperCase()}
-              </span>
-              <h4 className="font-extrabold text-slate-800 text-sm leading-snug">
-                {activeOS.equipment?.name || 'Equipamento Geral'}
-              </h4>
-              {activeOS.equipment?.model && (
-                <p className="text-[10px] text-slate-400 font-bold">
-                  {activeOS.equipment.brand} • {activeOS.equipment.model} {activeOS.equipment.serial_number ? `(S/N: ${activeOS.equipment.serial_number})` : ''}
-                </p>
-              )}
-              
-              <div className="flex items-center gap-2 text-xs text-slate-600 font-semibold pt-1">
-                <User className="w-4 h-4 text-slate-400" />
-                <span>{getCustomerDisplayName(activeOS.customer)}</span>
+                <StatusBadge
+                  label={currentOS.priority}
+                  type={getPriorityBadgeType(currentOS.priority)}
+                  className={currentOS.priority === 'urgente' ? 'animate-pulse font-extrabold' : ''}
+                />
               </div>
-            </div>
 
-            {/* Dirección */}
-            {activeOS.customer && (
-              <div className="bg-slate-50/60 rounded-xl p-4 space-y-2.5 text-xs font-semibold text-slate-600 border border-slate-150/40 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]">
-                <div className="flex items-start gap-2 text-[11px] leading-relaxed">
-                  <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
-                  <span>
-                    {activeOS.customer.address_street}, {activeOS.customer.address_number}
-                    {activeOS.customer.address_complement ? ` - ${activeOS.customer.address_complement}` : ''}
-                    <br />
-                    <span className="text-[10px] text-slate-400 font-medium">
-                      {activeOS.customer.address_neighborhood}, {activeOS.customer.address_city} - {activeOS.customer.address_state}
-                    </span>
-                  </span>
+              {/* Equipamiento y Cliente */}
+              <div className="space-y-2">
+                <span className="text-[10px] font-mono font-black text-sky-600 bg-sky-50/50 px-2 py-0.5 rounded border border-sky-105/20 inline-block leading-none">
+                  OS: #{currentOS.id.slice(0, 8).toUpperCase()}
+                </span>
+                <h4 className="font-extrabold text-slate-800 text-sm leading-snug">
+                  {currentOS.equipment?.name || 'Equipamento Geral'}
+                </h4>
+                {currentOS.equipment?.model && (
+                  <p className="text-[10px] text-slate-400 font-bold">
+                    {currentOS.equipment.brand} • {currentOS.equipment.model} {currentOS.equipment.serial_number ? `(S/N: ${currentOS.equipment.serial_number})` : ''}
+                  </p>
+                )}
+                
+                <div className="flex items-center gap-2 text-xs text-slate-600 font-semibold pt-1">
+                  <User className="w-4 h-4 text-slate-400" />
+                  <span>{getCustomerDisplayName(currentOS.customer)}</span>
                 </div>
-                {activeOS.customer.phone && (
-                  <div className="flex items-center gap-2 border-t border-slate-200/50 pt-2">
-                    <Phone className="w-3.5 h-3.5 text-slate-450" />
-                    <a href={`tel:${activeOS.customer.phone}`} className="text-sky-600 font-extrabold hover:underline">
-                      {activeOS.customer.phone}
-                    </a>
+              </div>
+
+              {/* Dirección */}
+              {currentOS.customer && (
+                <div className="bg-slate-50/60 rounded-xl p-4 space-y-2.5 text-xs font-semibold text-slate-600 border border-slate-150/40 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]">
+                  <div className="flex items-start gap-2 text-[11px] leading-relaxed">
+                    <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
+                    <span>
+                      {currentOS.customer.address_street}, {currentOS.customer.address_number}
+                      {currentOS.customer.address_complement ? ` - ${currentOS.customer.address_complement}` : ''}
+                      <br />
+                      <span className="text-[10px] text-slate-400 font-medium">
+                        {currentOS.customer.address_neighborhood}, {currentOS.customer.address_city} - {currentOS.customer.address_state}
+                      </span>
+                    </span>
+                  </div>
+                  {currentOS.customer.phone && (
+                    <div className="flex items-center gap-2 border-t border-slate-200/50 pt-2">
+                      <Phone className="w-3.5 h-3.5 text-slate-450" />
+                      <a href={`tel:${currentOS.customer.phone}`} className="text-sky-600 font-extrabold hover:underline">
+                        {currentOS.customer.phone}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Relato del problema */}
+              <div className="space-y-1">
+                <span className="text-[9px] font-extrabold text-slate-450 uppercase tracking-wide">Descrição do Chamado:</span>
+                <p className="text-xs text-slate-500 font-semibold leading-relaxed bg-slate-50/40 p-3 rounded-xl border border-slate-150/40 italic">
+                  "{currentOS.description}"
+                </p>
+              </div>
+
+              {/* Botones de acción táctiles grandes */}
+              <div className="pt-2 border-t border-slate-100/80 flex flex-col gap-2">
+                {currentOS.status !== 'em_atendimento' ? (
+                  <PremiumButton
+                    loading={updatingStatus}
+                    onClick={() => handleUpdateActiveStatus(currentOS, 'em_atendimento')}
+                    variant="primary"
+                    className="w-full py-3 text-xs"
+                    icon={<Wrench className="w-4 h-4" />}
+                  >
+                    Iniciar Atendimento Local
+                  </PremiumButton>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    <PremiumButton
+                      loading={updatingStatus}
+                      onClick={() => handleUpdateActiveStatus(currentOS, 'concluida')}
+                      variant="emerald"
+                      className="py-3 text-xs"
+                      icon={<Check className="w-4 h-4" />}
+                    >
+                      Concluir Serviço
+                    </PremiumButton>
+                    <PremiumButton
+                      loading={updatingStatus}
+                      onClick={() => handleUpdateActiveStatus(currentOS, 'aguardando_peca')}
+                      variant="danger"
+                      className="py-3 text-xs bg-orange-500 hover:bg-orange-600 border-none text-white"
+                      icon={<AlertTriangle className="w-4 h-4" />}
+                    >
+                      Aguardar Peça
+                    </PremiumButton>
                   </div>
                 )}
-              </div>
-            )}
-
-            {/* Relato del problema */}
-            <div className="space-y-1">
-              <span className="text-[9px] font-extrabold text-slate-450 uppercase tracking-wide">Descrição do Chamado:</span>
-              <p className="text-xs text-slate-500 font-semibold leading-relaxed bg-slate-50/40 p-3 rounded-xl border border-slate-150/40 italic">
-                "{activeOS.description}"
-              </p>
-            </div>
-
-            {/* Botones de acción táctiles grandes */}
-            <div className="pt-2 border-t border-slate-100/80 flex flex-col gap-2">
-              {activeOS.status !== 'em_atendimento' ? (
-                <PremiumButton
-                  loading={updatingStatus}
-                  onClick={() => handleUpdateActiveStatus('em_atendimento')}
-                  variant="primary"
-                  className="w-full py-3 text-xs"
-                  icon={<Wrench className="w-4 h-4" />}
+                <Link 
+                  href="/tecnico/servicos"
+                  className="w-full bg-slate-50 hover:bg-slate-100/60 border border-slate-200/60 text-slate-600 font-extrabold text-[11px] py-3 rounded-xl flex items-center justify-center gap-1 transition-all"
                 >
-                  Iniciar Atendimento Local
-                </PremiumButton>
-              ) : (
-                <div className="grid grid-cols-2 gap-3">
-                  <PremiumButton
-                    loading={updatingStatus}
-                    onClick={() => handleUpdateActiveStatus('concluida')}
-                    variant="emerald"
-                    className="py-3 text-xs"
-                    icon={<Check className="w-4 h-4" />}
-                  >
-                    Concluir Serviço
-                  </PremiumButton>
-                  <PremiumButton
-                    loading={updatingStatus}
-                    onClick={() => handleUpdateActiveStatus('aguardando_peca')}
-                    variant="danger"
-                    className="py-3 text-xs bg-orange-500 hover:bg-orange-600 border-none text-white"
-                    icon={<AlertTriangle className="w-4 h-4" />}
-                  >
-                    Aguardar Peça
-                  </PremiumButton>
-                </div>
-              )}
-              <Link 
-                href="/tecnico/servicos"
-                className="w-full bg-slate-50 hover:bg-slate-100/60 border border-slate-200/60 text-slate-600 font-extrabold text-[11px] py-3 rounded-xl flex items-center justify-center gap-1 transition-all"
-              >
-                Gerenciar Todos os Chamados <ChevronRight className="w-4 h-4 text-slate-400" />
-              </Link>
+                  Gerenciar Todos os Chamados <ChevronRight className="w-4 h-4 text-slate-400" />
+                </Link>
+              </div>
             </div>
-          </div>
+          ))}
         </div>
       ) : (
         <EmptyState
