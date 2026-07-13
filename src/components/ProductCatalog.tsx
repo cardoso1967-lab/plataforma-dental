@@ -69,6 +69,19 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
     <div className="flex-1 flex flex-col bg-slate-50/50">
       {/* 1. Hero do Catálogo */}
       <section className="bg-gradient-to-b from-slate-900 to-brand-dark text-white py-16 md:py-20 relative overflow-hidden">
+        {/* Video background */}
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          aria-hidden="true"
+        >
+          <source src="/videos/autoclave_loop_melhorado_web.mp4" type="video/mp4" />
+        </video>
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-slate-900/70" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#0284c715_1px,transparent_1px),linear-gradient(to_bottom,#0284c715_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-6 text-center md:text-left">
           <div className="max-w-3xl space-y-4">
