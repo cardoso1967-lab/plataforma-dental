@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { PageHero } from '@/components/ui/PageHero';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PremiumButton } from '@/components/ui/PremiumButton';
@@ -10,7 +10,8 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { MetricCard } from '@/components/ui/MetricCard';
 import { 
   Package, Plus, Search, Edit2, Trash2, 
-  X, Tag, DollarSign, Archive, Layers, RefreshCw
+  X, Tag, DollarSign, Archive, Layers, RefreshCw,
+  Upload, Image as ImageIcon, Loader2
 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
@@ -52,8 +53,14 @@ export default function AdminProdutosPage() {
   // Estados de modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [imageLoadError, setImageLoadError] = useState(false);
-  const [urlValidationError, setUrlValidationError] = useState<string | null>(null);
+  
+  // Estados para Upload de Imagem no Supabase Storage
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [imageAction, setImageAction] = useState<'keep' | 'new' | 'remove'>('keep');
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageErrorMessage, setImageErrorMessage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Formulario
   const [formProduct, setFormProduct] = useState({
@@ -65,10 +72,7 @@ export default function AdminProdutosPage() {
     product_type: 'equipamento' as Product['product_type'],
     category_id: '',
     is_active: true,
-    imageUrl: '',
   });
-
-  const isImageFieldInvalid = formProduct.imageUrl.trim() !== "" && (urlValidationError !== null || imageLoadError);
 
   // Generar Slug automáticamente
   const generateSlug = (text: string) => {
@@ -132,12 +136,70 @@ export default function AdminProdutosPage() {
     loadData();
   }, []);
 
+  // Extrair caminho do arquivo dentro do bucket product-images se pertencer ao Storage
+  const extractStoragePath = (url: string | null | undefined): string | null => {
+    if (!url || typeof url !== 'string') return null;
+    if (!url.includes('product-images')) return null;
+    const parts = url.split('/product-images/');
+    if (parts.length > 1) {
+      const rawPath = parts[1].split('?')[0];
+      return decodeURIComponent(rawPath);
+    }
+    return null;
+  };
+
+  // Handler de seleção de arquivo com validação
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImageErrorMessage(null);
+
+    const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
+    const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif'];
+    const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
+
+    const isTypeValid = allowedMimeTypes.includes(file.type.toLowerCase()) || allowedExtensions.includes(fileExt);
+
+    if (!isTypeValid) {
+      setImageErrorMessage('Formato de arquivo não suportado. Envie uma imagem JPG, PNG, WEBP ou AVIF.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
+    if (file.size > MAX_SIZE) {
+      setImageErrorMessage('O arquivo selecionado excede o limite máximo permitido de 5 MB.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+    setImageAction('new');
+    setImageErrorMessage(null);
+  };
+
+  // Handler de remoção de imagem
+  const handleRemoveImage = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setImageAction('remove');
+    setImageErrorMessage(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   // Abrir modal
   const openModal = (product: Product | null = null) => {
     setEditingProduct(product);
-    setImageLoadError(false);
-    setUrlValidationError(null);
+    setSelectedFile(null);
+    setImageAction('keep');
+    setUploadingImage(false);
+    setImageErrorMessage(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+
     if (product) {
+      setPreviewUrl(product.primaryImageUrl || null);
       setFormProduct({
         sku: product.sku || '',
         name: product.name || '',
@@ -147,9 +209,9 @@ export default function AdminProdutosPage() {
         product_type: product.product_type || 'equipamento',
         category_id: product.category_id || '',
         is_active: product.is_active,
-        imageUrl: product.primaryImageUrl || '',
       });
     } else {
+      setPreviewUrl(null);
       setFormProduct({
         sku: '',
         name: '',
@@ -159,7 +221,6 @@ export default function AdminProdutosPage() {
         product_type: 'equipamento',
         category_id: '',
         is_active: true,
-        imageUrl: '',
       });
     }
     setIsModalOpen(true);
@@ -169,15 +230,43 @@ export default function AdminProdutosPage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formProduct.name.trim() || !formProduct.price) return;
-
-    // Impedir salvamento se o campo de imagem for inválido
-    if (isImageFieldInvalid) return;
+    if (imageErrorMessage) return;
 
     try {
       setLoading(true);
+      let finalImageUrl: string | null = previewUrl;
+
+      // 1. Upload de imagem para o Supabase Storage se um novo arquivo foi selecionado
+      if (imageAction === 'new' && selectedFile) {
+        setUploadingImage(true);
+        const fileExt = selectedFile.name.split('.').pop()?.toLowerCase() || 'jpg';
+        const fileName = `${Date.now()}_${crypto.randomUUID()}.${fileExt}`;
+        const filePath = `products/${fileName}`;
+
+        const { data: uploadData, error: uploadErr } = await supabase.storage
+          .from('product-images')
+          .upload(filePath, selectedFile, {
+            cacheControl: '3600',
+            upsert: false,
+          });
+
+        if (uploadErr) {
+          console.error('Erro no upload para o Supabase Storage:', uploadErr);
+          throw new Error(`Erro no upload da imagem: ${uploadErr.message}`);
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(filePath);
+
+        finalImageUrl = publicUrlData.publicUrl;
+        setUploadingImage(false);
+      } else if (imageAction === 'remove') {
+        finalImageUrl = null;
+      }
+
+      // 2. Slug único
       const generatedSlug = generateSlug(formProduct.name);
-      
-      // Validar si el slug ya existe (excepto para el producto actual) para evitar errores de llave única
       let uniqueSlug = generatedSlug;
       let counter = 1;
       let isUnique = false;
@@ -213,62 +302,14 @@ export default function AdminProdutosPage() {
         is_active: formProduct.is_active,
       };
 
+      let productId = editingProduct?.id;
+
       if (editingProduct) {
         const { error: saveError } = await supabase
           .from('products')
           .update(payload)
           .eq('id', editingProduct.id);
         if (saveError) throw saveError;
-
-        // Salvar imagem primária — upsert na product_images do produto editado
-        if (formProduct.imageUrl.trim()) {
-          // Atualizar registro existente ou criar novo
-          const { data: existingImg, error: checkImgError } = await supabase
-            .from('product_images')
-            .select('id')
-            .eq('product_id', editingProduct.id)
-            .eq('is_primary', true)
-            .maybeSingle();
-
-          if (checkImgError) {
-            console.error("Erro ao verificar imagem existente no Supabase:", checkImgError);
-            throw new Error(`Erro ao verificar imagem existente: ${checkImgError.message}`);
-          }
-
-          if (existingImg) {
-            const { error: updateImgError } = await supabase
-              .from('product_images')
-              .update({ url: formProduct.imageUrl.trim() })
-              .eq('id', existingImg.id);
-            if (updateImgError) {
-              console.error("Erro ao atualizar imagem no Supabase:", updateImgError);
-              throw new Error(`Erro ao atualizar imagem do produto: ${updateImgError.message}`);
-            }
-          } else {
-            const { error: insertImgError } = await supabase
-              .from('product_images')
-              .insert({
-                product_id: editingProduct.id,
-                url: formProduct.imageUrl.trim(),
-                is_primary: true,
-              });
-            if (insertImgError) {
-              console.error("Erro ao inserir imagem no Supabase:", insertImgError);
-              throw new Error(`Erro ao salvar imagem do produto: ${insertImgError.message}`);
-            }
-          }
-        } else {
-          // Se a URL estiver vazia, mas existia imagem, podemos removê-la para sincronizar com o admin
-          const { error: deleteImgError } = await supabase
-            .from('product_images')
-            .delete()
-            .eq('product_id', editingProduct.id)
-            .eq('is_primary', true);
-          if (deleteImgError) {
-            console.error("Erro ao remover imagem do Supabase:", deleteImgError);
-            throw new Error(`Erro ao remover imagem do produto: ${deleteImgError.message}`);
-          }
-        }
       } else {
         const { data: newProd, error: saveError } = await supabase
           .from('products')
@@ -276,30 +317,70 @@ export default function AdminProdutosPage() {
           .select('id')
           .single();
         if (saveError) throw saveError;
+        productId = newProd?.id;
+      }
 
-        // Salvar imagem primária para o produto recém-criado
-        if (formProduct.imageUrl.trim() && newProd?.id) {
-          const { error: insertImgError } = await supabase
+      // 3. Atualizar/Inserir/Remover imagem na tabela product_images
+      if (productId) {
+        if (imageAction === 'new' && finalImageUrl) {
+          const { data: existingImg } = await supabase
             .from('product_images')
-            .insert({
-              product_id: newProd.id,
-              url: formProduct.imageUrl.trim(),
-              is_primary: true,
-            });
-          if (insertImgError) {
-            console.error("Erro ao salvar imagem para novo produto no Supabase:", insertImgError);
-            throw new Error(`Erro ao salvar imagem do novo produto: ${insertImgError.message}`);
+            .select('id')
+            .eq('product_id', productId)
+            .eq('is_primary', true)
+            .maybeSingle();
+
+          if (existingImg) {
+            const { error: updateImgErr } = await supabase
+              .from('product_images')
+              .update({ url: finalImageUrl })
+              .eq('id', existingImg.id);
+            if (updateImgErr) throw updateImgErr;
+          } else {
+            const { error: insertImgErr } = await supabase
+              .from('product_images')
+              .insert({
+                product_id: productId,
+                url: finalImageUrl,
+                is_primary: true,
+              });
+            if (insertImgErr) throw insertImgErr;
+          }
+        } else if (imageAction === 'remove') {
+          const { error: delImgErr } = await supabase
+            .from('product_images')
+            .delete()
+            .eq('product_id', productId)
+            .eq('is_primary', true);
+          if (delImgErr) throw delImgErr;
+        }
+      }
+
+      // 4. Excluir imagem antiga do Storage SOMENTE se a operação do produto foi concluída
+      if ((imageAction === 'new' || imageAction === 'remove') && editingProduct?.primaryImageUrl) {
+        const oldStoragePath = extractStoragePath(editingProduct.primaryImageUrl);
+        if (oldStoragePath) {
+          console.log('Excluindo imagem antiga do bucket product-images:', oldStoragePath);
+          const { error: removeErr } = await supabase.storage
+            .from('product-images')
+            .remove([oldStoragePath]);
+          if (removeErr) {
+            console.warn('Aviso: Não foi possível remover imagem antiga do Storage:', removeErr.message);
           }
         }
       }
 
       setIsModalOpen(false);
       setEditingProduct(null);
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      setImageAction('keep');
       await loadData();
     } catch (err: any) {
       alert('Erro ao salvar produto: ' + err.message);
     } finally {
       setLoading(false);
+      setUploadingImage(false);
     }
   };
 
@@ -309,12 +390,22 @@ export default function AdminProdutosPage() {
 
     try {
       setLoading(true);
+      const prodToDelete = products.find(p => p.id === id);
+
       const { error: delError } = await supabase
         .from('products')
         .delete()
         .eq('id', id);
 
       if (delError) throw delError;
+
+      if (prodToDelete?.primaryImageUrl) {
+        const oldStoragePath = extractStoragePath(prodToDelete.primaryImageUrl);
+        if (oldStoragePath) {
+          await supabase.storage.from('product-images').remove([oldStoragePath]);
+        }
+      }
+
       await loadData();
     } catch (err: any) {
       alert('Erro ao excluir produto: ' + err.message);
@@ -631,98 +722,100 @@ export default function AdminProdutosPage() {
             rows={3}
           />
 
-          {/* Campo de URL da Imagem Principal */}
-          <div className="space-y-1.5">
+          {/* Componente de Upload de Imagem no Supabase Storage */}
+          <div className="space-y-2">
             <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
-              URL da Imagem Principal
-              <span className="ml-1 text-slate-400 font-medium normal-case">(opcional)</span>
+              Imagem do Produto
             </label>
-            <input
-              type="url"
-              name="imageUrl"
-              value={formProduct.imageUrl || ''}
-              onChange={(e) => {
-                const val = e.target.value;
-                setFormProduct({ ...formProduct, imageUrl: val });
-                setImageLoadError(false);
 
-                const trimmed = val.trim();
-                if (!trimmed) {
-                  setUrlValidationError(null);
-                } else {
-                  if (!/^https?:\/\//i.test(trimmed)) {
-                    setUrlValidationError("Informe o link direto da imagem. O link informado parece ser uma página de produto, não uma imagem.");
-                  } else {
-                    const cleanUrl = trimmed.split(/[?#]/)[0];
-                    const hasValidExt = /\.(jpg|jpeg|png|webp|avif)$/i.test(cleanUrl);
-                    if (!hasValidExt) {
-                      setUrlValidationError("Informe o link direto da imagem. O link informado parece ser uma página de produto, não uma imagem.");
-                    } else {
-                      setUrlValidationError(null);
-                    }
-                  }
-                }
-              }}
-              placeholder="https://exemplo.com/imagem-produto.jpg"
-              className={`w-full bg-slate-50 border rounded-xl px-3 py-2.5 text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all ${
-                urlValidationError
-                  ? 'border-rose-300 focus:ring-rose-500 focus:border-rose-400'
-                  : 'border-slate-200 focus:ring-sky-500 focus:border-sky-400'
-              }`}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
+              onChange={handleFileChange}
+              className="hidden"
+              id="product-image-upload"
             />
-            <p className="text-[10px] text-slate-450 font-medium leading-relaxed">
-              Use o link direto da imagem, terminando em .jpg, .jpeg, .png, .webp ou .avif. Não use o link da página do produto.
-            </p>
-            
-            {/* Área de Preview e Estado */}
-            <div className="mt-2 space-y-2">
-              {!formProduct.imageUrl.trim() ? (
-                <div className="text-[11px] text-slate-400 font-medium bg-slate-50 border border-slate-100 rounded-xl p-2.5">
-                  Nenhuma imagem informada. O produto usará o placeholder da vitrine.
+
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+              {previewUrl ? (
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <div className="w-24 h-24 relative rounded-xl border border-slate-200 bg-white overflow-hidden shrink-0 flex items-center justify-center p-1 shadow-2xs">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={previewUrl}
+                      alt="Pré-visualização da imagem do produto"
+                      className="w-full h-full object-contain rounded-lg"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2 w-full sm:w-auto">
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploadingImage || loading}
+                        className="px-3.5 py-2 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
+                      >
+                        <Upload className="w-3.5 h-3.5 text-sky-600" />
+                        Substituir imagem
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        disabled={uploadingImage || loading}
+                        className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl text-xs font-bold text-rose-700 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                        Remover imagem
+                      </button>
+                    </div>
+                    {imageAction === 'new' && (
+                      <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
+                        ✓ Nova imagem selecionada (será enviada ao salvar)
+                      </span>
+                    )}
+                  </div>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  {/* Se não houver erro de validação da URL, mostramos a imagem e o status de carregamento */}
-                  {!urlValidationError && (
-                    <div className="flex items-center gap-3 p-2 bg-slate-50 rounded-xl border border-slate-100">
-                      {!imageLoadError ? (
-                        <>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={formProduct.imageUrl}
-                            alt="Pré-visualização"
-                            className="w-12 h-12 object-contain rounded-lg border border-slate-200 bg-white flex-shrink-0"
-                            onError={() => setImageLoadError(true)}
-                            onLoad={() => setImageLoadError(false)}
-                          />
-                          <span className="text-[10px] text-emerald-600 font-bold leading-relaxed">
-                            Imagem carregada com sucesso.
-                          </span>
-                        </>
-                      ) : (
-                        <span className="text-[10px] text-rose-650 font-bold leading-relaxed">
-                          Falha no carregamento.
-                        </span>
-                      )}
-                    </div>
-                  )}
+                <div className="flex flex-col items-center justify-center py-6 px-4 text-center border-2 border-dashed border-slate-200 rounded-xl bg-white/50 hover:bg-white transition-colors">
+                  <div className="w-12 h-12 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center mb-2">
+                    <ImageIcon className="w-6 h-6" />
+                  </div>
+                  <p className="text-xs font-extrabold text-slate-700 mb-1">
+                    Nenhuma imagem selecionada
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingImage || loading}
+                    className="mt-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
+                  >
+                    <Upload className="w-4 h-4" />
+                    Selecionar imagem
+                  </button>
+                </div>
+              )}
 
-                  {/* Alerta de Erro de Validação de URL (Página HTML, etc.) */}
-                  {urlValidationError && (
-                    <div className="text-xs text-rose-650 font-bold bg-rose-50 border border-rose-100 rounded-xl p-3">
-                      {urlValidationError}
-                    </div>
-                  )}
+              {/* Indicador de carregamento */}
+              {uploadingImage && (
+                <div className="flex items-center gap-2 p-3 bg-sky-50 border border-sky-100 rounded-xl text-sky-700 text-xs font-bold animate-pulse">
+                  <Loader2 className="w-4 h-4 animate-spin text-sky-600" />
+                  <span>Enviando imagem para o Supabase Storage...</span>
+                </div>
+              )}
 
-                  {/* Alerta de Falha de Carregamento Físico da Imagem */}
-                  {!urlValidationError && imageLoadError && (
-                    <div className="text-xs text-rose-650 font-bold bg-rose-50 border border-rose-100 rounded-xl p-3">
-                      Não foi possível carregar esta imagem. Verifique se o link é direto para um arquivo de imagem.
-                    </div>
-                  )}
+              {/* Mensagem de erro */}
+              {imageErrorMessage && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-bold leading-relaxed">
+                  {imageErrorMessage}
                 </div>
               )}
             </div>
+
+            <p className="text-[10px] text-slate-455 font-medium leading-relaxed">
+              Envie uma imagem JPG, PNG, WEBP ou AVIF de até 5 MB.
+            </p>
           </div>
 
           <div className="flex items-center gap-2 pt-2">
@@ -738,13 +831,6 @@ export default function AdminProdutosPage() {
             </label>
           </div>
 
-          {/* Mensagem informativa antes do rodapé de ações, se houver erro */}
-          {isImageFieldInvalid && (
-            <div className="text-xs text-rose-650 font-bold bg-rose-50 border border-rose-100 rounded-xl p-3 text-center">
-              Corrija os erros na URL da imagem antes de salvar o produto.
-            </div>
-          )}
-
           {/* Botões Ação */}
           <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 bg-slate-50 -mx-6 -mb-6 p-6 rounded-b-3xl">
             <PremiumButton
@@ -755,9 +841,9 @@ export default function AdminProdutosPage() {
             </PremiumButton>
             <PremiumButton
               type="submit"
-              loading={loading}
+              loading={loading || uploadingImage}
               variant="primary"
-              disabled={isImageFieldInvalid}
+              disabled={!!imageErrorMessage}
             >
               Salvar Produto
             </PremiumButton>
