@@ -8,6 +8,7 @@ import { PremiumInput } from '@/components/ui/PremiumInput';
 import { PremiumModal } from '@/components/ui/PremiumModal';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { MetricCard } from '@/components/ui/MetricCard';
+import * as tus from 'tus-js-client';
 import { 
   Package, Plus, Search, Edit2, Trash2, 
   X, Tag, DollarSign, Archive, Layers, RefreshCw,
@@ -79,6 +80,11 @@ interface VideoItem {
   fileName?: string;
   sortOrder: number;
   file?: File;
+  status?: 'idle' | 'preparing' | 'uploading' | 'paused' | 'retrying' | 'completed' | 'cancelled' | 'error';
+  statusText?: string;
+  progressPercent?: number;
+  uploadedBytes?: number;
+  totalBytes?: number;
 }
 
 export default function AdminProdutosPage() {
@@ -385,7 +391,29 @@ export default function AdminProdutosPage() {
     if (videoFileInputRef.current) videoFileInputRef.current.value = '';
   };
 
+  const activeTusUploadRef = useRef<tus.Upload | null>(null);
+
+  const updateVideoItemState = (index: number, partialState: Partial<VideoItem>) => {
+    setVideoItems(prev => {
+      const copy = [...prev];
+      if (copy[index]) {
+        copy[index] = { ...copy[index], ...partialState };
+      }
+      return copy;
+    });
+  };
+
   const handleRemoveVideo = (index: number) => {
+    if (activeTusUploadRef.current) {
+      try {
+        console.log("Abortando upload TUS ativo em andamento...");
+        activeTusUploadRef.current.abort();
+      } catch (e) {
+        console.warn("Erro ao abortar TUS upload:", e);
+      }
+      activeTusUploadRef.current = null;
+    }
+
     const itemToRemove = videoItems[index];
     if (itemToRemove.id) {
       setRemovedVideoIds(prev => [...prev, itemToRemove.id!]);
@@ -622,7 +650,7 @@ export default function AdminProdutosPage() {
         }
       }
 
-      // 3. Upload de novos arquivos de vídeo para o Supabase Storage (bucket product-videos)
+      // 3. Upload de novos arquivos de vídeo para o Supabase Storage (bucket product-videos com TUS para > 6 MB)
       const newlyUploadedVideoPaths: string[] = [];
       const finalVideoRecords: Array<{
         id?: string;
@@ -633,6 +661,14 @@ export default function AdminProdutosPage() {
         sort_order: number;
       }> = [];
 
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error("Sessão de usuário expirada ou não autenticada.");
+
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ofkyvldcifezobulucmr.supabase.co';
+      const tusEndpoint = `${supabaseUrl}/storage/v1/upload/resumable`;
+      const TUS_THRESHOLD = 6 * 1024 * 1024; // 6 MB
+
       for (let i = 0; i < videoItems.length; i++) {
         const vItem = videoItems[i];
         if (vItem.file) {
@@ -640,22 +676,93 @@ export default function AdminProdutosPage() {
           const safeFileName = `${crypto.randomUUID()}.${ext}`;
           const storagePath = `${productId}/${safeFileName}`;
 
-          const { data: uploadData, error: uploadErr } = await supabase.storage
-            .from('product-videos')
-            .upload(storagePath, vItem.file, {
-              cacheControl: '3600',
-              upsert: false,
-            });
+          if (vItem.file.size <= TUS_THRESHOLD) {
+            // Upload padrão Supabase para vídeos <= 6 MB
+            updateVideoItemState(i, { status: 'uploading', statusText: 'Enviando: 50%', progressPercent: 50 });
 
-          if (uploadErr) {
-            console.error("Erro no upload de vídeo para product-videos:", uploadErr);
-            if (newlyUploadedVideoPaths.length > 0) {
-              await supabase.storage.from('product-videos').remove(newlyUploadedVideoPaths);
+            const { data: uploadData, error: uploadErr } = await supabase.storage
+              .from('product-videos')
+              .upload(storagePath, vItem.file, {
+                cacheControl: '3600',
+                upsert: false,
+              });
+
+            if (uploadErr) {
+              console.error("Erro no upload direto de vídeo:", uploadErr);
+              updateVideoItemState(i, { status: 'error', statusText: 'Falha no envio' });
+              if (newlyUploadedVideoPaths.length > 0) {
+                await supabase.storage.from('product-videos').remove(newlyUploadedVideoPaths);
+              }
+              if (newlyUploadedStoragePaths.length > 0) {
+                await supabase.storage.from('product-images').remove(newlyUploadedStoragePaths);
+              }
+              throw new Error(`Falha no envio do vídeo "${vItem.file.name}": ${uploadErr.message}`);
             }
-            if (newlyUploadedStoragePaths.length > 0) {
-              await supabase.storage.from('product-images').remove(newlyUploadedStoragePaths);
+
+            updateVideoItemState(i, { status: 'completed', statusText: 'Upload concluído', progressPercent: 100 });
+          } else {
+            // Upload TUS resumável para vídeos > 6 MB
+            try {
+              await new Promise<void>((resolve, reject) => {
+                updateVideoItemState(i, { status: 'preparing', statusText: 'Preparando vídeo...', progressPercent: 0 });
+
+                const upload = new tus.Upload(vItem.file!, {
+                  endpoint: tusEndpoint,
+                  retryDelays: [0, 3000, 5000, 10000],
+                  headers: {
+                    authorization: `Bearer ${accessToken}`,
+                    'x-upsert': 'false',
+                  },
+                  uploadDataDuringCreation: true,
+                  removeFingerprintOnSuccess: true,
+                  metadata: {
+                    bucketName: 'product-videos',
+                    objectName: storagePath,
+                    contentType: vItem.file!.type || 'video/mp4',
+                    cacheControl: '3600',
+                  },
+                  chunkSize: 6 * 1024 * 1024,
+                  onError: (error) => {
+                    console.error("Erro no TUS upload:", error);
+                    updateVideoItemState(i, { status: 'error', statusText: 'Falha no envio' });
+                    activeTusUploadRef.current = null;
+                    reject(error);
+                  },
+                  onProgress: (bytesUploaded, bytesTotal) => {
+                    const percent = Math.min(100, Math.round((bytesUploaded / bytesTotal) * 100));
+                    const uploadedMB = (bytesUploaded / (1024 * 1024)).toFixed(1);
+                    const totalMB = (bytesTotal / (1024 * 1024)).toFixed(1);
+                    updateVideoItemState(i, {
+                      status: 'uploading',
+                      statusText: `Enviando: ${percent}% (${uploadedMB} MB / ${totalMB} MB)`,
+                      progressPercent: percent,
+                      uploadedBytes: bytesUploaded,
+                      totalBytes: bytesTotal,
+                    });
+                  },
+                  onSuccess: () => {
+                    updateVideoItemState(i, {
+                      status: 'completed',
+                      statusText: 'Upload concluído',
+                      progressPercent: 100,
+                    });
+                    activeTusUploadRef.current = null;
+                    resolve();
+                  },
+                });
+
+                activeTusUploadRef.current = upload;
+                upload.start();
+              });
+            } catch (tusErr: any) {
+              if (newlyUploadedVideoPaths.length > 0) {
+                await supabase.storage.from('product-videos').remove(newlyUploadedVideoPaths);
+              }
+              if (newlyUploadedStoragePaths.length > 0) {
+                await supabase.storage.from('product-images').remove(newlyUploadedStoragePaths);
+              }
+              throw new Error(`Falha no envio TUS do vídeo "${vItem.file.name}": ${tusErr.message || 'Erro de rede ou transferência.'}`);
             }
-            throw new Error(`Falha no envio do vídeo "${vItem.file.name}": ${uploadErr.message}`);
           }
 
           newlyUploadedVideoPaths.push(storagePath);
@@ -1362,58 +1469,90 @@ export default function AdminProdutosPage() {
                   {videoItems.map((vItem, index) => (
                     <div
                       key={index}
-                      className="bg-white border border-slate-200 rounded-xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs"
+                      className="bg-white border border-slate-200 rounded-xl p-3.5 flex flex-col gap-2.5 shadow-2xs"
                     >
-                      <div className="flex items-center gap-3 w-full sm:w-auto">
-                        <div className="w-16 h-12 bg-slate-900 rounded-lg overflow-hidden shrink-0 relative flex items-center justify-center border border-slate-200">
-                          <video
-                            src={vItem.publicUrl}
-                            className="w-full h-full object-cover opacity-60"
-                            preload="metadata"
-                          />
-                          <Play className="w-5 h-5 text-white absolute fill-white" />
-                        </div>
-                        <div className="flex-1 min-w-0 space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-slate-800 truncate">
-                              {vItem.fileName || `Vídeo ${index + 1}`}
-                            </span>
-                            {vItem.sizeBytes && (
-                              <span className="text-[10px] text-slate-400 font-semibold bg-slate-100 px-2 py-0.5 rounded-md">
-                                {(vItem.sizeBytes / (1024 * 1024)).toFixed(1)} MB
-                              </span>
-                            )}
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 w-full sm:w-auto">
+                          <div className="w-16 h-12 bg-slate-900 rounded-lg overflow-hidden shrink-0 relative flex items-center justify-center border border-slate-200">
+                            <video
+                              src={vItem.publicUrl}
+                              className="w-full h-full object-cover opacity-60"
+                              preload="metadata"
+                            />
+                            <Play className="w-5 h-5 text-white absolute fill-white" />
                           </div>
-                          <input
-                            type="text"
-                            value={vItem.title}
-                            onChange={(e) => handleVideoTitleChange(index, e.target.value)}
-                            placeholder="Título do vídeo (opcional, ex: Conheça a Autoclave Tanda B Pro)"
-                            className="w-full text-xs text-slate-700 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 focus:bg-white focus:border-indigo-500 outline-none transition-all"
-                          />
+                          <div className="flex-1 min-w-0 space-y-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-xs font-bold text-slate-800 truncate">
+                                {vItem.fileName || `Vídeo ${index + 1}`}
+                              </span>
+                              {vItem.sizeBytes && (
+                                <span className="text-[10px] text-slate-400 font-semibold bg-slate-100 px-2 py-0.5 rounded-md">
+                                  {(vItem.sizeBytes / (1024 * 1024)).toFixed(1)} MB
+                                  {vItem.sizeBytes > 6 * 1024 * 1024 && (
+                                    <span className="ml-1 text-indigo-600 font-bold">• TUS Resumável</span>
+                                  )}
+                                </span>
+                              )}
+                              {vItem.statusText && (
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                                  vItem.status === 'completed'
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                    : vItem.status === 'error'
+                                    ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                                    : 'bg-indigo-50 text-indigo-700 border border-indigo-200 animate-pulse'
+                                }`}>
+                                  {vItem.statusText}
+                                </span>
+                              )}
+                            </div>
+                            <input
+                              type="text"
+                              value={vItem.title}
+                              onChange={(e) => handleVideoTitleChange(index, e.target.value)}
+                              placeholder="Título do vídeo (opcional, ex: Conheça a Autoclave Tanda B Pro)"
+                              className="w-full text-xs text-slate-700 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 focus:bg-white focus:border-indigo-500 outline-none transition-all"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 w-full sm:w-auto justify-end border-t sm:border-t-0 border-slate-100 pt-2 sm:pt-0">
+                          <button
+                            type="button"
+                            onClick={() => setPreviewVideoUrl(vItem.publicUrl)}
+                            className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+                            title="Visualizar vídeo"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            Visualizar
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveVideo(index)}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
+                            title="Remover vídeo / Cancelar upload"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 w-full sm:w-auto justify-end border-t sm:border-t-0 border-slate-100 pt-2 sm:pt-0">
-                        <button
-                          type="button"
-                          onClick={() => setPreviewVideoUrl(vItem.publicUrl)}
-                          className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer"
-                          title="Visualizar vídeo"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          Visualizar
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveVideo(index)}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
-                          title="Remover vídeo"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      {/* Barra de Progresso Real do TUS / Upload */}
+                      {vItem.progressPercent !== undefined && vItem.progressPercent > 0 && vItem.progressPercent < 100 && (
+                        <div className="w-full space-y-1 bg-indigo-50/60 p-2 rounded-lg border border-indigo-100">
+                          <div className="flex justify-between text-[10px] font-bold text-indigo-700">
+                            <span>{vItem.statusText || 'Enviando...'}</span>
+                            <span>{vItem.progressPercent}%</span>
+                          </div>
+                          <div className="w-full bg-indigo-200 h-1.5 rounded-full overflow-hidden">
+                            <div
+                              className="bg-indigo-600 h-1.5 rounded-full transition-all duration-200"
+                              style={{ width: `${vItem.progressPercent}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
