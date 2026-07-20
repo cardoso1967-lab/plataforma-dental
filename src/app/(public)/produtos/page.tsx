@@ -11,14 +11,22 @@ export default async function ProductsPage() {
     .select(`
       *,
       category:product_categories(id, name),
-      images:product_images(url, is_primary)
+      images:product_images(url, public_url, is_primary, sort_order)
     `)
     .eq('is_active', true)
     .order('name', { ascending: true });
 
   const formattedProducts = (dbProducts || []).map((p) => {
-    const primaryImage = p.images?.find((img: any) => img.is_primary)?.url 
-      || p.images?.[0]?.url 
+    const sorted = [...(p.images || [])].sort((a: any, b: any) => {
+      if (a.is_primary) return -1;
+      if (b.is_primary) return 1;
+      return (a.sort_order || 0) - (b.sort_order || 0);
+    });
+
+    const primaryImage = sorted.find((img: any) => img.is_primary)?.public_url
+      || sorted.find((img: any) => img.is_primary)?.url
+      || sorted[0]?.public_url
+      || sorted[0]?.url
       || undefined;
 
     return {

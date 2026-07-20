@@ -14,6 +14,7 @@ import {
   HelpCircle
 } from 'lucide-react';
 import { ProductCard } from '@/components/ui/ProductCard';
+import { ProductGallery } from '@/components/ui/ProductGallery';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 
 interface PageProps {
@@ -31,7 +32,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
     .select(`
       *,
       category:product_categories(id, name),
-      images:product_images(url, is_primary)
+      images:product_images(id, url, public_url, is_primary, sort_order)
     `)
     .eq('slug', slug)
     .eq('is_active', true)
@@ -73,7 +74,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
     .select(`
       *,
       category:product_categories(id, name),
-      images:product_images(url, is_primary)
+      images:product_images(id, url, public_url, is_primary, sort_order)
     `)
     .eq('is_active', true)
     .neq('id', product.id)
@@ -87,7 +88,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
     relatedProducts = [...relatedProducts, ...fillers].slice(0, 3);
   }
 
-  const primaryImage = product.images?.find((img: any) => img.is_primary)?.url 
+  const primaryImage = product.images?.find((img: any) => img.is_primary)?.public_url 
+    || product.images?.find((img: any) => img.is_primary)?.url 
+    || product.images?.[0]?.public_url
     || product.images?.[0]?.url 
     || null;
 
@@ -136,40 +139,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
         {/* Hero Section do Produto */}
         <div className="bg-white rounded-3xl border border-slate-100 shadow-xs overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-8 p-6 sm:p-8">
           
-          {/* Imagem do Produto */}
+          {/* Galeria de Imagens do Produto */}
           <div className="lg:col-span-6 flex flex-col justify-center">
-            <div className={`aspect-square rounded-2xl border border-slate-100 relative flex flex-col items-center justify-center overflow-hidden shadow-2xs ${
-              primaryImage 
-                ? 'bg-white' 
-                : 'bg-gradient-to-br from-slate-50 via-sky-50/20 to-slate-100'
-            }`}>
-              {primaryImage ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={primaryImage}
-                  alt={product.name}
-                  className="object-contain w-full h-full p-6 transition-transform duration-500 hover:scale-105"
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center space-y-3 p-6">
-                  <div className="bg-sky-100/40 text-sky-600 w-20 h-20 rounded-3xl flex items-center justify-center shadow-xs border border-sky-100/20">
-                    <svg className="w-10 h-10 text-[#0284c7]/80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 2c-.8 0-1.5.5-2 1.2a4.4 4.4 0 00-.7 2.2c0 2.1.8 3 1.2 5a3.8 3.8 0 01-.3 2.7c-.8 1.4-1.9 2.5-2.5 4.1C7 19.3 7 20.3 8 21c.8.6 1.8.6 2.5.1a4.6 4.6 0 001.5-2.6 4.6 4.6 0 001.5 2.6c.7.5 1.7.5 2.5-.1 1-.7 1-1.7.3-3.8-.6-1.6-1.7-2.7-2.5-4.1a3.8 3.8 0 01-.3-2.7c.4-2 1.2-2.9 1.2-5a4.4 4.4 0 00-.7-2.2c-.5-.7-1.2-1.2-2-1.2z" />
-                      <path d="M18 4.5l1 1-1 1" />
-                      <path d="M5 8.5l1 1-1 1" />
-                    </svg>
-                  </div>
-                  <div className="text-center">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">
-                      Imagem em breve
-                    </span>
-                    <span className="text-[10px] text-slate-455 font-semibold block mt-1">
-                      M.MUNIZ Equipamentos
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
+            <ProductGallery
+              productName={product.name}
+              images={product.images || []}
+            />
           </div>
 
           {/* Ficha Técnica Rápida e CTAs */}

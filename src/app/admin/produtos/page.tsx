@@ -11,7 +11,8 @@ import { MetricCard } from '@/components/ui/MetricCard';
 import { 
   Package, Plus, Search, Edit2, Trash2, 
   X, Tag, DollarSign, Archive, Layers, RefreshCw,
-  Upload, Image as ImageIcon, Loader2, ShieldAlert, AlertTriangle
+  Upload, Image as ImageIcon, Loader2, ShieldAlert, AlertTriangle,
+  ChevronLeft, ChevronRight, Star
 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
@@ -19,6 +20,16 @@ import { useAuth } from '@/components/AuthProvider';
 interface Category {
   id: string;
   name: string;
+}
+
+interface ProductImage {
+  id?: string;
+  product_id?: string;
+  url?: string;
+  public_url?: string;
+  storage_path?: string | null;
+  is_primary?: boolean;
+  sort_order?: number;
 }
 
 interface Product {
@@ -35,38 +46,48 @@ interface Product {
   created_at: string;
   category?: Category | null;
   primaryImageUrl?: string | null;
+  images?: ProductImage[];
+}
+
+interface GalleryItem {
+  id?: string;
+  publicUrl: string;
+  storagePath?: string | null;
+  isPrimary: boolean;
+  sortOrder: number;
+  file?: File;
 }
 
 export default function AdminProdutosPage() {
   const supabase = createSupabaseBrowserClient();
   const { profile: adminProfile } = useAuth();
 
-  // Estados de datos
+  // Estados de dados
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Estados de búsqueda
+  // Estados de busca
   const [searchTerm, setSearchTerm] = useState('');
 
   // Estados de modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   
-  // Estados para exclusão protegida e desativação
+  // Estados para exclusao protegida e desativacao
   const [deleteModalProduct, setDeleteModalProduct] = useState<Product | null>(null);
   const [deleteModalMode, setDeleteModalMode] = useState<'none' | 'confirm_delete' | 'blocked_history'>('none');
   const [deactivatingProduct, setDeactivatingProduct] = useState(false);
   const [checkingHistory, setCheckingHistory] = useState(false);
   
-  // Estados para Upload de Imagem no Supabase Storage
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [imageAction, setImageAction] = useState<'keep' | 'new' | 'remove'>('keep');
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [imageErrorMessage, setImageErrorMessage] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // Estados da Galeria de Imagens (Ate 8 imagens)
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
+  const [removedImageIds, setRemovedImageIds] = useState<string[]>([]);
+  const [removedStoragePaths, setRemovedStoragePaths] = useState<string[]>([]);
+  const [galleryModalError, setGalleryModalError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number; message: string } | null>(null);
+  const galleryFileInputRef = useRef<HTMLInputElement>(null);
 
   // Formulario
   const [formProduct, setFormProduct] = useState({
@@ -80,7 +101,7 @@ export default function AdminProdutosPage() {
     is_active: true,
   });
 
-  // Generar Slug automáticamente
+  // Generar Slug automaticamente
   const generateSlug = (text: string) => {
     return text
       .toString()
@@ -100,28 +121,42 @@ export default function AdminProdutosPage() {
       setLoading(true);
       setError(null);
 
-      // 1. Obtener productos con categorías e imagem primária
+      // 1. Obtener productos com imagens ordenadas
       const { data: prodData, error: prodError } = await supabase
         .from('products')
         .select(`
           *,
           category:product_categories(id, name),
-          images:product_images(url, is_primary)
+          images:product_images(id, product_id, url, public_url, storage_path, is_primary, sort_order)
         `)
         .order('name', { ascending: true });
 
       if (prodError) throw prodError;
 
-      // Enriquecer com URL da imagem primária
-      const enriched = (prodData || []).map((p: any) => ({
-        ...p,
-        primaryImageUrl: p.images?.find((img: any) => img.is_primary)?.url
-          || p.images?.[0]?.url
-          || null,
-      }));
+      // Enriquecer com lista ordenada e URL da imagem capa
+      const enriched = (prodData || []).map((p: any) => {
+        const sortedImgs = (p.images || []).sort((a: any, b: any) => {
+          if (a.is_primary) return -1;
+          if (b.is_primary) return 1;
+          return (a.sort_order || 0) - (b.sort_order || 0);
+        });
+
+        const primaryUrl = sortedImgs.find((img: any) => img.is_primary)?.public_url
+          || sortedImgs.find((img: any) => img.is_primary)?.url
+          || sortedImgs[0]?.public_url
+          || sortedImgs[0]?.url
+          || null;
+
+        return {
+          ...p,
+          images: sortedImgs,
+          primaryImageUrl: primaryUrl,
+        };
+      });
+
       setProducts(enriched);
 
-      // 2. Obtener categorías
+      // 2. Obtener categorias
       const { data: catData, error: catError } = await supabase
         .from('product_categories')
         .select('id, name')
@@ -154,58 +189,154 @@ export default function AdminProdutosPage() {
     return null;
   };
 
-  // Handler de seleção de arquivo com validação
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // Handler de seleção múltipla de arquivos para a galeria
+  const handleGalleryFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-    setImageErrorMessage(null);
+    setGalleryModalError(null);
+
+    const currentCount = galleryItems.length;
+    if (currentCount + files.length > 8) {
+      setGalleryModalError(`O limite é de no máximo 8 imagens por produto. Atualmente você possui ${currentCount} imagem(ns) e selecionou mais ${files.length}.`);
+      if (galleryFileInputRef.current) galleryFileInputRef.current.value = '';
+      return;
+    }
 
     const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
     const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif'];
-    const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
-
-    const isTypeValid = allowedMimeTypes.includes(file.type.toLowerCase()) || allowedExtensions.includes(fileExt);
-
-    if (!isTypeValid) {
-      setImageErrorMessage('Formato de arquivo não suportado. Envie uma imagem JPG, PNG, WEBP ou AVIF.');
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      return;
-    }
-
     const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
-    if (file.size > MAX_SIZE) {
-      setImageErrorMessage('O arquivo selecionado excede o limite máximo permitido de 5 MB.');
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      return;
+
+    const newItems: GalleryItem[] = [];
+
+    for (const file of files) {
+      const ext = file.name.split('.').pop()?.toLowerCase() || '';
+      const isTypeValid = allowedMimeTypes.includes(file.type.toLowerCase()) || allowedExtensions.includes(ext);
+
+      if (!isTypeValid) {
+        setGalleryModalError(`O arquivo "${file.name}" possui formato não suportado. Envie imagens JPG, PNG, WEBP ou AVIF.`);
+        if (galleryFileInputRef.current) galleryFileInputRef.current.value = '';
+        return;
+      }
+
+      if (file.size > MAX_SIZE) {
+        setGalleryModalError(`O arquivo "${file.name}" excede o limite máximo permitido de 5 MB.`);
+        if (galleryFileInputRef.current) galleryFileInputRef.current.value = '';
+        return;
+      }
+
+      // Prevenir duplicados no mesmo lote de seleção por nome e tamanho
+      const isDuplicate = galleryItems.some(item => item.file && item.file.name === file.name && item.file.size === file.size) ||
+                          newItems.some(item => item.file && item.file.name === file.name && item.file.size === file.size);
+
+      if (isDuplicate) {
+        console.warn(`Arquivo duplicado ignorado: ${file.name}`);
+        continue;
+      }
+
+      const previewUrl = URL.createObjectURL(file);
+      newItems.push({
+        publicUrl: previewUrl,
+        isPrimary: false,
+        sortOrder: currentCount + newItems.length,
+        file: file,
+      });
     }
 
-    setSelectedFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
-    setImageAction('new');
-    setImageErrorMessage(null);
+    if (newItems.length === 0) return;
+
+    const updatedGallery = [...galleryItems, ...newItems];
+
+    if (!updatedGallery.some(item => item.isPrimary)) {
+      updatedGallery[0].isPrimary = true;
+    }
+
+    setGalleryItems(updatedGallery);
+    if (galleryFileInputRef.current) galleryFileInputRef.current.value = '';
   };
 
-  // Handler de remoção de imagem
-  const handleRemoveImage = () => {
-    setSelectedFile(null);
-    setPreviewUrl(null);
-    setImageAction('remove');
-    setImageErrorMessage(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
+  // Definir imagem selecionada como Capa / Principal
+  const handleSetPrimaryImage = (index: number) => {
+    const updated = galleryItems.map((item, idx) => ({
+      ...item,
+      isPrimary: idx === index,
+    }));
+    setGalleryItems(updated);
   };
 
-  // Abrir modal
+  // Remover imagem da galeria (marcando para exclusão se já existia no banco/storage)
+  const handleRemoveGalleryImage = (index: number) => {
+    const itemToRemove = galleryItems[index];
+    if (itemToRemove.id) {
+      setRemovedImageIds(prev => [...prev, itemToRemove.id!]);
+    }
+    if (itemToRemove.storagePath) {
+      setRemovedStoragePaths(prev => [...prev, itemToRemove.storagePath!]);
+    }
+
+    const remaining = galleryItems.filter((_, idx) => idx !== index);
+
+    // Se a imagem removida era a principal, promove a primeira restante a principal
+    if (itemToRemove.isPrimary && remaining.length > 0) {
+      remaining[0].isPrimary = true;
+    }
+
+    const reordered = remaining.map((item, idx) => ({
+      ...item,
+      sortOrder: idx,
+    }));
+
+    setGalleryItems(reordered);
+  };
+
+  // Mover ordem da imagem (esquerda / direita)
+  const handleMoveGalleryImage = (index: number, direction: 'left' | 'right') => {
+    const targetIndex = direction === 'left' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= galleryItems.length) return;
+
+    const reordered = [...galleryItems];
+    const temp = reordered[index];
+    reordered[index] = reordered[targetIndex];
+    reordered[targetIndex] = temp;
+
+    const finalOrder = reordered.map((item, idx) => ({
+      ...item,
+      sortOrder: idx,
+    }));
+
+    setGalleryItems(finalOrder);
+  };
+
+  // Abrir modal de criação/edição
   const openModal = (product: Product | null = null) => {
     setEditingProduct(product);
-    setSelectedFile(null);
-    setImageAction('keep');
-    setUploadingImage(false);
-    setImageErrorMessage(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
+    setGalleryModalError(null);
+    setUploadProgress(null);
+    setRemovedImageIds([]);
+    setRemovedStoragePaths([]);
+    if (galleryFileInputRef.current) galleryFileInputRef.current.value = '';
 
     if (product) {
-      setPreviewUrl(product.primaryImageUrl || null);
+      const initialGallery: GalleryItem[] = (product.images || [])
+        .map((img: any, idx: number) => ({
+          id: img.id,
+          publicUrl: img.public_url || img.url || '',
+          storagePath: img.storage_path || extractStoragePath(img.public_url || img.url),
+          isPrimary: !!img.is_primary,
+          sortOrder: img.sort_order !== undefined ? img.sort_order : idx,
+        }))
+        .sort((a, b) => {
+          if (a.isPrimary) return -1;
+          if (b.isPrimary) return 1;
+          return a.sortOrder - b.sortOrder;
+        });
+
+      if (initialGallery.length > 0 && !initialGallery.some(item => item.isPrimary)) {
+        initialGallery[0].isPrimary = true;
+      }
+
+      setGalleryItems(initialGallery);
+
       setFormProduct({
         sku: product.sku || '',
         name: product.name || '',
@@ -217,7 +348,7 @@ export default function AdminProdutosPage() {
         is_active: product.is_active,
       });
     } else {
-      setPreviewUrl(null);
+      setGalleryItems([]);
       setFormProduct({
         sku: '',
         name: '',
@@ -232,46 +363,17 @@ export default function AdminProdutosPage() {
     setIsModalOpen(true);
   };
 
-  // Guardar producto
+  // Salvar produto e sincronizar galeria de imagens no Supabase Storage e DB
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formProduct.name.trim() || !formProduct.price) return;
-    if (imageErrorMessage) return;
+    if (galleryModalError) return;
 
     try {
       setLoading(true);
-      let finalImageUrl: string | null = previewUrl;
+      setUploadProgress(null);
 
-      // 1. Upload de imagem para o Supabase Storage se um novo arquivo foi selecionado
-      if (imageAction === 'new' && selectedFile) {
-        setUploadingImage(true);
-        const fileExt = selectedFile.name.split('.').pop()?.toLowerCase() || 'jpg';
-        const fileName = `${Date.now()}_${crypto.randomUUID()}.${fileExt}`;
-        const filePath = `products/${fileName}`;
-
-        const { data: uploadData, error: uploadErr } = await supabase.storage
-          .from('product-images')
-          .upload(filePath, selectedFile, {
-            cacheControl: '3600',
-            upsert: false,
-          });
-
-        if (uploadErr) {
-          console.error('Erro no upload para o Supabase Storage:', uploadErr);
-          throw new Error(`Erro no upload da imagem: ${uploadErr.message}`);
-        }
-
-        const { data: publicUrlData } = supabase.storage
-          .from('product-images')
-          .getPublicUrl(filePath);
-
-        finalImageUrl = publicUrlData.publicUrl;
-        setUploadingImage(false);
-      } else if (imageAction === 'remove') {
-        finalImageUrl = null;
-      }
-
-      // 2. Slug único
+      // 1. Slug único
       const generatedSlug = generateSlug(formProduct.name);
       let uniqueSlug = generatedSlug;
       let counter = 1;
@@ -326,67 +428,143 @@ export default function AdminProdutosPage() {
         productId = newProd?.id;
       }
 
-      // 3. Atualizar/Inserir/Remover imagem na tabela product_images
-      if (productId) {
-        if (imageAction === 'new' && finalImageUrl) {
-          const { data: existingImg } = await supabase
-            .from('product_images')
-            .select('id')
-            .eq('product_id', productId)
-            .eq('is_primary', true)
-            .maybeSingle();
+      if (!productId) throw new Error("ID do produto não foi retornado pelo servidor.");
 
-          if (existingImg) {
-            const { error: updateImgErr } = await supabase
-              .from('product_images')
-              .update({ url: finalImageUrl })
-              .eq('id', existingImg.id);
-            if (updateImgErr) throw updateImgErr;
-          } else {
-            const { error: insertImgErr } = await supabase
-              .from('product_images')
-              .insert({
-                product_id: productId,
-                url: finalImageUrl,
-                is_primary: true,
-              });
-            if (insertImgErr) throw insertImgErr;
-          }
-        } else if (imageAction === 'remove') {
-          const { error: delImgErr } = await supabase
-            .from('product_images')
-            .delete()
-            .eq('product_id', productId)
-            .eq('is_primary', true);
-          if (delImgErr) throw delImgErr;
-        }
+      // 2. Upload de novos arquivos no Supabase Storage com limpeza de erro (rollback)
+      const newFilesToUpload = galleryItems.filter(item => item.file);
+      const newlyUploadedStoragePaths: string[] = [];
+
+      if (newFilesToUpload.length > 0) {
+        setUploadProgress({ current: 0, total: newFilesToUpload.length, message: `Enviando 0 de ${newFilesToUpload.length} imagens...` });
       }
 
-      // 4. Excluir imagem antiga do Storage SOMENTE se a operação do produto foi concluída
-      if ((imageAction === 'new' || imageAction === 'remove') && editingProduct?.primaryImageUrl) {
-        const oldStoragePath = extractStoragePath(editingProduct.primaryImageUrl);
-        if (oldStoragePath) {
-          console.log('Excluindo imagem antiga do bucket product-images:', oldStoragePath);
-          const { error: removeErr } = await supabase.storage
+      const finalRecords: Array<{
+        id?: string;
+        product_id: string;
+        url: string;
+        public_url: string;
+        storage_path: string | null;
+        is_primary: boolean;
+        sort_order: number;
+      }> = [];
+
+      let uploadedCount = 0;
+
+      for (let i = 0; i < galleryItems.length; i++) {
+        const item = galleryItems[i];
+
+        if (item.file) {
+          uploadedCount++;
+          setUploadProgress({
+            current: uploadedCount,
+            total: newFilesToUpload.length,
+            message: `Enviando imagem ${uploadedCount} de ${newFilesToUpload.length}...`
+          });
+
+          const ext = item.file.name.split('.').pop()?.toLowerCase() || 'jpg';
+          const safeFileName = `${Date.now()}_${crypto.randomUUID()}.${ext}`;
+          const storagePath = `products/${productId}/${safeFileName}`;
+
+          const { data: uploadData, error: uploadErr } = await supabase.storage
             .from('product-images')
-            .remove([oldStoragePath]);
-          if (removeErr) {
-            console.warn('Aviso: Não foi possível remover imagem antiga do Storage:', removeErr.message);
+            .upload(storagePath, item.file, {
+              cacheControl: '3600',
+              upsert: false,
+            });
+
+          if (uploadErr) {
+            console.error("Erro no upload para o Supabase Storage:", uploadErr);
+            if (newlyUploadedStoragePaths.length > 0) {
+              console.log("Executando rollback dos arquivos já enviados nesta tentativa:", newlyUploadedStoragePaths);
+              await supabase.storage.from('product-images').remove(newlyUploadedStoragePaths);
+            }
+            throw new Error(`Falha no envio da imagem "${item.file.name}": ${uploadErr.message}`);
           }
+
+          newlyUploadedStoragePaths.push(storagePath);
+
+          const { data: publicUrlData } = supabase.storage
+            .from('product-images')
+            .getPublicUrl(storagePath);
+
+          finalRecords.push({
+            product_id: productId,
+            url: publicUrlData.publicUrl,
+            public_url: publicUrlData.publicUrl,
+            storage_path: storagePath,
+            is_primary: item.isPrimary,
+            sort_order: i,
+          });
+        } else {
+          finalRecords.push({
+            id: item.id,
+            product_id: productId,
+            url: item.publicUrl,
+            public_url: item.publicUrl,
+            storage_path: item.storagePath || null,
+            is_primary: item.isPrimary,
+            sort_order: i,
+          });
         }
       }
 
+      // 3. Excluir registros removidos do banco de dados
+      if (removedImageIds.length > 0) {
+        await supabase.from('product_images').delete().in('id', removedImageIds);
+      }
+
+      // 4. Normalizar e salvar/atualizar registros da galeria no banco (Garantindo exatamente 1 is_primary)
+      let hasPrimary = false;
+      const normalizedRecords = finalRecords.map(r => {
+        if (r.is_primary && !hasPrimary) {
+          hasPrimary = true;
+          return { ...r, is_primary: true };
+        }
+        return { ...r, is_primary: false };
+      });
+      if (!hasPrimary && normalizedRecords.length > 0) {
+        normalizedRecords[0].is_primary = true;
+      }
+
+      for (const rec of normalizedRecords) {
+        if (rec.id) {
+          await supabase.from('product_images').update({
+            url: rec.url,
+            public_url: rec.public_url,
+            storage_path: rec.storage_path,
+            is_primary: rec.is_primary,
+            sort_order: rec.sort_order,
+          }).eq('id', rec.id);
+        } else {
+          await supabase.from('product_images').insert({
+            product_id: rec.product_id,
+            url: rec.url,
+            public_url: rec.public_url,
+            storage_path: rec.storage_path,
+            is_primary: rec.is_primary,
+            sort_order: rec.sort_order,
+          });
+        }
+      }
+
+      // 5. Excluir arquivos removidos do Storage SOMENTE após salvamento bem-sucedido
+      if (removedStoragePaths.length > 0) {
+        console.log("Removendo arquivos do Storage marcados para exclusao:", removedStoragePaths);
+        await supabase.storage.from('product-images').remove(removedStoragePaths);
+      }
+
+      setUploadProgress(null);
       setIsModalOpen(false);
       setEditingProduct(null);
-      setSelectedFile(null);
-      setPreviewUrl(null);
-      setImageAction('keep');
+      setGalleryItems([]);
+      setRemovedImageIds([]);
+      setRemovedStoragePaths([]);
       await loadData();
     } catch (err: any) {
-      alert('Erro ao salvar produto: ' + err.message);
+      console.error('Erro ao salvar produto:', err);
+      setGalleryModalError(err.message || 'Erro ao salvar produto.');
     } finally {
-      setLoading(false);
-      setUploadingImage(false);
+      setUploadProgress(null);
     }
   };
 
@@ -783,99 +961,168 @@ export default function AdminProdutosPage() {
             rows={3}
           />
 
-          {/* Componente de Upload de Imagem no Supabase Storage */}
-          <div className="space-y-2">
-            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
-              Imagem do Produto
-            </label>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
-              onChange={handleFileChange}
-              className="hidden"
-              id="product-image-upload"
-            />
-
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
-              {previewUrl ? (
-                <div className="flex flex-col sm:flex-row items-center gap-4">
-                  <div className="w-24 h-24 relative rounded-xl border border-slate-200 bg-white overflow-hidden shrink-0 flex items-center justify-center p-1 shadow-2xs">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={previewUrl}
-                      alt="Pré-visualização da imagem do produto"
-                      className="w-full h-full object-contain rounded-lg"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-2 w-full sm:w-auto">
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploadingImage || loading}
-                        className="px-3.5 py-2 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
-                      >
-                        <Upload className="w-3.5 h-3.5 text-sky-600" />
-                        Substituir imagem
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleRemoveImage}
-                        disabled={uploadingImage || loading}
-                        className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl text-xs font-bold text-rose-700 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
-                      >
-                        <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                        Remover imagem
-                      </button>
-                    </div>
-                    {imageAction === 'new' && (
-                      <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
-                        ✓ Nova imagem selecionada (será enviada ao salvar)
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-6 px-4 text-center border-2 border-dashed border-slate-200 rounded-xl bg-white/50 hover:bg-white transition-colors">
-                  <div className="w-12 h-12 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center mb-2">
-                    <ImageIcon className="w-6 h-6" />
-                  </div>
-                  <p className="text-xs font-extrabold text-slate-700 mb-1">
-                    Nenhuma imagem selecionada
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingImage || loading}
-                    className="mt-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
-                  >
-                    <Upload className="w-4 h-4" />
-                    Selecionar imagem
-                  </button>
-                </div>
-              )}
-
-              {/* Indicador de carregamento */}
-              {uploadingImage && (
-                <div className="flex items-center gap-2 p-3 bg-sky-50 border border-sky-100 rounded-xl text-sky-700 text-xs font-bold animate-pulse">
-                  <Loader2 className="w-4 h-4 animate-spin text-sky-600" />
-                  <span>Enviando imagem para o Supabase Storage...</span>
-                </div>
-              )}
-
-              {/* Mensagem de erro */}
-              {imageErrorMessage && (
-                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-bold leading-relaxed">
-                  {imageErrorMessage}
-                </div>
-              )}
+          {/* Galeria de Imagens do Produto (até 8 imagens) */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
+                Imagens do Produto ({galleryItems.length}/8)
+              </label>
+              <button
+                type="button"
+                onClick={() => galleryFileInputRef.current?.click()}
+                disabled={loading || !!uploadProgress || galleryItems.length >= 8}
+                className="px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Adicionar imagens
+              </button>
             </div>
 
+            <input
+              ref={galleryFileInputRef}
+              type="file"
+              multiple
+              accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
+              onChange={handleGalleryFilesChange}
+              className="hidden"
+              id="product-gallery-upload"
+            />
+
+            {/* Grid Responsivo de Miniaturas */}
+            {galleryItems.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                {galleryItems.map((item, index) => (
+                  <div
+                    key={index}
+                    className={`relative bg-white border rounded-xl p-2 flex flex-col items-center gap-2 group transition-all ${
+                      item.isPrimary ? 'border-sky-500 ring-2 ring-sky-100 shadow-xs' : 'border-slate-200'
+                    }`}
+                  >
+                    {/* Badge de Imagem Principal */}
+                    {item.isPrimary ? (
+                      <span className="absolute top-1.5 left-1.5 bg-sky-600 text-white text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider z-10 shadow-2xs flex items-center gap-1">
+                        <Star className="w-2.5 h-2.5 fill-white" /> Imagem principal
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleSetPrimaryImage(index)}
+                        className="absolute top-1.5 left-1.5 bg-slate-900/60 hover:bg-sky-600 backdrop-blur-xs text-white text-[9px] font-bold px-2 py-0.5 rounded-md transition-all z-10 opacity-80 group-hover:opacity-100 cursor-pointer"
+                        title="Definir como Imagem Principal"
+                      >
+                        Definir capa
+                      </button>
+                    )}
+
+                    {/* Miniatura */}
+                    <div className="w-full aspect-square relative rounded-lg overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={item.publicUrl}
+                        alt={`Imagem ${index + 1}`}
+                        className="w-full h-full object-contain p-1"
+                      />
+                    </div>
+
+                    {/* Controles de Ordenação e Exclusão */}
+                    <div className="flex items-center justify-between w-full pt-1 border-t border-slate-100 text-slate-500">
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleMoveGalleryImage(index, 'left')}
+                          disabled={index === 0}
+                          className="p-1 rounded hover:bg-slate-100 disabled:opacity-30 cursor-pointer"
+                          title="Mover para a esquerda"
+                        >
+                          <ChevronLeft className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleMoveGalleryImage(index, 'right')}
+                          disabled={index === galleryItems.length - 1}
+                          className="p-1 rounded hover:bg-slate-100 disabled:opacity-30 cursor-pointer"
+                          title="Mover para a direita"
+                        >
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveGalleryImage(index)}
+                        className="p-1 text-slate-400 hover:text-rose-600 rounded hover:bg-rose-50 transition-colors cursor-pointer"
+                        title="Remover imagem"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div
+                onClick={() => galleryFileInputRef.current?.click()}
+                className="flex flex-col items-center justify-center py-8 px-4 text-center border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50 hover:bg-slate-50 transition-colors cursor-pointer"
+              >
+                <div className="w-12 h-12 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center mb-2">
+                  <ImageIcon className="w-6 h-6" />
+                </div>
+                <p className="text-xs font-extrabold text-slate-700 mb-1">
+                  Nenhuma imagem na galeria
+                </p>
+                <p className="text-[10px] text-slate-400 font-medium mb-3">
+                  Clique para selecionar até 8 imagens para este produto.
+                </p>
+                <button
+                  type="button"
+                  className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs"
+                >
+                  <Upload className="w-4 h-4" />
+                  Selecionar imagens
+                </button>
+              </div>
+            )}
+
+            {/* Progresso de Envio */}
+            {uploadProgress && (
+              <div className="p-3 bg-sky-50 border border-sky-100 rounded-xl text-sky-700 text-xs font-bold space-y-1.5 animate-pulse">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-sky-600" />
+                    {uploadProgress.message}
+                  </span>
+                  <span className="text-[10px] font-black">
+                    {Math.round((uploadProgress.current / uploadProgress.total) * 100)}%
+                  </span>
+                </div>
+                <div className="w-full bg-sky-200 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className="bg-sky-600 h-1.5 rounded-full transition-all duration-300"
+                    style={{ width: `${(uploadProgress.current / uploadProgress.total) * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Modal / Alerta de Erro Visual na Galeria */}
+            {galleryModalError && (
+              <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-bold flex items-start justify-between gap-2">
+                <div className="flex items-start gap-2">
+                  <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
+                  <span>{galleryModalError}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setGalleryModalError(null)}
+                  className="p-0.5 text-rose-400 hover:text-rose-700"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
             <p className="text-[10px] text-slate-455 font-medium leading-relaxed">
-              Envie uma imagem JPG, PNG, WEBP ou AVIF de até 5 MB.
+              Envie até 8 imagens em formato JPG, PNG, WEBP ou AVIF de até 5 MB cada. A primeira imagem ou a capa definida será exibida na vitrine principal.
             </p>
           </div>
 
@@ -902,9 +1149,9 @@ export default function AdminProdutosPage() {
             </PremiumButton>
             <PremiumButton
               type="submit"
-              loading={loading || uploadingImage}
+              loading={loading || !!uploadProgress}
               variant="primary"
-              disabled={!!imageErrorMessage}
+              disabled={!!galleryModalError}
             >
               Salvar Produto
             </PremiumButton>
