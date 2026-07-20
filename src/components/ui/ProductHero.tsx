@@ -1,14 +1,23 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { MessageCircle, HelpCircle, ChevronRight, PackageCheck, AlertCircle } from 'lucide-react';
+import { MessageCircle, HelpCircle, PackageCheck, AlertCircle, Play, Film } from 'lucide-react';
 
 export interface GalleryImage {
   id?: string;
   url?: string;
   public_url?: string;
   is_primary?: boolean;
+  sort_order?: number;
+}
+
+export interface GalleryVideo {
+  id?: string;
+  public_url: string;
+  storage_path?: string;
+  title?: string | null;
+  poster_url?: string | null;
   sort_order?: number;
 }
 
@@ -24,6 +33,7 @@ export interface ProductHeroData {
   financing_details?: string | null;
   category?: { id: string; name: string } | null;
   images?: GalleryImage[];
+  videos?: GalleryVideo[];
 }
 
 interface ProductHeroProps {
@@ -33,13 +43,22 @@ interface ProductHeroProps {
   whatsappNumber?: string;
 }
 
+export interface MediaItem {
+  type: 'image' | 'video';
+  id: string;
+  url: string;
+  posterUrl?: string | null;
+  title?: string | null;
+  sortOrder: number;
+}
+
 export const ProductHero: React.FC<ProductHeroProps> = ({
   product,
   quoteWhatsappUrl,
   specialistWhatsappUrl,
   whatsappNumber,
 }) => {
-  // Ordenar imagens: principal primeiro, depois por sort_order
+  // 1. Organizar imagens: principal primeiro, depois por sort_order
   const sortedImages = [...(product.images || [])].sort((a, b) => {
     if (a.is_primary) return -1;
     if (b.is_primary) return 1;
@@ -47,12 +66,52 @@ export const ProductHero: React.FC<ProductHeroProps> = ({
   });
 
   const getImageUrl = (img?: GalleryImage) => img?.public_url || img?.url || null;
+  const primaryImageUrl = getImageUrl(sortedImages[0]) || '';
 
-  const [activeImage, setActiveImage] = useState<string | null>(
-    getImageUrl(sortedImages[0])
-  );
+  const mediaImages: MediaItem[] = sortedImages
+    .map((img, idx): MediaItem | null => {
+      const url = getImageUrl(img);
+      if (!url) return null;
+      return {
+        type: 'image',
+        id: img.id || `img-${idx}`,
+        url,
+        sortOrder: img.is_primary ? -100 : (img.sort_order || idx),
+      };
+    })
+    .filter((item): item is MediaItem => item !== null);
 
-  const activeUrl = activeImage || getImageUrl(sortedImages[0]);
+  const mediaVideos: MediaItem[] = [...(product.videos || [])]
+    .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+    .map((vid, idx) => ({
+      type: 'video' as const,
+      id: vid.id || `vid-${idx}`,
+      url: vid.public_url,
+      posterUrl: vid.poster_url || primaryImageUrl,
+      title: vid.title || null,
+      sortOrder: vid.sort_order !== undefined ? vid.sort_order : 100 + idx,
+    }));
+
+  const allMediaItems: MediaItem[] = [...mediaImages, ...mediaVideos];
+
+  const [activeMediaIndex, setActiveMediaIndex] = useState<number>(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const activeMedia = allMediaItems[activeMediaIndex] || allMediaItems[0];
+
+  // Pausar vídeo ao trocar a seleção da mídia
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+  }, [activeMediaIndex]);
+
+  const handleSelectMedia = (idx: number) => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+    setActiveMediaIndex(idx);
+  };
 
   const formattedPrice = new Intl.NumberFormat('pt-BR', {
     style: 'currency',
@@ -88,7 +147,7 @@ export const ProductHero: React.FC<ProductHeroProps> = ({
               </p>
             )}
 
-            {/* Informações Técnicas Resumidas / SKU & Estoque */}
+            {/* SKU & Estoque */}
             <div className="pt-2 flex flex-wrap items-center gap-3 border-t border-slate-800/80">
               <span className="text-slate-400 font-mono text-xs font-semibold">
                 SKU: {product.sku || 'N/A'}
@@ -157,17 +216,40 @@ export const ProductHero: React.FC<ProductHeroProps> = ({
           </div>
         </div>
 
-        {/* Painel Direito (~58%): Cinza Clínico Claro + Sobreposição da Imagem */}
+        {/* Painel Direito (~58%): Cinza Clínico Claro + Palco de Mídia (Imagem ou Player de Vídeo) */}
         <div className="col-span-7 bg-[#F8FAFC] p-10 flex flex-col justify-between items-center relative overflow-visible">
-          {/* Imagem Principal Flutuante com Sobreposição */}
-          <div className="flex-1 w-full flex items-center justify-center -ml-16 z-20 relative py-4">
-            {activeUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={activeUrl}
-                alt={product.name}
-                className="object-contain max-h-[440px] w-auto mx-auto filter drop-shadow-md transition-all duration-300 hover:scale-102"
-              />
+          {/* Mídia Principal Flutuante */}
+          <div className="flex-1 w-full flex flex-col items-center justify-center -ml-16 z-20 relative py-4">
+            {activeMedia ? (
+              activeMedia.type === 'video' ? (
+                <div className="w-full max-w-[540px] space-y-2">
+                  <div className="w-full aspect-video rounded-2xl overflow-hidden shadow-lg border border-slate-200 bg-black">
+                    <video
+                      ref={videoRef}
+                      src={activeMedia.url}
+                      poster={activeMedia.posterUrl || primaryImageUrl}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      autoPlay={false}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  {activeMedia.title && (
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-700 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-2xs w-fit mx-auto">
+                      <Film className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                      <span>{activeMedia.title}</span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={activeMedia.url}
+                  alt={product.name}
+                  className="object-contain max-h-[440px] w-auto mx-auto filter drop-shadow-md transition-all duration-300 hover:scale-102"
+                />
+              )
             ) : (
               <div className="flex flex-col items-center justify-center space-y-3 p-8">
                 <div className="bg-sky-100/60 text-sky-600 w-20 h-20 rounded-3xl flex items-center justify-center shadow-xs">
@@ -176,38 +258,52 @@ export const ProductHero: React.FC<ProductHeroProps> = ({
                   </svg>
                 </div>
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                  Imagem em breve
+                  Mídia em breve
                 </span>
               </div>
             )}
           </div>
 
           {/* Miniaturas da Galeria em Desktop */}
-          {sortedImages.length > 1 && (
-            <div className="flex items-center justify-center gap-3 z-30 pt-2">
-              {sortedImages.map((img, idx) => {
-                const url = getImageUrl(img);
-                if (!url) return null;
-                const isSelected = activeUrl === url;
+          {allMediaItems.length > 1 && (
+            <div className="flex items-center justify-center gap-3 z-30 pt-2 flex-wrap">
+              {allMediaItems.map((item, idx) => {
+                const isSelected = activeMediaIndex === idx;
 
                 return (
                   <button
-                    key={img.id || idx}
+                    key={item.id}
                     type="button"
-                    onClick={() => setActiveImage(url)}
-                    className={`w-14 h-14 rounded-xl border p-1 transition-all bg-white cursor-pointer ${
+                    onClick={() => handleSelectMedia(idx)}
+                    className={`w-14 h-14 rounded-xl border p-1 transition-all bg-white cursor-pointer relative overflow-hidden ${
                       isSelected
                         ? 'border-sky-500 ring-2 ring-sky-200 shadow-xs scale-105 opacity-100'
                         : 'border-slate-200 hover:border-slate-300 opacity-60 hover:opacity-100'
                     }`}
-                    title={`Ver imagem ${idx + 1} de ${product.name}`}
+                    title={item.type === 'video' ? (item.title || `Vídeo ${idx + 1}`) : `Imagem ${idx + 1}`}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={url}
-                      alt={`${product.name} - Imagem ${idx + 1}`}
-                      className="object-contain w-full h-full rounded-lg"
-                    />
+                    {item.type === 'video' ? (
+                      <div className="w-full h-full relative flex items-center justify-center bg-slate-900 rounded-lg overflow-hidden">
+                        {item.posterUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={item.posterUrl}
+                            alt={item.title || 'Vídeo'}
+                            className="object-cover w-full h-full opacity-60"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-slate-800" />
+                        )}
+                        <Play className="w-5 h-5 text-white absolute fill-white" />
+                      </div>
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={item.url}
+                        alt={`${product.name} - Imagem ${idx + 1}`}
+                        className="object-contain w-full h-full rounded-lg"
+                      />
+                    )}
                   </button>
                 );
               })}
@@ -217,7 +313,6 @@ export const ProductHero: React.FC<ProductHeroProps> = ({
       </div>
 
       {/* ================= MOBILE VIEW (< lg) ================= */}
-      {/* Ordem Mobile Obrigatória: 1. Categoria/Nome -> 2. Imagem -> 3. Miniaturas -> 4. Descrição -> 5. Preço -> 6. Botões */}
       <div className="lg:hidden flex flex-col space-y-6 bg-[#0B192C] rounded-2xl p-5 border border-slate-800 text-white">
         
         {/* 1 & 2. Categoria e Nome do Produto */}
@@ -237,49 +332,86 @@ export const ProductHero: React.FC<ProductHeroProps> = ({
           </div>
         </div>
 
-        {/* 3. Imagem Principal */}
-        <div className="bg-[#F8FAFC] rounded-xl p-4 flex items-center justify-center min-h-[260px] shadow-xs">
-          {activeUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={activeUrl}
-              alt={product.name}
-              className="object-contain max-h-[260px] w-auto mx-auto filter drop-shadow-sm"
-            />
+        {/* 3. Mídia Principal (Imagem ou Player de Vídeo) */}
+        <div className="bg-[#F8FAFC] rounded-xl p-3 flex flex-col items-center justify-center min-h-[240px] shadow-xs">
+          {activeMedia ? (
+            activeMedia.type === 'video' ? (
+              <div className="w-full space-y-2">
+                <div className="w-full aspect-video rounded-lg overflow-hidden bg-black shadow-inner">
+                  <video
+                    ref={videoRef}
+                    src={activeMedia.url}
+                    poster={activeMedia.posterUrl || primaryImageUrl}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    autoPlay={false}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                {activeMedia.title && (
+                  <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold text-slate-700 bg-white px-2.5 py-1 rounded-lg border border-slate-200">
+                    <Film className="w-3 h-3 text-sky-600 shrink-0" />
+                    <span className="truncate">{activeMedia.title}</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={activeMedia.url}
+                alt={product.name}
+                className="object-contain max-h-[260px] w-auto mx-auto filter drop-shadow-sm"
+              />
+            )
           ) : (
             <div className="flex flex-col items-center justify-center space-y-2 py-8">
               <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                Imagem em breve
+                Mídia em breve
               </span>
             </div>
           )}
         </div>
 
-        {/* 4. Miniaturas (se houver mais de 1) */}
-        {sortedImages.length > 1 && (
+        {/* 4. Miniaturas da Galeria (se houver mais de 1) */}
+        {allMediaItems.length > 1 && (
           <div className="flex items-center justify-center gap-2 overflow-x-auto no-scrollbar py-1">
-            {sortedImages.map((img, idx) => {
-              const url = getImageUrl(img);
-              if (!url) return null;
-              const isSelected = activeUrl === url;
+            {allMediaItems.map((item, idx) => {
+              const isSelected = activeMediaIndex === idx;
 
               return (
                 <button
-                  key={img.id || idx}
+                  key={item.id}
                   type="button"
-                  onClick={() => setActiveImage(url)}
-                  className={`w-12 h-12 rounded-lg border p-1 transition-all bg-white shrink-0 cursor-pointer ${
+                  onClick={() => handleSelectMedia(idx)}
+                  className={`w-12 h-12 rounded-lg border p-1 transition-all bg-white shrink-0 cursor-pointer relative overflow-hidden ${
                     isSelected
                       ? 'border-sky-500 ring-2 ring-sky-200 opacity-100 scale-105'
                       : 'border-slate-200 opacity-60'
                   }`}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={url}
-                    alt={`${product.name} - ${idx + 1}`}
-                    className="object-contain w-full h-full rounded"
-                  />
+                  {item.type === 'video' ? (
+                    <div className="w-full h-full relative flex items-center justify-center bg-slate-900 rounded overflow-hidden">
+                      {item.posterUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={item.posterUrl}
+                          alt={item.title || 'Vídeo'}
+                          className="object-cover w-full h-full opacity-60"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-slate-800" />
+                      )}
+                      <Play className="w-4 h-4 text-white absolute fill-white" />
+                    </div>
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={item.url}
+                      alt={`${product.name} - ${idx + 1}`}
+                      className="object-contain w-full h-full rounded"
+                    />
+                  )}
                 </button>
               );
             })}

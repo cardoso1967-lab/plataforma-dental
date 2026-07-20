@@ -12,7 +12,7 @@ import {
   Package, Plus, Search, Edit2, Trash2, 
   X, Tag, DollarSign, Archive, Layers, RefreshCw,
   Upload, Image as ImageIcon, Loader2, ShieldAlert, AlertTriangle,
-  ChevronLeft, ChevronRight, Star
+  ChevronLeft, ChevronRight, Star, Film, Play, Video as VideoIcon, Eye
 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
@@ -32,6 +32,17 @@ interface ProductImage {
   sort_order?: number;
 }
 
+interface ProductVideo {
+  id?: string;
+  product_id?: string;
+  storage_path?: string;
+  public_url: string;
+  title?: string | null;
+  poster_url?: string | null;
+  sort_order?: number;
+  created_at?: string;
+}
+
 interface Product {
   id: string;
   category_id: string | null;
@@ -47,6 +58,7 @@ interface Product {
   category?: Category | null;
   primaryImageUrl?: string | null;
   images?: ProductImage[];
+  videos?: ProductVideo[];
 }
 
 interface GalleryItem {
@@ -54,6 +66,17 @@ interface GalleryItem {
   publicUrl: string;
   storagePath?: string | null;
   isPrimary: boolean;
+  sortOrder: number;
+  file?: File;
+}
+
+interface VideoItem {
+  id?: string;
+  publicUrl: string;
+  storagePath?: string;
+  title: string;
+  sizeBytes?: number;
+  fileName?: string;
   sortOrder: number;
   file?: File;
 }
@@ -89,7 +112,15 @@ export default function AdminProdutosPage() {
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number; message: string } | null>(null);
   const galleryFileInputRef = useRef<HTMLInputElement>(null);
 
-  // Formulario
+  // Estados de Vídeos do Produto (Até 2 vídeos)
+  const [videoItems, setVideoItems] = useState<VideoItem[]>([]);
+  const [removedVideoIds, setRemovedVideoIds] = useState<string[]>([]);
+  const [removedVideoStoragePaths, setRemovedVideoStoragePaths] = useState<string[]>([]);
+  const [videoModalError, setVideoModalError] = useState<string | null>(null);
+  const [previewVideoUrl, setPreviewVideoUrl] = useState<string | null>(null);
+  const videoFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Formulário
   const [formProduct, setFormProduct] = useState({
     sku: '',
     name: '',
@@ -121,13 +152,14 @@ export default function AdminProdutosPage() {
       setLoading(true);
       setError(null);
 
-      // 1. Obtener productos com imagens ordenadas
+      // 1. Obtener productos com imagens e vídeos ordenados
       const { data: prodData, error: prodError } = await supabase
         .from('products')
         .select(`
           *,
           category:product_categories(id, name),
-          images:product_images(id, product_id, url, public_url, storage_path, is_primary, sort_order)
+          images:product_images(id, product_id, url, public_url, storage_path, is_primary, sort_order),
+          videos:product_videos(id, product_id, storage_path, public_url, title, poster_url, sort_order)
         `)
         .order('name', { ascending: true });
 
@@ -307,14 +339,83 @@ export default function AdminProdutosPage() {
     setGalleryItems(finalOrder);
   };
 
+  // Handlers para Vídeos do Produto (até 2 vídeos)
+  const handleVideoFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setVideoModalError(null);
+
+    if (videoItems.length >= 2) {
+      setVideoModalError("O limite é de no máximo 2 vídeos por produto. Remova um vídeo existente antes de adicionar outro.");
+      if (videoFileInputRef.current) videoFileInputRef.current.value = '';
+      return;
+    }
+
+    const allowedMimeTypes = ['video/mp4', 'video/webm'];
+    const allowedExtensions = ['mp4', 'webm'];
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+
+    const isTypeValid = allowedMimeTypes.includes(file.type.toLowerCase()) || allowedExtensions.includes(ext);
+
+    if (!isTypeValid) {
+      setVideoModalError(`O arquivo "${file.name}" possui formato não suportado. Envie arquivos em MP4 ou WEBM.`);
+      if (videoFileInputRef.current) videoFileInputRef.current.value = '';
+      return;
+    }
+
+    const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50 MB
+    if (file.size > MAX_VIDEO_SIZE) {
+      setVideoModalError(`O arquivo "${file.name}" excede o limite máximo permitido de 50 MB (tamanho: ${(file.size / (1024 * 1024)).toFixed(1)} MB).`);
+      if (videoFileInputRef.current) videoFileInputRef.current.value = '';
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    const newItem: VideoItem = {
+      publicUrl: objectUrl,
+      title: '',
+      fileName: file.name,
+      sizeBytes: file.size,
+      sortOrder: videoItems.length,
+      file: file,
+    };
+
+    setVideoItems([...videoItems, newItem]);
+    if (videoFileInputRef.current) videoFileInputRef.current.value = '';
+  };
+
+  const handleRemoveVideo = (index: number) => {
+    const itemToRemove = videoItems[index];
+    if (itemToRemove.id) {
+      setRemovedVideoIds(prev => [...prev, itemToRemove.id!]);
+    }
+    if (itemToRemove.storagePath) {
+      setRemovedVideoStoragePaths(prev => [...prev, itemToRemove.storagePath!]);
+    }
+
+    const remaining = videoItems.filter((_, idx) => idx !== index).map((v, i) => ({ ...v, sortOrder: i }));
+    setVideoItems(remaining);
+  };
+
+  const handleVideoTitleChange = (index: number, newTitle: string) => {
+    const updated = [...videoItems];
+    updated[index] = { ...updated[index], title: newTitle };
+    setVideoItems(updated);
+  };
+
   // Abrir modal de criação/edição
   const openModal = (product: Product | null = null) => {
     setEditingProduct(product);
     setGalleryModalError(null);
+    setVideoModalError(null);
     setUploadProgress(null);
     setRemovedImageIds([]);
     setRemovedStoragePaths([]);
+    setRemovedVideoIds([]);
+    setRemovedVideoStoragePaths([]);
     if (galleryFileInputRef.current) galleryFileInputRef.current.value = '';
+    if (videoFileInputRef.current) videoFileInputRef.current.value = '';
 
     if (product) {
       const initialGallery: GalleryItem[] = (product.images || [])
@@ -337,6 +438,18 @@ export default function AdminProdutosPage() {
 
       setGalleryItems(initialGallery);
 
+      const initialVideos: VideoItem[] = (product.videos || [])
+        .map((vid: any, idx: number) => ({
+          id: vid.id,
+          publicUrl: vid.public_url,
+          storagePath: vid.storage_path,
+          title: vid.title || '',
+          sortOrder: vid.sort_order !== undefined ? vid.sort_order : idx,
+        }))
+        .sort((a, b) => a.sortOrder - b.sortOrder);
+
+      setVideoItems(initialVideos);
+
       setFormProduct({
         sku: product.sku || '',
         name: product.name || '',
@@ -349,6 +462,7 @@ export default function AdminProdutosPage() {
       });
     } else {
       setGalleryItems([]);
+      setVideoItems([]);
       setFormProduct({
         sku: '',
         name: '',
@@ -363,11 +477,11 @@ export default function AdminProdutosPage() {
     setIsModalOpen(true);
   };
 
-  // Salvar produto e sincronizar galeria de imagens no Supabase Storage e DB
+  // Salvar produto e sincronizar galeria de imagens e vídeos no Supabase Storage e DB
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formProduct.name.trim() || !formProduct.price) return;
-    if (galleryModalError) return;
+    if (galleryModalError || videoModalError) return;
 
     try {
       setLoading(true);
@@ -430,7 +544,7 @@ export default function AdminProdutosPage() {
 
       if (!productId) throw new Error("ID do produto não foi retornado pelo servidor.");
 
-      // 2. Upload de novos arquivos no Supabase Storage com limpeza de erro (rollback)
+      // 2. Upload de novos arquivos de imagem para o Supabase Storage (bucket product-images)
       const newFilesToUpload = galleryItems.filter(item => item.file);
       const newlyUploadedStoragePaths: string[] = [];
 
@@ -508,12 +622,76 @@ export default function AdminProdutosPage() {
         }
       }
 
-      // 3. Excluir registros removidos do banco de dados
+      // 3. Upload de novos arquivos de vídeo para o Supabase Storage (bucket product-videos)
+      const newlyUploadedVideoPaths: string[] = [];
+      const finalVideoRecords: Array<{
+        id?: string;
+        product_id: string;
+        storage_path: string;
+        public_url: string;
+        title?: string | null;
+        sort_order: number;
+      }> = [];
+
+      for (let i = 0; i < videoItems.length; i++) {
+        const vItem = videoItems[i];
+        if (vItem.file) {
+          const ext = vItem.file.name.split('.').pop()?.toLowerCase() || 'mp4';
+          const safeFileName = `${crypto.randomUUID()}.${ext}`;
+          const storagePath = `${productId}/${safeFileName}`;
+
+          const { data: uploadData, error: uploadErr } = await supabase.storage
+            .from('product-videos')
+            .upload(storagePath, vItem.file, {
+              cacheControl: '3600',
+              upsert: false,
+            });
+
+          if (uploadErr) {
+            console.error("Erro no upload de vídeo para product-videos:", uploadErr);
+            if (newlyUploadedVideoPaths.length > 0) {
+              await supabase.storage.from('product-videos').remove(newlyUploadedVideoPaths);
+            }
+            if (newlyUploadedStoragePaths.length > 0) {
+              await supabase.storage.from('product-images').remove(newlyUploadedStoragePaths);
+            }
+            throw new Error(`Falha no envio do vídeo "${vItem.file.name}": ${uploadErr.message}`);
+          }
+
+          newlyUploadedVideoPaths.push(storagePath);
+
+          const { data: pubData } = supabase.storage
+            .from('product-videos')
+            .getPublicUrl(storagePath);
+
+          finalVideoRecords.push({
+            product_id: productId,
+            storage_path: storagePath,
+            public_url: pubData.publicUrl,
+            title: vItem.title || null,
+            sort_order: i,
+          });
+        } else {
+          finalVideoRecords.push({
+            id: vItem.id,
+            product_id: productId,
+            storage_path: vItem.storagePath || '',
+            public_url: vItem.publicUrl,
+            title: vItem.title || null,
+            sort_order: i,
+          });
+        }
+      }
+
+      // 4. Excluir registros removidos do banco de dados (imagens e vídeos)
       if (removedImageIds.length > 0) {
         await supabase.from('product_images').delete().in('id', removedImageIds);
       }
+      if (removedVideoIds.length > 0) {
+        await supabase.from('product_videos').delete().in('id', removedVideoIds);
+      }
 
-      // 4. Normalizar e salvar/atualizar registros da galeria no banco (Garantindo exatamente 1 is_primary)
+      // 5. Salvar/atualizar imagens na tabela product_images
       let hasPrimary = false;
       const normalizedRecords = finalRecords.map(r => {
         if (r.is_primary && !hasPrimary) {
@@ -547,23 +725,43 @@ export default function AdminProdutosPage() {
         }
       }
 
-      // 5. Excluir arquivos removidos do Storage SOMENTE após salvamento bem-sucedido
+      // 6. Salvar/atualizar vídeos na tabela product_videos
+      for (const vRec of finalVideoRecords) {
+        if (vRec.id) {
+          await supabase.from('product_videos').update({
+            title: vRec.title,
+            sort_order: vRec.sort_order,
+          }).eq('id', vRec.id);
+        } else {
+          await supabase.from('product_videos').insert(vRec);
+        }
+      }
+
+      // 7. Excluir arquivos removidos do Storage (imagens e vídeos) SOMENTE após salvamento bem-sucedido
       if (removedStoragePaths.length > 0) {
-        console.log("Removendo arquivos do Storage marcados para exclusao:", removedStoragePaths);
+        console.log("Removendo imagens do Storage marcadas para exclusão:", removedStoragePaths);
         await supabase.storage.from('product-images').remove(removedStoragePaths);
+      }
+      if (removedVideoStoragePaths.length > 0) {
+        console.log("Removendo vídeos do Storage marcados para exclusão:", removedVideoStoragePaths);
+        await supabase.storage.from('product-videos').remove(removedVideoStoragePaths);
       }
 
       setUploadProgress(null);
       setIsModalOpen(false);
       setEditingProduct(null);
       setGalleryItems([]);
+      setVideoItems([]);
       setRemovedImageIds([]);
       setRemovedStoragePaths([]);
+      setRemovedVideoIds([]);
+      setRemovedVideoStoragePaths([]);
       await loadData();
     } catch (err: any) {
       console.error('Erro ao salvar produto:', err);
       setGalleryModalError(err.message || 'Erro ao salvar produto.');
     } finally {
+      setLoading(false);
       setUploadProgress(null);
     }
   };
@@ -1104,6 +1302,145 @@ export default function AdminProdutosPage() {
               </div>
             )}
 
+            {/* Vídeos do Produto (até 2 vídeos) */}
+            <div className="space-y-3 pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    Vídeos do Produto ({videoItems.length}/2)
+                  </label>
+                  <p className="text-[10px] text-slate-400 font-medium">
+                    Envie até 2 vídeos em MP4 ou WEBM, com no máximo 50 MB cada.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (videoItems.length >= 2) {
+                      setVideoModalError("O limite é de no máximo 2 vídeos por produto. Remova um vídeo existente antes de adicionar outro.");
+                      return;
+                    }
+                    videoFileInputRef.current?.click();
+                  }}
+                  disabled={loading || videoItems.length >= 2}
+                  className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Adicionar vídeo
+                </button>
+              </div>
+
+              <input
+                ref={videoFileInputRef}
+                type="file"
+                accept="video/mp4,video/webm"
+                onChange={handleVideoFilesChange}
+                className="hidden"
+                id="product-video-upload"
+              />
+
+              {/* Alerta de erro de vídeo (sem alert nativo) */}
+              {videoModalError && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-medium flex items-start justify-between gap-2">
+                  <div className="flex items-start gap-2">
+                    <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                    <span>{videoModalError}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setVideoModalError(null)}
+                    className="text-rose-500 hover:text-rose-800 text-xs font-bold cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+              {/* Lista de Vídeos Cadastrados/Selecionados */}
+              {videoItems.length > 0 ? (
+                <div className="space-y-3 bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                  {videoItems.map((vItem, index) => (
+                    <div
+                      key={index}
+                      className="bg-white border border-slate-200 rounded-xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs"
+                    >
+                      <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <div className="w-16 h-12 bg-slate-900 rounded-lg overflow-hidden shrink-0 relative flex items-center justify-center border border-slate-200">
+                          <video
+                            src={vItem.publicUrl}
+                            className="w-full h-full object-cover opacity-60"
+                            preload="metadata"
+                          />
+                          <Play className="w-5 h-5 text-white absolute fill-white" />
+                        </div>
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-slate-800 truncate">
+                              {vItem.fileName || `Vídeo ${index + 1}`}
+                            </span>
+                            {vItem.sizeBytes && (
+                              <span className="text-[10px] text-slate-400 font-semibold bg-slate-100 px-2 py-0.5 rounded-md">
+                                {(vItem.sizeBytes / (1024 * 1024)).toFixed(1)} MB
+                              </span>
+                            )}
+                          </div>
+                          <input
+                            type="text"
+                            value={vItem.title}
+                            onChange={(e) => handleVideoTitleChange(index, e.target.value)}
+                            placeholder="Título do vídeo (opcional, ex: Conheça a Autoclave Tanda B Pro)"
+                            className="w-full text-xs text-slate-700 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 focus:bg-white focus:border-indigo-500 outline-none transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 w-full sm:w-auto justify-end border-t sm:border-t-0 border-slate-100 pt-2 sm:pt-0">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewVideoUrl(vItem.publicUrl)}
+                          className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+                          title="Visualizar vídeo"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          Visualizar
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveVideo(index)}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
+                          title="Remover vídeo"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div
+                  onClick={() => {
+                    if (videoItems.length >= 2) {
+                      setVideoModalError("O limite é de no máximo 2 vídeos por produto. Remova um vídeo existente antes de adicionar outro.");
+                      return;
+                    }
+                    videoFileInputRef.current?.click();
+                  }}
+                  className="flex flex-col items-center justify-center py-6 px-4 text-center border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50 hover:bg-slate-50 transition-colors cursor-pointer"
+                >
+                  <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mb-2">
+                    <Film className="w-5 h-5" />
+                  </div>
+                  <p className="text-xs font-extrabold text-slate-700 mb-0.5">
+                    Nenhum vídeo adicionado
+                  </p>
+                  <p className="text-[10px] text-slate-400 font-medium">
+                    Clique para enviar até 2 vídeos explicativos do equipamento em MP4 ou WEBM (máx. 50 MB).
+                  </p>
+                </div>
+              )}
+            </div>
+
             {/* Modal / Alerta de Erro Visual na Galeria */}
             {galleryModalError && (
               <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-bold flex items-start justify-between gap-2">
@@ -1263,6 +1600,36 @@ export default function AdminProdutosPage() {
           </div>
         </div>
       </PremiumModal>
+
+      {/* Modal de Pré-visualização de Vídeo */}
+      {previewVideoUrl && (
+        <PremiumModal
+          isOpen={!!previewVideoUrl}
+          onClose={() => setPreviewVideoUrl(null)}
+          title="Pré-visualização do Vídeo"
+        >
+          <div className="space-y-4">
+            <div className="w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-inner flex items-center justify-center border border-slate-800">
+              <video
+                src={previewVideoUrl}
+                controls
+                autoPlay
+                playsInline
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => setPreviewVideoUrl(null)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
+              >
+                Fechar Pré-visualização
+              </button>
+            </div>
+          </div>
+        </PremiumModal>
+      )}
     </div>
   );
 }

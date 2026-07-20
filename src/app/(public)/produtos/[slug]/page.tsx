@@ -32,7 +32,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
     .select(`
       *,
       category:product_categories(id, name),
-      images:product_images(id, url, public_url, is_primary, sort_order)
+      images:product_images(id, url, public_url, is_primary, sort_order),
+      videos:product_videos(id, storage_path, public_url, title, poster_url, sort_order)
     `)
     .eq('slug', slug)
     .eq('is_active', true)
