@@ -11,7 +11,7 @@ import { MetricCard } from '@/components/ui/MetricCard';
 import { 
   Package, Plus, Search, Edit2, Trash2, 
   X, Tag, DollarSign, Archive, Layers, RefreshCw,
-  Upload, Image as ImageIcon, Loader2
+  Upload, Image as ImageIcon, Loader2, ShieldAlert, AlertTriangle
 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
@@ -53,6 +53,12 @@ export default function AdminProdutosPage() {
   // Estados de modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  
+  // Estados para exclusão protegida e desativação
+  const [deleteModalProduct, setDeleteModalProduct] = useState<Product | null>(null);
+  const [deleteModalMode, setDeleteModalMode] = useState<'none' | 'confirm_delete' | 'blocked_history'>('none');
+  const [deactivatingProduct, setDeactivatingProduct] = useState(false);
+  const [checkingHistory, setCheckingHistory] = useState(false);
   
   // Estados para Upload de Imagem no Supabase Storage
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -384,33 +390,88 @@ export default function AdminProdutosPage() {
     }
   };
 
-  // Eliminar producto
-  const handleDelete = async (id: string) => {
-    if (!confirm('Deseja realmente excluir este produto?')) return;
+  // Preparar exclusão com verificação de histórico em sales_order_items
+  const handleDeleteClick = async (product: Product) => {
+    try {
+      setCheckingHistory(true);
+      setDeleteModalProduct(product);
 
+      // Verificar se existem itens em sales_order_items vinculados a este produto
+      const { count, error: countErr } = await supabase
+        .from('sales_order_items')
+        .select('id', { count: 'exact', head: true })
+        .eq('product_id', product.id);
+
+      if (countErr) {
+        console.error('Erro ao verificar histórico de vendas do produto:', countErr);
+      }
+
+      if (count && count > 0) {
+        setDeleteModalMode('blocked_history');
+      } else {
+        setDeleteModalMode('confirm_delete');
+      }
+    } catch (err: any) {
+      console.error('Erro ao verificar histórico para exclusão:', err);
+    } finally {
+      setCheckingHistory(false);
+    }
+  };
+
+  // Exclusão definitiva para produtos sem histórico
+  const handleConfirmDelete = async () => {
+    if (!deleteModalProduct) return;
     try {
       setLoading(true);
-      const prodToDelete = products.find(p => p.id === id);
+      const prodId = deleteModalProduct.id;
+      const imgUrl = deleteModalProduct.primaryImageUrl;
+
+      // Remover registros em product_images antes da exclusão do produto
+      await supabase.from('product_images').delete().eq('product_id', prodId);
 
       const { error: delError } = await supabase
         .from('products')
         .delete()
-        .eq('id', id);
+        .eq('id', prodId);
 
       if (delError) throw delError;
 
-      if (prodToDelete?.primaryImageUrl) {
-        const oldStoragePath = extractStoragePath(prodToDelete.primaryImageUrl);
+      if (imgUrl) {
+        const oldStoragePath = extractStoragePath(imgUrl);
         if (oldStoragePath) {
           await supabase.storage.from('product-images').remove([oldStoragePath]);
         }
       }
 
+      setDeleteModalMode('none');
+      setDeleteModalProduct(null);
       await loadData();
     } catch (err: any) {
-      alert('Erro ao excluir produto: ' + err.message);
+      console.error('Erro ao excluir produto:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Desativação para produtos que possuem histórico em pedidos
+  const handleDeactivateProduct = async () => {
+    if (!deleteModalProduct) return;
+    try {
+      setDeactivatingProduct(true);
+      const { error: updateErr } = await supabase
+        .from('products')
+        .update({ is_active: false })
+        .eq('id', deleteModalProduct.id);
+
+      if (updateErr) throw updateErr;
+
+      setDeleteModalMode('none');
+      setDeleteModalProduct(null);
+      await loadData();
+    } catch (err: any) {
+      console.error('Erro ao desativar produto:', err);
+    } finally {
+      setDeactivatingProduct(false);
     }
   };
 
@@ -570,7 +631,7 @@ export default function AdminProdutosPage() {
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
-                            onClick={() => handleDelete(prod.id)}
+                            onClick={() => handleDeleteClick(prod)}
                             className="p-1.5 text-slate-450 hover:text-rose-650 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
                             title="Excluir Produto"
                           >
@@ -625,7 +686,7 @@ export default function AdminProdutosPage() {
                       <Edit2 className="w-3 h-3 text-slate-450" /> Editar
                     </button>
                     <button
-                      onClick={() => handleDelete(prod.id)}
+                      onClick={() => handleDeleteClick(prod)}
                       className="px-3.5 py-2 bg-rose-50/50 hover:bg-rose-100 border border-rose-100 rounded-xl text-[10px] font-black text-rose-700 transition-all flex items-center gap-1 shadow-2xs hover:scale-[1.01]"
                     >
                       <Trash2 className="w-3 h-3 text-rose-455" /> Excluir
@@ -849,6 +910,111 @@ export default function AdminProdutosPage() {
             </PremiumButton>
           </div>
         </form>
+      </PremiumModal>
+
+      {/* Modal de Bloqueio por Histórico de Vendas / Opção de Desativação */}
+      <PremiumModal
+        isOpen={deleteModalMode === 'blocked_history'}
+        onClose={() => {
+          setDeleteModalMode('none');
+          setDeleteModalProduct(null);
+        }}
+        title="Produto em Histórico de Pedidos"
+        size="sm"
+      >
+        <div className="space-y-4 text-left">
+          <div className="flex items-start gap-3 p-3.5 bg-rose-50 border border-rose-100 rounded-2xl">
+            <div className="p-2 bg-rose-100 text-rose-600 rounded-xl shrink-0 mt-0.5">
+              <ShieldAlert className="w-5 h-5" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="font-extrabold text-xs text-rose-900">
+                {deleteModalProduct?.name}
+              </h4>
+              <p className="text-xs text-rose-700 leading-relaxed font-medium">
+                Este produto possui histórico em pedidos e não pode ser excluído. Você pode desativá-lo para removê-lo do catálogo.
+              </p>
+            </div>
+          </div>
+
+          <p className="text-[11px] text-slate-500 font-normal leading-relaxed">
+            A desativação oculta o produto do catálogo público e impede novas vendas, preservando integralmente o histórico de pedidos já cadastrados.
+          </p>
+
+          <div className="flex justify-end gap-2.5 pt-4 border-t border-slate-100">
+            <PremiumButton
+              variant="outline"
+              onClick={() => {
+                setDeleteModalMode('none');
+                setDeleteModalProduct(null);
+              }}
+              disabled={deactivatingProduct}
+            >
+              Cancelar
+            </PremiumButton>
+            <PremiumButton
+              variant="primary"
+              onClick={handleDeactivateProduct}
+              loading={deactivatingProduct}
+              icon={<Archive className="w-3.5 h-3.5" />}
+            >
+              Desativar produto
+            </PremiumButton>
+          </div>
+        </div>
+      </PremiumModal>
+
+      {/* Modal de Confirmação de Exclusão Definitiva (Produtos Sem Histórico) */}
+      <PremiumModal
+        isOpen={deleteModalMode === 'confirm_delete'}
+        onClose={() => {
+          setDeleteModalMode('none');
+          setDeleteModalProduct(null);
+        }}
+        title="Confirmar Exclusão de Produto"
+        size="sm"
+      >
+        <div className="space-y-4 text-left">
+          <div className="flex items-start gap-3 p-3.5 bg-amber-50 border border-amber-100 rounded-2xl">
+            <div className="p-2 bg-amber-100 text-amber-700 rounded-xl shrink-0 mt-0.5">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="font-extrabold text-xs text-amber-900">
+                {deleteModalProduct?.name}
+              </h4>
+              <p className="text-xs text-amber-800 leading-relaxed font-medium">
+                Deseja realmente excluir este produto? Esta ação é irreversível e removerá o produto do catálogo de forma definitiva.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2.5 pt-4 border-t border-slate-100">
+            <PremiumButton
+              variant="outline"
+              onClick={() => {
+                setDeleteModalMode('none');
+                setDeleteModalProduct(null);
+              }}
+              disabled={loading}
+            >
+              Cancelar
+            </PremiumButton>
+            <button
+              type="button"
+              onClick={handleConfirmDelete}
+              disabled={loading}
+              className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
+            >
+              {loading ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Trash2 className="w-3.5 h-3.5" />
+              )}
+              Excluir definitivamente
+            </button>
+          </div>
+        </div>
       </PremiumModal>
     </div>
   );
