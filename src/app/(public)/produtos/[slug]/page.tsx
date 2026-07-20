@@ -14,7 +14,7 @@ import {
   HelpCircle
 } from 'lucide-react';
 import { ProductCard } from '@/components/ui/ProductCard';
-import { ProductGallery } from '@/components/ui/ProductGallery';
+import { ProductHero } from '@/components/ui/ProductHero';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 
 interface PageProps {
@@ -136,96 +136,26 @@ export default async function ProductDetailPage({ params }: PageProps) {
           </Link>
         </div>
 
-        {/* Hero Section do Produto */}
-        <div className="bg-white rounded-3xl border border-slate-100 shadow-xs overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-8 p-6 sm:p-8">
-          
-          {/* Galeria de Imagens do Produto */}
-          <div className="lg:col-span-6 flex flex-col justify-center">
-            <ProductGallery
-              productName={product.name}
-              images={product.images || []}
-            />
-          </div>
+        {/* Componente Hero Clínico Editorial */}
+        <ProductHero
+          product={product}
+          quoteWhatsappUrl={quoteWhatsappUrl}
+          specialistWhatsappUrl={specialistWhatsappUrl}
+          whatsappNumber={whatsappNumber}
+        />
 
-          {/* Ficha Técnica Rápida e CTAs */}
-          <div className="lg:col-span-6 flex flex-col justify-between space-y-6">
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="bg-sky-50 text-[#0284c7] text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider border border-sky-100">
-                  {product.category?.name || 'Geral'}
-                </span>
-                <span className={`text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider border ${
-                  product.stock_quantity > 0 
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
-                    : 'bg-amber-50 text-amber-700 border-amber-100'
-                }`}>
-                  {product.stock_quantity > 0 ? `${product.stock_quantity} un disponíveis` : 'Sob consulta'}
-                </span>
-                <span className="bg-slate-100 text-slate-600 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider border border-slate-200">
-                  Ativo
-                </span>
-              </div>
-
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-brand-dark tracking-tight leading-none">
-                {product.name}
-              </h1>
-
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
-                <span>SKU: {product.sku || 'NÃO INFORMADO'}</span>
-                <span>•</span>
-                <span className="uppercase">{product.product_type || 'Equipamento'}</span>
-              </div>
+        {/* Descrição Real do Produto (Apenas se cadastrada no banco de dados) */}
+        {product.description && product.description.trim().length > 0 && (
+          <div className="bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 space-y-4 shadow-2xs text-left">
+            <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+              <FileText className="w-5 h-5 text-sky-600" />
+              <h3 className="font-extrabold text-lg text-[#0B192C]">Apresentação do Equipamento</h3>
             </div>
-
-            {/* Bloco de Preço */}
-            <div className="bg-slate-50/80 border border-slate-100 p-5 rounded-2xl space-y-1.5 text-left">
-              <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">
-                {product.price > 0 ? 'Preço Sugerido' : 'Valor'}
-              </span>
-              <div className="flex items-baseline gap-2">
-                <h2 className="text-3xl font-black text-brand-dark">
-                  {product.price > 0 ? formattedPrice : 'Sob Consulta'}
-                </h2>
-                {product.price > 0 && (
-                  <span className="text-[10px] text-slate-400 font-medium">(Condições facilitadas de financiamento)</span>
-                )}
-              </div>
-            </div>
-
-            {/* Botões de Ação Hero */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <Link 
-                href={quoteWhatsappUrl} 
-                target={whatsappNumber ? "_blank" : undefined}
-                rel={whatsappNumber ? "noopener noreferrer" : undefined}
-                className="flex-1 bg-gradient-to-r from-[#0284c7] to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white font-extrabold text-xs tracking-wider uppercase rounded-xl py-4 px-6 flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 active:scale-98 cursor-pointer"
-              >
-                <MessageCircle className="w-4 h-4 shrink-0" />
-                Solicitar Cotação
-              </Link>
-              <Link 
-                href={specialistWhatsappUrl} 
-                target={whatsappNumber ? "_blank" : undefined}
-                rel={whatsappNumber ? "noopener noreferrer" : undefined}
-                className="flex-1 border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 hover:text-brand-dark font-extrabold text-xs tracking-wider uppercase rounded-xl py-4 px-6 flex items-center justify-center gap-2 transition-all duration-200 hover:-translate-y-0.5 active:scale-98 cursor-pointer"
-              >
-                <HelpCircle className="w-4 h-4 shrink-0" />
-                Falar com Especialista
-              </Link>
-            </div>
+            <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+              {product.description}
+            </p>
           </div>
-        </div>
-
-        {/* Descrição Comercial do Produto */}
-        <div className="bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 space-y-4 shadow-2xs text-left">
-          <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-            <FileText className="w-5 h-5 text-[#0284c7]" />
-            <h3 className="font-extrabold text-lg text-brand-dark">Apresentação do Equipamento</h3>
-          </div>
-          <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
-            {product.description || 'Este equipamento odontológico M.MUNIZ foi desenvolvido sob os mais rígidos padrões de ergonomia, biossegurança e durabilidade. Projetado para otimizar a rotina clínica do profissional e assegurar o máximo conforto ao paciente. Conta com estrutura reforçada, estofamento anatômico e tecnologias de fluxo de trabalho de última geração.'}
-          </p>
-        </div>
+        )}
 
         {/* Bloco de Benefícios Premium M.MUNIZ */}
         <div className="space-y-6">
