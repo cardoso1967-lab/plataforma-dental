@@ -81,6 +81,7 @@ export default function AdminClientesPage() {
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [editingEquipment, setEditingEquipment] = useState<ClientEquipment | null>(null);
   const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
+  const [equipmentToDelete, setEquipmentToDelete] = useState<string | null>(null);
 
   // Estados del formulario de cliente
   const [formCustomer, setFormCustomer] = useState({
@@ -276,8 +277,9 @@ export default function AdminClientesPage() {
 
   // Eliminar cliente
   const handleDeleteCustomer = (id: string) => {
+    // Proteção dupla: verificação de role no handler além da ocultação do botão na UI
     if (adminProfile?.role === 'standard_user') {
-      setError('Erro de permissão: Usuários Comuns não possuem privilégios para excluir clientes.');
+      setError('Permissão negada: Usuários Comuns não podem excluir clientes.');
       return;
     }
     setCustomerToDelete(id);
@@ -384,16 +386,18 @@ export default function AdminClientesPage() {
       }
 
     } catch (err: any) {
-      alert('Erro ao salvar equipamento: ' + err.message);
+      setError('Erro ao salvar equipamento: ' + err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // Eliminar equipo
-  const handleDeleteEquipment = async (id: string) => {
-    if (!confirm('Deseja realmente excluir este equipamento?')) return;
+  // Solicitar confirmação de exclusão de equipamento via modal customizado
+  const initiateDeleteEquipment = (id: string) => {
+    setEquipmentToDelete(id);
+  };
 
+  const executeDeleteEquipment = async (id: string) => {
     try {
       setLoading(true);
       const { error: delError } = await supabase
@@ -404,7 +408,7 @@ export default function AdminClientesPage() {
       if (delError) throw delError;
       await loadData();
     } catch (err: any) {
-      alert('Erro ao excluir equipamento: ' + err.message);
+      setError('Erro ao excluir equipamento: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -844,7 +848,7 @@ export default function AdminClientesPage() {
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
-                            onClick={() => handleDeleteEquipment(equip.id)}
+                            onClick={() => initiateDeleteEquipment(equip.id)}
                             className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-all cursor-pointer"
                             title="Excluir equipamento"
                           >
@@ -1166,6 +1170,39 @@ export default function AdminClientesPage() {
                 }}
               >
                 Excluir Cliente
+              </PremiumButton>
+            </div>
+          </div>
+        </PremiumModal>
+      )}
+
+      {equipmentToDelete && (
+        <PremiumModal
+          isOpen={!!equipmentToDelete}
+          onClose={() => setEquipmentToDelete(null)}
+          title="Confirmar Exclusão de Equipamento"
+          size="sm"
+        >
+          <div className="space-y-4 text-left">
+            <p className="text-xs text-slate-655 leading-relaxed font-semibold">
+              Deseja realmente excluir este equipamento? Esta ação não pode ser desfeita.
+            </p>
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <PremiumButton
+                variant="outline"
+                onClick={() => setEquipmentToDelete(null)}
+              >
+                Cancelar
+              </PremiumButton>
+              <PremiumButton
+                variant="danger"
+                onClick={async () => {
+                  const id = equipmentToDelete;
+                  setEquipmentToDelete(null);
+                  await executeDeleteEquipment(id);
+                }}
+              >
+                Excluir Equipamento
               </PremiumButton>
             </div>
           </div>

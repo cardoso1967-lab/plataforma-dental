@@ -240,15 +240,15 @@ export async function saveUser(formData: {
 
       // 2. Se for role technician e tiver um técnico selecionado, vinculá-lo
       if (formData.role === 'technician' && formData.linkedTechnicianId) {
-        // Remover outros vínculos deste técnico específico primeiro
+        // Desvincular o registro de técnico selecionado de qualquer usuário anterior (sem deletar o registro)
         const { error: cleanTechError } = await adminClient
           .from('technicians')
           .update({ profile_id: null })
           .eq('id', formData.linkedTechnicianId);
-        
+
         if (cleanTechError) throw cleanTechError;
 
-        // Atualizar com o novo profile_id
+        // Associar o registro de técnico selecionado ao usuário alvo
         const { error: linkError } = await adminClient
           .from('technicians')
           .update({ profile_id: targetUserId })
@@ -256,15 +256,17 @@ export async function saveUser(formData: {
 
         if (linkError) throw linkError;
 
-        // Limpar o técnico automático que o trigger handle_new_user pode ter criado
-        // Para manter o banco limpo e sem técnicos duplicados
-        await adminClient
+        // Caso o trigger handle_new_user tenha criado um registro de técnico separado para este usuário,
+        // apenas desvinculá-lo (nunca deletar — pode ter OS históricas referenciando esse registro).
+        const { error: orphanUnlinkError } = await adminClient
           .from('technicians')
-          .delete()
+          .update({ profile_id: null })
           .eq('profile_id', targetUserId)
           .neq('id', formData.linkedTechnicianId);
+
+        if (orphanUnlinkError) throw orphanUnlinkError;
       } else if (formData.role === 'technician') {
-        // Se a role é técnico mas não especificou técnico vinculado, podemos criar um automaticamente se não houver nenhum
+        // Se a role é técnico mas não especificou técnico vinculado, criar um novo registro se não houver nenhum
         const { data: existingTechs } = await adminClient
           .from('technicians')
           .select('id')
@@ -315,7 +317,7 @@ export async function saveUser(formData: {
 
       // Lógica de Vinculação com Técnico para o novo usuário
       if (formData.role === 'technician' && formData.linkedTechnicianId) {
-        // Remover outros vínculos deste técnico específico primeiro
+        // Desvincular o registro de técnico selecionado de qualquer usuário anterior (sem deletar o registro)
         const { error: cleanTechError } = await adminClient
           .from('technicians')
           .update({ profile_id: null })
@@ -331,12 +333,15 @@ export async function saveUser(formData: {
 
         if (linkError) throw linkError;
 
-        // Remover o técnico automático genérico criado pelo trigger handle_new_user()
-        await adminClient
+        // Caso o trigger handle_new_user tenha criado um registro de técnico genérico para este usuário,
+        // apenas desvinculá-lo (nunca deletar — pode ter OS históricas referenciando esse registro).
+        const { error: orphanUnlinkError } = await adminClient
           .from('technicians')
-          .delete()
+          .update({ profile_id: null })
           .eq('profile_id', authUser.user.id)
           .neq('id', formData.linkedTechnicianId);
+
+        if (orphanUnlinkError) throw orphanUnlinkError;
       }
 
       return { success: true, tempPasswordCreated: tempPassword };

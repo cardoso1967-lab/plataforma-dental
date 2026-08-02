@@ -63,10 +63,13 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
 
   const loadDashboardData = async () => {
+    if (!profile) return;
     try {
       setLoading(true);
 
-      // 1. Cargar Órdenes de Servicio
+      const isRestrictedRole = profile.role === 'standard_user';
+
+      // 1. Cargar Órdenes de Servicio (todos os perfis internos)
       const { data: osData } = await supabase
         .from('service_orders')
         .select(`
@@ -76,20 +79,20 @@ export default function AdminDashboardPage() {
         `);
 
       const allOS = osData || [];
-      
+
       const activeOS = allOS.filter(os => os.status !== 'concluida' && os.status !== 'cancelada');
       const noTechOS = activeOS.filter(os => !os.technician_id);
       const urgentOS = activeOS.filter(os => os.priority === 'urgente');
       const pendingQuotes = activeOS.filter(os => os.status === 'orcamento_pendente');
 
-      // Calcular visitas de hoy
+      // Calcular visitas de hoje
       const todayStr = new Date().toDateString();
       const todayVisits = activeOS.filter(os => {
         if (!os.scheduled_date) return false;
         return new Date(os.scheduled_date).toDateString() === todayStr;
       }).length;
 
-      // 2. Cargar Técnicos Activos
+      // 2. Cargar Técnicos Ativos
       const { count: techCount } = await supabase
         .from('technicians')
         .select('*', { count: 'exact', head: true })
@@ -100,35 +103,41 @@ export default function AdminDashboardPage() {
         .from('customers')
         .select('*', { count: 'exact', head: true });
 
-      // 4. Cargar Pedidos de Venta para facturación y tabla de recientes
-      const { data: salesData } = await supabase
-        .from('sales_orders')
-        .select(`
-          id, total_amount, status, created_at,
-          customer:customers(company_name)
-        `)
-        .order('created_at', { ascending: false });
-
-      const allSales = salesData || [];
-      
-      // Sumar facturación mensual (pedidos aprobados/faturados del mes en curso)
-      const currentMonth = new Date().getMonth();
-      const currentYear = new Date().getFullYear();
-      const billingMonthly = allSales
-        .filter(order => {
-          const date = new Date(order.created_at);
-          return date.getMonth() === currentMonth && 
-            date.getFullYear() === currentYear && 
-            (order.status === 'aprovado' || order.status === 'faturado');
-        })
-        .reduce((sum, order) => sum + Number(order.total_amount), 0);
-
-      // 5. Obter contagem de produtos
+      // 4. Contagem de produtos
       const { count: prodCount } = await supabase
         .from('products')
         .select('*', { count: 'exact', head: true });
 
-      // Setear métricas
+      // 5. Dados financeiros — buscados APENAS para admin e manager.
+      // standard_user não recebe sales_orders no browser (nem faturamento nem pedidos recentes).
+      let billingMonthly = 0;
+      let recentSalesData: SalesOrder[] = [];
+
+      if (!isRestrictedRole) {
+        const { data: salesData } = await supabase
+          .from('sales_orders')
+          .select(`
+            id, total_amount, status, created_at,
+            customer:customers(company_name)
+          `)
+          .order('created_at', { ascending: false });
+
+        const allSales = salesData || [];
+
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+        billingMonthly = allSales
+          .filter(order => {
+            const date = new Date(order.created_at);
+            return date.getMonth() === currentMonth &&
+              date.getFullYear() === currentYear &&
+              (order.status === 'aprovado' || order.status === 'faturado');
+          })
+          .reduce((sum, order) => sum + Number(order.total_amount), 0);
+
+        recentSalesData = allSales.slice(0, 5) as any[];
+      }
+
       setMetrics({
         billingMonthly,
         activeOS: activeOS.length,
@@ -141,10 +150,9 @@ export default function AdminDashboardPage() {
         productCount: prodCount || 0,
       });
 
-      // Últimos 5 pedidos
-      setRecentSales(allSales.slice(0, 5) as any[]);
+      setRecentSales(recentSalesData);
 
-      // OS críticas (activas de prioridad alta o urgente)
+      // OS críticas (ativas de prioridade alta ou urgente)
       const criticalList = activeOS.filter(os => os.priority === 'urgente' || os.priority === 'alta');
       setCriticalOS(criticalList.slice(0, 5) as any[]);
 
@@ -156,8 +164,10 @@ export default function AdminDashboardPage() {
   };
 
   useEffect(() => {
-    loadDashboardData();
-  }, []);
+    if (profile) {
+      loadDashboardData();
+    }
+  }, [profile]);
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto text-left animate-in fade-in duration-300">
