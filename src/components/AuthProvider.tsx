@@ -7,9 +7,10 @@ import { useRouter } from 'next/navigation';
 
 export interface Profile {
   id: string;
-  role: 'admin' | 'vendedor' | 'suporte' | 'tecnico' | 'cliente';
+  role: 'admin' | 'vendedor' | 'suporte' | 'tecnico' | 'cliente' | 'manager' | 'technician' | 'standard_user';
   name: string;
   phone: string | null;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }

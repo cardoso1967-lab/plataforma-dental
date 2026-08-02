@@ -80,6 +80,7 @@ export default function AdminClientesPage() {
   const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [editingEquipment, setEditingEquipment] = useState<ClientEquipment | null>(null);
+  const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
 
   // Estados del formulario de cliente
   const [formCustomer, setFormCustomer] = useState({
@@ -267,16 +268,22 @@ export default function AdminClientesPage() {
       setEditingCustomer(null);
       await loadData();
     } catch (err: any) {
-      alert('Erro ao salvar cliente: ' + err.message);
+      setError('Erro ao salvar cliente: ' + err.message);
     } finally {
       setLoading(false);
     }
   };
 
   // Eliminar cliente
-  const handleDeleteCustomer = async (id: string) => {
-    if (!confirm('Deseja realmente excluir este cliente? Todos os equipamentos e ordens vinculadas podem ser afetados.')) return;
+  const handleDeleteCustomer = (id: string) => {
+    if (adminProfile?.role === 'standard_user') {
+      setError('Erro de permissão: Usuários Comuns não possuem privilégios para excluir clientes.');
+      return;
+    }
+    setCustomerToDelete(id);
+  };
 
+  const executeDeleteCustomer = async (id: string) => {
     try {
       setLoading(true);
       const { error: delError } = await supabase
@@ -291,7 +298,7 @@ export default function AdminClientesPage() {
       }
       await loadData();
     } catch (err: any) {
-      alert('Erro ao excluir cliente: ' + err.message);
+      setError('Erro ao excluir cliente: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -609,13 +616,15 @@ export default function AdminClientesPage() {
                                 >
                                   <Edit2 className="w-3.5 h-3.5" />
                                 </button>
-                                <button
-                                  onClick={() => handleDeleteCustomer(client.id)}
-                                  className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-50 transition-colors"
-                                  title="Excluir Cliente"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
+                                {adminProfile?.role !== 'standard_user' && (
+                                  <button
+                                    onClick={() => handleDeleteCustomer(client.id)}
+                                    className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-50 transition-colors"
+                                    title="Excluir Cliente"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
                                 <ChevronRight className="w-4 h-4 text-slate-300" />
                               </div>
                             </td>
@@ -695,12 +704,14 @@ export default function AdminClientesPage() {
                           >
                             <Edit2 className="w-3 h-3 text-slate-450" /> Editar
                           </button>
-                          <button
-                            onClick={() => handleDeleteCustomer(client.id)}
-                            className="px-3.5 py-2 bg-rose-50/50 hover:bg-rose-100 border border-rose-100 rounded-xl text-[10px] font-black text-rose-700 transition-all flex items-center gap-1 shadow-2xs"
-                          >
-                            <Trash2 className="w-3 h-3 text-rose-455" /> Excluir
-                          </button>
+                          {adminProfile?.role !== 'standard_user' && (
+                            <button
+                              onClick={() => handleDeleteCustomer(client.id)}
+                              className="px-3.5 py-2 bg-rose-50/50 hover:bg-rose-100 border border-rose-100 rounded-xl text-[10px] font-black text-rose-700 transition-all flex items-center gap-1 shadow-2xs"
+                            >
+                              <Trash2 className="w-3 h-3 text-rose-455" /> Excluir
+                            </button>
+                          )}
                         </div>
                       </div>
                     );
@@ -1127,6 +1138,39 @@ export default function AdminClientesPage() {
           </div>
         </form>
       </PremiumModal>
+
+      {customerToDelete && (
+        <PremiumModal
+          isOpen={!!customerToDelete}
+          onClose={() => setCustomerToDelete(null)}
+          title="Confirmar Exclusão"
+          size="sm"
+        >
+          <div className="space-y-4 text-left">
+            <p className="text-xs text-slate-655 leading-relaxed font-semibold">
+              Deseja realmente excluir este cliente? Todos os equipamentos e ordens de serviço vinculadas serão afetados. Esta ação não pode ser desfeita.
+            </p>
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <PremiumButton
+                variant="outline"
+                onClick={() => setCustomerToDelete(null)}
+              >
+                Cancelar
+              </PremiumButton>
+              <PremiumButton
+                variant="danger"
+                onClick={async () => {
+                  const id = customerToDelete;
+                  setCustomerToDelete(null);
+                  await executeDeleteCustomer(id);
+                }}
+              >
+                Excluir Cliente
+              </PremiumButton>
+            </div>
+          </div>
+        </PremiumModal>
+      )}
     </div>
   );
 }

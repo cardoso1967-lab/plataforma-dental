@@ -41,11 +41,31 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed = true, setIsColla
     { label: 'Pedidos de Venda', href: '/admin/pedidos-venda', icon: Receipt },
     { label: 'Ordens de Serviço', href: '/admin/ordens-servico', icon: Wrench },
     { label: 'Técnicos', href: '/admin/tecnicos', icon: UserCog },
+    { label: 'Usuários', href: '/admin/usuarios', icon: Users },
     { label: 'Agenda', href: '/admin/agenda', icon: Calendar },
     { label: 'Orçamentos', href: '/admin/orcamentos', icon: CircleDollarSign },
     { label: 'Peças de Reposição', href: '/admin/pecas', icon: Settings },
     { label: 'Relatórios', href: '/admin/relatorios', icon: BarChart3 },
   ];
+
+  const filteredMenuItems = menuItems.filter((item) => {
+    if (!profile) return false;
+    const role = profile.role;
+
+    // Apenas admin pode acessar Usuários
+    if (item.href === '/admin/usuarios' && role !== 'admin') {
+      return false;
+    }
+
+    // standard_user não acessa Usuários, Técnicos e Relatórios
+    if (role === 'standard_user') {
+      if (item.href === '/admin/usuarios' || item.href === '/admin/tecnicos' || item.href === '/admin/relatorios') {
+        return false;
+      }
+    }
+
+    return true;
+  });
 
   const isActive = (href: string) => pathname === href;
 
@@ -122,7 +142,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed = true, setIsColla
 
           {/* Menus */}
           <nav className="p-3 space-y-1.5">
-            {menuItems.map((item) => {
+            {filteredMenuItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
               return (

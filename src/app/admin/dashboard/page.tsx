@@ -55,6 +55,7 @@ export default function AdminDashboardPage() {
     urgentOSCount: 0,
     todayVisits: 0,
     pendingQuotes: 0,
+    productCount: 0,
   });
 
   const [recentSales, setRecentSales] = useState<SalesOrder[]>([]);
@@ -122,6 +123,11 @@ export default function AdminDashboardPage() {
         })
         .reduce((sum, order) => sum + Number(order.total_amount), 0);
 
+      // 5. Obter contagem de produtos
+      const { count: prodCount } = await supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true });
+
       // Setear métricas
       setMetrics({
         billingMonthly,
@@ -132,6 +138,7 @@ export default function AdminDashboardPage() {
         urgentOSCount: urgentOS.length,
         todayVisits,
         pendingQuotes: pendingQuotes.length,
+        productCount: prodCount || 0,
       });
 
       // Últimos 5 pedidos
@@ -231,15 +238,27 @@ export default function AdminDashboardPage() {
               Indicadores de Desempenho SaaS
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <MetricCard
-                title="Receita Mensal"
-                value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(metrics.billingMonthly)}
-                trend={{ label: 'Faturamento deste mês', type: 'up' }}
-                icon={<TrendingUp className="w-5 h-5 text-sky-700 stroke-[2.5]" />}
-                variant="default"
-                titleClassName="text-sky-700 font-semibold tracking-[0.04em]"
-                descriptionClassName="text-slate-700 font-medium"
-              />
+              {profile?.role !== 'standard_user' ? (
+                <MetricCard
+                  title="Receita Mensal"
+                  value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(metrics.billingMonthly)}
+                  trend={{ label: 'Faturamento deste mês', type: 'up' }}
+                  icon={<TrendingUp className="w-5 h-5 text-sky-700 stroke-[2.5]" />}
+                  variant="default"
+                  titleClassName="text-sky-700 font-semibold tracking-[0.04em]"
+                  descriptionClassName="text-slate-700 font-medium"
+                />
+              ) : (
+                <MetricCard
+                  title="Produtos Cadastrados"
+                  value={`${metrics.productCount} itens`}
+                  description="Catálogo de equipamentos e peças"
+                  icon={<Package className="w-5 h-5 text-sky-750 stroke-[2]" />}
+                  variant="default"
+                  titleClassName="text-sky-700 font-semibold tracking-[0.04em]"
+                  descriptionClassName="text-slate-700 font-medium"
+                />
+              )}
               <MetricCard
                 title="Atendimentos Ativos"
                 value={`${metrics.activeOS} chamados`}
@@ -365,69 +384,73 @@ export default function AdminDashboardPage() {
           {/* Seções de Tablas y Listados Premium */}
           <div className="grid lg:grid-cols-2 gap-6 pt-2">
             {/* Últimos Pedidos de Venda */}
-            <div className="bg-gradient-to-b from-white to-slate-50/35 rounded-3xl border border-slate-200/80 p-6 space-y-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)]">
-              <div className="flex justify-between items-center border-b border-slate-100 pb-4">
-                <div className="space-y-1 text-left">
-                  <h3 className="font-extrabold text-sm text-slate-800 tracking-tight">Últimos Pedidos de Venda</h3>
-                  <p className="text-xs text-slate-500 font-medium">Monitoramento de transações e contratos comerciais recentes</p>
+            {profile?.role !== 'standard_user' && (
+              <div className="bg-gradient-to-b from-white to-slate-50/35 rounded-3xl border border-slate-200/80 p-6 space-y-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)]">
+                <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+                  <div className="space-y-1 text-left">
+                    <h3 className="font-extrabold text-sm text-slate-800 tracking-tight">Últimos Pedidos de Venda</h3>
+                    <p className="text-xs text-slate-500 font-medium">Monitoramento de transações e contratos comerciais recentes</p>
+                  </div>
+                  <Link 
+                    href="/admin/pedidos-venda"
+                    className="text-xs text-sky-655 font-bold hover:underline flex items-center gap-1 bg-sky-50/80 hover:bg-sky-50 px-3 py-1.5 rounded-xl border border-sky-100/40 transition-colors"
+                  >
+                    Ver todos <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                  </Link>
                 </div>
-                <Link 
-                  href="/admin/pedidos-venda"
-                  className="text-xs text-sky-655 font-bold hover:underline flex items-center gap-1 bg-sky-50/80 hover:bg-sky-50 px-3 py-1.5 rounded-xl border border-sky-100/40 transition-colors"
-                >
-                  Ver todos <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
-                </Link>
-              </div>
 
-              <div className="overflow-x-auto no-scrollbar">
-                {recentSales.length === 0 ? (
-                  <EmptyState
-                    title="Nenhum pedido recente"
-                    description="Quando novas ordens de venda forem faturadas ou aprovadas no sistema, elas aparecerão listadas nesta seção."
-                    icon={<FileText className="w-6 h-6 text-slate-400" />}
-                    actionLabel="Criar Novo Pedido"
-                    actionHref="/admin/pedidos-venda"
-                  />
-                ) : (
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="text-slate-500 font-bold border-b border-slate-100 bg-slate-50/50 rounded-xl">
-                        <th className="pb-3.5 pt-2 pl-3 font-mono text-xs uppercase tracking-wider">ID Pedido</th>
-                        <th className="pb-3.5 pt-2 px-2 font-mono text-xs uppercase tracking-wider">Cliente</th>
-                        <th className="pb-3.5 pt-2 text-right font-mono text-xs uppercase tracking-wider">Valor</th>
-                        <th className="pb-3.5 pt-2 text-center pr-3 font-mono text-xs uppercase tracking-wider">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100/60">
-                      {recentSales.map((order) => (
-                        <tr key={order.id} className="hover:bg-slate-50/30 transition-colors duration-150">
-                          <td className="py-4 pl-3 font-mono font-bold text-sky-600">
-                            #{order.id.substring(0, 8).toUpperCase()}
-                          </td>
-                          <td className="py-4 px-2 font-bold text-slate-700">
-                            {getCustomerDisplayName(order.customer)}
-                          </td>
-                          <td className="py-4 text-right font-extrabold text-slate-900">
-                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(order.total_amount)}
-                          </td>
-                          <td className="py-4 text-center pr-3">
-                            <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border uppercase tracking-wider shadow-3xs font-mono ${
-                              order.status === 'aprovado' ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20' :
-                              order.status === 'faturado' ? 'bg-blue-500/10 text-blue-700 border-blue-500/20' : 'bg-amber-500/10 text-amber-700 border-amber-500/20'
-                            }`}>
-                              {order.status}
-                            </span>
-                          </td>
+                <div className="overflow-x-auto no-scrollbar">
+                  {recentSales.length === 0 ? (
+                    <EmptyState
+                      title="Nenhum pedido recente"
+                      description="Quando novas ordens de venda forem faturadas ou aprovadas no sistema, elas aparecerão listadas nesta seção."
+                      icon={<FileText className="w-6 h-6 text-slate-400" />}
+                      actionLabel="Criar Novo Pedido"
+                      actionHref="/admin/pedidos-venda"
+                    />
+                  ) : (
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="text-slate-500 font-bold border-b border-slate-100 bg-slate-50/50 rounded-xl">
+                          <th className="pb-3.5 pt-2 pl-3 font-mono text-xs uppercase tracking-wider">ID Pedido</th>
+                          <th className="pb-3.5 pt-2 px-2 font-mono text-xs uppercase tracking-wider">Cliente</th>
+                          <th className="pb-3.5 pt-2 text-right font-mono text-xs uppercase tracking-wider">Total</th>
+                          <th className="pb-3.5 pt-2 text-center pr-3 font-mono text-xs uppercase tracking-wider">Status</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
+                      </thead>
+                      <tbody className="divide-y divide-slate-100/60">
+                        {recentSales.map((order) => (
+                          <tr key={order.id} className="hover:bg-slate-50/30 transition-colors duration-150">
+                            <td className="py-4 pl-3 font-mono font-bold text-sky-600">
+                              #{order.id.substring(0, 8).toUpperCase()}
+                            </td>
+                            <td className="py-4 px-2 font-bold text-slate-700">
+                              {getCustomerDisplayName(order.customer)}
+                            </td>
+                            <td className="py-4 text-right font-extrabold text-slate-900">
+                              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(order.total_amount)}
+                            </td>
+                            <td className="py-4 text-center pr-3">
+                              <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border uppercase tracking-wider shadow-3xs font-mono ${
+                                order.status === 'aprovado' ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20' :
+                                order.status === 'faturado' ? 'bg-blue-500/10 text-blue-700 border-blue-500/20' : 'bg-amber-500/10 text-amber-700 border-amber-500/20'
+                              }`}>
+                                {order.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* OS Críticas Pendentes */}
-            <div className="bg-gradient-to-b from-white to-slate-50/35 rounded-3xl border border-slate-200/80 p-6 space-y-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)]">
+            <div className={`bg-gradient-to-b from-white to-slate-50/35 rounded-3xl border border-slate-200/80 p-6 space-y-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)] ${
+              profile?.role === 'standard_user' ? 'lg:col-span-2' : 'lg:col-span-1'
+            }`}>
               <div className="flex justify-between items-center border-b border-slate-100 pb-4">
                 <div className="space-y-1 text-left">
                   <h3 className="font-extrabold text-sm text-slate-800 flex items-center gap-1.5 tracking-tight">

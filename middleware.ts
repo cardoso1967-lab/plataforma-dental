@@ -72,55 +72,96 @@ export async function middleware(request: NextRequest) {
   // 2. Si está logueado, validar rol y accesos
   if (user) {
     let role = 'cliente';
+    let is_active = true;
 
     try {
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('role')
+        .select('role, is_active')
         .eq('id', user.id)
         .single();
 
       if (profileError) {
         console.error('Erro seguro ao consultar perfil no middleware (ID do usuário omitido por segurança):', profileError.message);
-      } else if (profile?.role) {
-        role = profile.role;
+      } else if (profile) {
+        role = profile.role || 'cliente';
+        is_active = profile.is_active !== false;
       }
     } catch (err: any) {
       console.error('Falha de execução ao buscar perfil no middleware:', err?.message || err);
     }
 
+    // Se o usuário estiver inativo e acessar uma rota protegida -> Redirecionar para login
+    if (isProtectedPath && !is_active) {
+      try {
+        await supabase.auth.signOut();
+      } catch (e) {
+        console.error('Erro ao efetuar signout de usuário inativo no middleware:', e);
+      }
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      url.searchParams.set('error', 'inactive');
+      return redirectWithCookies(supabaseResponse, url);
+    }
+
     // Definir panel correspondiente al rol
     let roleDashboard = '/cliente/dashboard';
     if (role === 'admin') roleDashboard = '/admin/dashboard';
+    else if (role === 'manager') roleDashboard = '/admin/dashboard';
+    else if (role === 'standard_user') roleDashboard = '/admin/dashboard';
+    else if (['tecnico', 'technician'].includes(role)) roleDashboard = '/tecnico/dashboard';
     else if (role === 'vendedor') roleDashboard = '/admin/pedidos-venda';
     else if (role === 'suporte') roleDashboard = '/admin/ordens-servico';
-    else if (role === 'tecnico') roleDashboard = '/tecnico/dashboard';
 
-    // Si intenta acceder a /login estando ya logueado -> Redirigir a su panel
-    if (isLoginPage) {
+    // Si intenta acceder a /login estando ya logueado y activo -> Redirigir a su panel
+    if (isLoginPage && is_active) {
       const url = request.nextUrl.clone();
       url.pathname = roleDashboard;
       return redirectWithCookies(supabaseResponse, url);
     }
 
     // Validaciones de acceso cruzado:
-    // Cliente en ruta de admin o técnico -> Redirigir a su panel
+    // Cliente en rota de admin ou técnico -> Redirecionar a seu painel
     if (isClientePath && role !== 'cliente') {
       const url = request.nextUrl.clone();
       url.pathname = roleDashboard;
       return redirectWithCookies(supabaseResponse, url);
     }
 
-    if (isTecnicoPath && role !== 'tecnico') {
+    if (isTecnicoPath && !['tecnico', 'technician'].includes(role)) {
       const url = request.nextUrl.clone();
       url.pathname = roleDashboard;
       return redirectWithCookies(supabaseResponse, url);
     }
 
-    if (isAdminPath && !['admin', 'vendedor', 'suporte'].includes(role)) {
-      const url = request.nextUrl.clone();
-      url.pathname = roleDashboard;
-      return redirectWithCookies(supabaseResponse, url);
+    if (isAdminPath) {
+      // Apenas perfis internos permitidos em rotas de administração
+      if (!['admin', 'manager', 'standard_user', 'vendedor', 'suporte'].includes(role)) {
+        const url = request.nextUrl.clone();
+        url.pathname = roleDashboard;
+        return redirectWithCookies(supabaseResponse, url);
+      }
+
+      // Restrições de subpáginas em /admin:
+      const isAdminUsuarios = pathname.startsWith('/admin/usuarios');
+      const isAdminTecnicos = pathname.startsWith('/admin/tecnicos');
+      const isAdminRelatorios = pathname.startsWith('/admin/relatorios');
+
+      // 1. Apenas administradores acessam a área de usuários (/admin/usuarios)
+      if (isAdminUsuarios && role !== 'admin') {
+        const url = request.nextUrl.clone();
+        url.pathname = roleDashboard;
+        return redirectWithCookies(supabaseResponse, url);
+      }
+
+      // 2. Perfis standard_user não acessam Usuários, Técnicos e Relatórios
+      if (role === 'standard_user') {
+        if (isAdminUsuarios || isAdminTecnicos || isAdminRelatorios) {
+          const url = request.nextUrl.clone();
+          url.pathname = roleDashboard;
+          return redirectWithCookies(supabaseResponse, url);
+        }
+      }
     }
   }
 
