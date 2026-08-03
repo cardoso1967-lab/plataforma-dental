@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -12,20 +12,76 @@ export default function RedefinirSenhaPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // PKCE Exchange states
   const [invalidLink, setInvalidLink] = useState(false);
+  const [isExchanging, setIsExchanging] = useState(true);
+  const hasExchanged = useRef(false);
   
   const router = useRouter();
   const supabase = createSupabaseBrowserClient();
 
   useEffect(() => {
-    // Check for error in URL (hash or search string) when link is expired/invalid
     const hash = window.location.hash;
     const search = window.location.search;
     
+    // 1. Explicit error in URL from Supabase
     if (hash.includes('error=') || search.includes('error=')) {
       setInvalidLink(true);
+      setIsExchanging(false);
+      return;
     }
-  }, []);
+
+    // 2. Extract code for PKCE
+    const urlParams = new URLSearchParams(search);
+    const code = urlParams.get('code');
+    
+    if (code) {
+      // Prevent Strict Mode / double effects from exchanging the same code twice
+      if (hasExchanged.current) return;
+      hasExchanged.current = true;
+      
+      const exchangeCode = async () => {
+        try {
+          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          
+          if (exchangeError) {
+            console.error('Erro ao trocar código por sessão:', exchangeError);
+            setInvalidLink(true);
+          } else if (!data.session) {
+            setInvalidLink(true);
+          } else {
+            // Remove code from URL visually after successful exchange
+            window.history.replaceState(null, '', window.location.pathname);
+          }
+        } catch (err) {
+          console.error('Falha na troca de código PKCE:', err);
+          setInvalidLink(true);
+        } finally {
+          setIsExchanging(false);
+        }
+      };
+      
+      exchangeCode();
+    } else {
+      // 3. No code found, verify if we already have a session or implicit token
+      const verifySession = async () => {
+        try {
+          const { data } = await supabase.auth.getSession();
+          // Implicit flow uses access_token in hash, PKCE uses code in query
+          if (!data.session && !hash.includes('access_token=')) {
+            setInvalidLink(true);
+          }
+        } catch (err) {
+          setInvalidLink(true);
+        } finally {
+          setIsExchanging(false);
+        }
+      };
+      
+      verifySession();
+    }
+  }, [supabase.auth]);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,17 +111,15 @@ export default function RedefinirSenhaPage() {
 
       if (updateError) {
         console.error('Erro ao atualizar senha:', updateError);
-        setError('Ocorreu um erro ao redefinir a senha. O link pode ter expirado.');
+        setError('Ocorreu um erro ao redefinir a senha. A sessão pode ter expirado.');
         setLoading(false);
         return;
       }
 
       setSuccess(true);
       
-      // Sign out the recovery session
       await supabase.auth.signOut();
       
-      // Redirect after 3 seconds
       setTimeout(() => {
         router.replace('/login');
       }, 3000);
@@ -76,6 +130,21 @@ export default function RedefinirSenhaPage() {
       setLoading(false);
     }
   };
+
+  if (isExchanging) {
+    return (
+      <div className="py-12 sm:py-16 bg-slate-50 flex-1 flex flex-col justify-center items-center px-4">
+        <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-3xl border border-slate-100 shadow-sm text-center">
+          <div className="flex flex-col items-center gap-4 py-8">
+            <Loader2 className="w-10 h-10 animate-spin text-sky-500" />
+            <p className="text-sm text-slate-500 font-medium animate-pulse">
+              Validando link de recuperação...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (invalidLink) {
     return (
