@@ -104,6 +104,23 @@ export default function TecnicoServicosPage() {
     loadData();
   }, [profile]);
 
+  // Auto-open modal if ID is in URL
+  useEffect(() => {
+    if (!loading && services.length > 0) {
+      if (typeof window !== 'undefined') {
+        const searchParams = new URLSearchParams(window.location.search);
+        const urlId = searchParams.get('id');
+        if (urlId && !isModalOpen && !selectedOS) {
+          const specificOS = services.find(s => s.id === urlId);
+          if (specificOS) {
+            openStatusModal(specificOS);
+            window.history.replaceState({}, '', window.location.pathname);
+          }
+        }
+      }
+    }
+  }, [loading, services]);
+
   // Filtrado y búsqueda
   useEffect(() => {
     let result = [...services];

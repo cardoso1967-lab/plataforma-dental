@@ -318,7 +318,7 @@ export default function TecnicoAgendaPage() {
                 </div>
 
                 {/* Botão para iniciar atendimento */}
-                <Link href={`/tecnico/servicos`} className="block w-full pt-1">
+                <Link href={`/tecnico/servicos?id=${item.osId}`} className="block w-full pt-1">
                   <PremiumButton
                     variant="outline"
                     className="w-full text-xs py-2.5"
@@ -395,7 +395,7 @@ export default function TecnicoAgendaPage() {
                 </div>
 
                 {/* Botão para iniciar atendimento */}
-                <Link href={`/tecnico/servicos`} className="block w-full pt-1">
+                <Link href={`/tecnico/servicos?id=${item.osId}`} className="block w-full pt-1">
                   <PremiumButton
                     variant="outline"
                     className="w-full text-xs py-2.5"
