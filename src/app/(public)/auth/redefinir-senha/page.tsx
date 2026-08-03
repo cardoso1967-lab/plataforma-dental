@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -12,80 +12,34 @@ export default function RedefinirSenhaPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  // PKCE Exchange states
+
   const [invalidLink, setInvalidLink] = useState(false);
-  const [isExchanging, setIsExchanging] = useState(true);
-  const hasExchanged = useRef(false);
-  
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
+
   const router = useRouter();
   const supabase = createSupabaseBrowserClient();
 
   useEffect(() => {
-    const hash = window.location.hash;
-    const search = window.location.search;
-    
-    // 1. Explicit error in URL from Supabase
-    if (hash.includes('error=') || search.includes('error=')) {
-      setInvalidLink(true);
-      setIsExchanging(false);
-      return;
-    }
+    // 1. Verify if we have a valid session established by verifyOtp
+    const verifySession = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (!data.session) {
+          setInvalidLink(true);
+        }
+      } catch (err) {
+        setInvalidLink(true);
+      } finally {
+        setIsCheckingSession(false);
+      }
+    };
 
-    // 2. Extract code for PKCE
-    const urlParams = new URLSearchParams(search);
-    const code = urlParams.get('code');
-    
-    if (code) {
-      // Prevent Strict Mode / double effects from exchanging the same code twice
-      if (hasExchanged.current) return;
-      hasExchanged.current = true;
-      
-      const exchangeCode = async () => {
-        try {
-          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-          
-          if (exchangeError) {
-            console.error('Erro ao trocar código por sessão:', exchangeError);
-            setInvalidLink(true);
-          } else if (!data.session) {
-            setInvalidLink(true);
-          } else {
-            // Remove code from URL visually after successful exchange
-            window.history.replaceState(null, '', window.location.pathname);
-          }
-        } catch (err) {
-          console.error('Falha na troca de código PKCE:', err);
-          setInvalidLink(true);
-        } finally {
-          setIsExchanging(false);
-        }
-      };
-      
-      exchangeCode();
-    } else {
-      // 3. No code found, verify if we already have a session or implicit token
-      const verifySession = async () => {
-        try {
-          const { data } = await supabase.auth.getSession();
-          // Implicit flow uses access_token in hash, PKCE uses code in query
-          if (!data.session && !hash.includes('access_token=')) {
-            setInvalidLink(true);
-          }
-        } catch (err) {
-          setInvalidLink(true);
-        } finally {
-          setIsExchanging(false);
-        }
-      };
-      
-      verifySession();
-    }
+    verifySession();
   }, [supabase.auth]);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!password || !confirmPassword) {
       setError('Por favor, preencha todos os campos.');
       return;
@@ -117,13 +71,13 @@ export default function RedefinirSenhaPage() {
       }
 
       setSuccess(true);
-      
+
       await supabase.auth.signOut();
-      
+
       setTimeout(() => {
         router.replace('/login');
       }, 3000);
-      
+
     } catch (err: any) {
       console.error('Falha de execução ao redefinir senha:', err);
       setError('Ocorreu um erro inesperado. Tente novamente.');
@@ -131,14 +85,14 @@ export default function RedefinirSenhaPage() {
     }
   };
 
-  if (isExchanging) {
+  if (isCheckingSession) {
     return (
       <div className="py-12 sm:py-16 bg-slate-50 flex-1 flex flex-col justify-center items-center px-4">
         <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-3xl border border-slate-100 shadow-sm text-center">
           <div className="flex flex-col items-center gap-4 py-8">
             <Loader2 className="w-10 h-10 animate-spin text-sky-500" />
             <p className="text-sm text-slate-500 font-medium animate-pulse">
-              Validando link de recuperação...
+              Validando sessão...
             </p>
           </div>
         </div>
@@ -156,8 +110,8 @@ export default function RedefinirSenhaPage() {
               Este link expirou ou já foi utilizado. Solicite um novo link.
             </p>
           </div>
-          <Link 
-            href="/recuperar-senha" 
+          <Link
+            href="/recuperar-senha"
             className="inline-flex items-center gap-2 text-sm font-bold text-sky-500 hover:text-sky-600 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -171,7 +125,7 @@ export default function RedefinirSenhaPage() {
   return (
     <div className="py-12 sm:py-16 bg-slate-50 flex-1 flex flex-col justify-center items-center px-4">
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
-        
+
         {/* Logo and Intro */}
         <div className="text-center space-y-3">
           <div className="mx-auto bg-white border border-slate-100 rounded-2xl w-16 h-16 flex items-center justify-center overflow-hidden shadow-md shadow-slate-200/50">
