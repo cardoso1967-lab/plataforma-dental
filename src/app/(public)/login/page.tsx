@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Stethoscope, ShieldAlert, Wrench, User, Loader2, ArrowRight } from 'lucide-react';
 
 export default function LoginPage() {
@@ -129,9 +130,14 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
-              Senha
-            </label>
+            <div className="flex justify-between items-center mb-1.5">
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
+                Senha
+              </label>
+              <Link href="/recuperar-senha" className="text-xs font-bold text-sky-500 hover:text-sky-600 transition-colors">
+                Esqueci minha senha?
+              </Link>
+            </div>
             <input
               type="password"
               value={password}
