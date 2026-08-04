@@ -418,8 +418,13 @@ export default function AdminOrdensServicoPage() {
       }
       reason = p.trim();
     } else {
-      const p = prompt('Observação da aprovação (Opcional):');
-      reason = p ? p.trim() : 'Aprovado pelo gerente.';
+      if (!confirm('Deseja realmente aprovar esta solicitação de reabertura?')) return;
+      const p = prompt('Informe o motivo da aprovação (Obrigatório):');
+      if (!p || !p.trim()) {
+        showFeedback('error', 'Motivo é obrigatório para aprovação.');
+        return;
+      }
+      reason = p.trim();
     }
 
     try {
@@ -561,12 +566,18 @@ export default function AdminOrdensServicoPage() {
         </PremiumButton>
       </div>
 
-      {reopeningRequests.length > 0 && (
-        <div className="mb-6 bg-amber-50 rounded-2xl border border-amber-200 p-6">
-          <h3 className="font-extrabold text-amber-900 text-sm flex items-center gap-2 mb-4">
-            <AlertCircle className="w-5 h-5" />
-            Solicitações de Reabertura Pendentes ({reopeningRequests.length})
-          </h3>
+      {/* Seção de Solicitações de Reabertura (Sempre visível) */}
+      <div className="mb-6 bg-amber-50 rounded-2xl border border-amber-200 p-6">
+        <h3 className="font-extrabold text-amber-900 text-sm flex items-center gap-2 mb-4">
+          <AlertCircle className="w-5 h-5" />
+          Solicitações de Reabertura ({reopeningRequests.length} pendentes)
+        </h3>
+
+        {reopeningRequests.length === 0 ? (
+          <p className="text-sm text-amber-700 font-medium italic">
+            Nenhuma solicitação de reabertura pendente.
+          </p>
+        ) : (
           <div className="space-y-3">
             {reopeningRequests.map(req => {
               const osCustomer = customers.find(c => c.id === req.os?.customer_id);
@@ -581,10 +592,25 @@ export default function AdminOrdensServicoPage() {
                       <span className="font-semibold text-slate-700 ml-2">Motivo:</span> {req.reason}
                     </div>
                     <div className="text-[10px] text-slate-400 font-semibold mt-1">
-                      Data da solicitação: {new Date(req.created_at).toLocaleString('pt-BR')}
+                      Data da solicitação: {new Date(req.created_at).toLocaleString('pt-BR', { timeZone: 'America/Mexico_City' })}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    <PremiumButton
+                      type="button"
+                      variant="outline"
+                      className="text-slate-600 border-slate-200 hover:bg-slate-50 text-xs px-3 py-1.5 h-auto"
+                      onClick={() => {
+                        const found = serviceOrders.find(o => o.id === req.service_order_id);
+                        if (found) {
+                          openModal(found);
+                        } else {
+                          showFeedback('error', 'OS não encontrada na lista atual.');
+                        }
+                      }}
+                    >
+                      Abrir solicitação
+                    </PremiumButton>
                     <PremiumButton
                       type="button"
                       variant="primary"
@@ -602,15 +628,15 @@ export default function AdminOrdensServicoPage() {
                       disabled={processingReopening !== null}
                       onClick={() => handleProcessReopening(req.id, 'reject')}
                     >
-                      Rejeitar
+                      Recusar
                     </PremiumButton>
                   </div>
                 </div>
               );
             })}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Fila de Ordens de Serviço */}
       <div className="bg-white rounded-3xl border border-slate-100 shadow-xs p-6 space-y-5">
