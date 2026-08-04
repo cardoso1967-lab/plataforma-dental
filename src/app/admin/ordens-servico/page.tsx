@@ -103,10 +103,13 @@ export default function AdminOrdensServicoPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingOS, setEditingOS] = useState<ServiceOrder | null>(null);
 
-  // Estados para novas notas de histórico
   const [newNotePeca, setNewNotePeca] = useState('');
   const [newNoteServico, setNewNoteServico] = useState('');
   const [addingNote, setAddingNote] = useState(false);
+
+  // Estados para reabertura
+  const [reopeningRequests, setReopeningRequests] = useState<any[]>([]);
+  const [processingReopening, setProcessingReopening] = useState<string | null>(null);
 
   // Formulario de OS
   const [formOS, setFormOS] = useState({
@@ -158,6 +161,20 @@ export default function AdminOrdensServicoPage() {
 
       if (custError) throw custError;
       setCustomers(custData || []);
+
+      // Obtener solicitaciones de reabertura pendientes
+      const { data: reqData, error: reqError } = await supabase
+        .from('service_order_reopening_requests')
+        .select(`
+          *,
+          technician:technicians(profile:profiles(name)),
+          os:service_orders(customer_id)
+        `)
+        .eq('status', 'pendente')
+        .order('created_at', { ascending: false });
+
+      if (reqError) console.error('Erro ao carregar solicitações de reabertura:', reqError);
+      setReopeningRequests(reqData || []);
 
       // 3. Obtener equipos
       const { data: equipData, error: equipError } = await supabase
@@ -391,6 +408,62 @@ export default function AdminOrdensServicoPage() {
     return equipments.filter(eq => eq.customer_id === formOS.customer_id);
   };
 
+  const handleProcessReopening = async (reqId: string, action: 'approve' | 'reject') => {
+    let reason = '';
+    if (action === 'reject') {
+      const p = prompt('Informe o motivo da rejeição (Obrigatório):');
+      if (!p || !p.trim()) {
+        showFeedback('error', 'Motivo é obrigatório para rejeição.');
+        return;
+      }
+      reason = p.trim();
+    } else {
+      const p = prompt('Observação da aprovação (Opcional):');
+      reason = p ? p.trim() : 'Aprovado pelo gerente.';
+    }
+
+    try {
+      setProcessingReopening(reqId);
+      const { error } = await supabase.rpc('process_reopening_request', {
+        p_request_id: reqId,
+        p_action: action,
+        p_reason: reason
+      });
+
+      if (error) throw error;
+      
+      showFeedback('success', `Solicitação ${action === 'approve' ? 'aprovada' : 'rejeitada'} com sucesso.`);
+      loadData();
+    } catch (err: any) {
+      showFeedback('error', err.message || 'Erro ao processar solicitação.');
+      console.error(err);
+    } finally {
+      setProcessingReopening(null);
+    }
+  };
+
+  const handleDirectReopen = async (osId: string) => {
+    const reason = prompt('Informe o motivo da reabertura direta (Obrigatório):');
+    if (!reason || !reason.trim()) {
+      showFeedback('error', 'Motivo é obrigatório.');
+      return;
+    }
+    
+    try {
+      const { error } = await supabase.rpc('direct_reopen_os', {
+        p_service_order_id: osId,
+        p_reason: reason.trim()
+      });
+      if (error) throw error;
+      
+      showFeedback('success', 'Ordem de Serviço reaberta com sucesso.');
+      loadData();
+    } catch (err: any) {
+      showFeedback('error', err.message || 'Erro ao reabrir OS.');
+      console.error(err);
+    }
+  };
+
   // Filtrar OS
   const filteredOS = serviceOrders.filter(os => {
     const text = searchTerm.toLowerCase();
@@ -471,6 +544,73 @@ export default function AdminOrdensServicoPage() {
           className="col-span-2 lg:col-span-1"
         />
       </div>
+
+      <div className="flex gap-4 mb-6">
+        <PremiumInput
+          label="Buscar OS"
+          name="search"
+          placeholder="Buscar por código da OS, cliente ou técnico..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          icon={<Search className="w-4 h-4 text-slate-400" />}
+          className="flex-1"
+        />
+        <PremiumButton onClick={() => openModal()} className="flex items-center gap-2 px-6 h-11 shrink-0">
+          <Plus className="w-4 h-4" />
+          Nova OS
+        </PremiumButton>
+      </div>
+
+      {reopeningRequests.length > 0 && (
+        <div className="mb-6 bg-amber-50 rounded-2xl border border-amber-200 p-6">
+          <h3 className="font-extrabold text-amber-900 text-sm flex items-center gap-2 mb-4">
+            <AlertCircle className="w-5 h-5" />
+            Solicitações de Reabertura Pendentes ({reopeningRequests.length})
+          </h3>
+          <div className="space-y-3">
+            {reopeningRequests.map(req => {
+              const osCustomer = customers.find(c => c.id === req.os?.customer_id);
+              return (
+                <div key={req.id} className="bg-white p-4 rounded-xl border border-amber-200 flex items-center justify-between shadow-sm">
+                  <div>
+                    <div className="font-bold text-slate-800 text-sm">
+                      OS #{req.service_order_id.substring(0, 8).toUpperCase()} - {osCustomer ? getCustomerDisplayName(osCustomer) : 'Cliente desconhecido'}
+                    </div>
+                    <div className="text-xs text-slate-600 mt-1">
+                      <span className="font-semibold text-slate-700">Técnico:</span> {req.technician?.profile?.name || 'Desconhecido'} | 
+                      <span className="font-semibold text-slate-700 ml-2">Motivo:</span> {req.reason}
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-semibold mt-1">
+                      Data da solicitação: {new Date(req.created_at).toLocaleString('pt-BR')}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <PremiumButton
+                      type="button"
+                      variant="primary"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-xs px-3 py-1.5 h-auto"
+                      loading={processingReopening === req.id}
+                      disabled={processingReopening !== null}
+                      onClick={() => handleProcessReopening(req.id, 'approve')}
+                    >
+                      Aprovar
+                    </PremiumButton>
+                    <PremiumButton
+                      type="button"
+                      variant="outline"
+                      className="text-rose-600 border-rose-200 hover:bg-rose-50 text-xs px-3 py-1.5 h-auto"
+                      disabled={processingReopening !== null}
+                      onClick={() => handleProcessReopening(req.id, 'reject')}
+                    >
+                      Rejeitar
+                    </PremiumButton>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Fila de Ordens de Serviço */}
       <div className="bg-white rounded-3xl border border-slate-100 shadow-xs p-6 space-y-5">
@@ -593,6 +733,15 @@ export default function AdminOrdensServicoPage() {
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
+                          {(os.status === 'concluida' || os.status === 'cancelada') && (
+                            <button
+                              onClick={() => handleDirectReopen(os.id)}
+                              className="p-1.5 text-amber-500 hover:text-amber-700 rounded-lg hover:bg-amber-100 transition-colors cursor-pointer"
+                              title="Reabertura Direta"
+                            >
+                              <RefreshCw className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                           <button
                             onClick={() => handleDelete(os.id)}
                             className="p-1.5 text-slate-450 hover:text-rose-650 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"

@@ -35,6 +35,10 @@ export default function TecnicoServicoDetailPage({ params }: { params: Promise<{
   const [newNotePeca, setNewNotePeca] = useState('');
   const [newNoteServico, setNewNoteServico] = useState('');
   const [addingNote, setAddingNote] = useState(false);
+  const [pendingRequest, setPendingRequest] = useState<any>(null);
+  const [reopenReason, setReopenReason] = useState('');
+  const [requestingReopen, setRequestingReopen] = useState(false);
+  const [newNoteComplemento, setNewNoteComplemento] = useState('');
 
   const showFeedback = (type: 'success' | 'error', message: string) => {
     setFeedback({ type, message });
@@ -90,6 +94,16 @@ export default function TecnicoServicoDetailPage({ params }: { params: Promise<{
         setSelectedOS(osData);
         setNewStatus(osData.status);
         setTechNotes(osData.reported_issues || '');
+
+        if (osData.status === 'concluida' || osData.status === 'cancelada') {
+          const { data: reqData } = await supabase
+            .from('service_order_reopening_requests')
+            .select('*')
+            .eq('service_order_id', id)
+            .eq('status', 'pendente')
+            .maybeSingle();
+          setPendingRequest(reqData || null);
+        }
       } else {
         setSelectedOS(null);
       }
@@ -140,6 +154,27 @@ export default function TecnicoServicoDetailPage({ params }: { params: Promise<{
       console.error(err);
     } finally {
       setAddingNote(false);
+    }
+  };
+
+  const handleReopen = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reopenReason.trim() || !selectedOS) return;
+    try {
+      setRequestingReopen(true);
+      const { data, error } = await supabase.rpc('request_reopening', {
+        p_service_order_id: selectedOS.id,
+        p_reason: reopenReason
+      });
+      if (error) throw error;
+
+      showFeedback('success', 'Ação registrada com sucesso.');
+      loadData();
+    } catch (err: any) {
+      showFeedback('error', err.message || 'Erro ao processar solicitação.');
+    } finally {
+      setRequestingReopen(false);
+      setReopenReason('');
     }
   };
 
@@ -262,31 +297,107 @@ export default function TecnicoServicoDetailPage({ params }: { params: Promise<{
             )}
           </div>
 
-          <PremiumInput
-            label="Alterar Status do Serviço"
-            name="status"
-            as="select"
-            value={newStatus}
-            onChange={(e) => setNewStatus(e.target.value)}
-            options={[
-              { value: 'visita_agendada', label: 'Visita Agendada' },
-              { value: 'em_atendimento', label: 'Em Atendimento Local' },
-              { value: 'aguardando_peca', label: 'Aguardando Peça de Reposição' },
-              { value: 'orcamento_pendente', label: 'Aguardando Aprovação' },
-              { value: 'concluida', label: 'Concluído (Finalizado)' },
-              { value: 'cancelada', label: 'Cancelado' }
-            ]}
-          />
+          {selectedOS.status === 'concluida' || selectedOS.status === 'cancelada' ? (
+            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-6">
+              <div className="flex items-center gap-2 text-rose-700 font-bold">
+                <AlertCircle className="w-5 h-5" />
+                Ordem de Serviço Finalizada
+              </div>
+              <p className="text-xs text-slate-600 font-medium">
+                Esta OS encontra-se em modo de visualização. O status atual não pode ser editado.
+              </p>
 
-          <PremiumInput
-            label="Observações Técnicas / Laudo de Campo"
-            name="notes"
-            as="textarea"
-            value={techNotes}
-            onChange={(e) => setTechNotes(e.target.value)}
-            placeholder="Descreva o diagnóstico, justificativas de mudança de status ou laudo final..."
-            rows={2}
-          />
+              {/* Complementary Notes Section */}
+              <div className="space-y-3 bg-white p-4 rounded-xl border border-slate-200">
+                <h4 className="font-bold text-slate-800 text-xs flex items-center gap-2">
+                  <User className="w-4 h-4 text-slate-400" />
+                  Adicionar complemento
+                </h4>
+                <div className="flex gap-2 items-start">
+                  <textarea
+                    value={newNoteComplemento}
+                    onChange={(e) => setNewNoteComplemento(e.target.value)}
+                    placeholder="Complemento após fechamento..."
+                    className="flex-1 text-[11px] p-2 rounded-lg border border-slate-200 focus:outline-none focus:border-slate-400 min-h-[60px]"
+                  />
+                  <PremiumButton
+                    type="button"
+                    onClick={() => handleAddNote(selectedOS.id, 'geral', newNoteComplemento, setNewNoteComplemento)}
+                    disabled={!newNoteComplemento.trim() || addingNote}
+                    variant="primary"
+                    className="shrink-0 text-[10px] py-2 px-3 h-auto"
+                  >
+                    Adicionar
+                  </PremiumButton>
+                </div>
+              </div>
+
+              {/* Reopening Logic */}
+              <div className="pt-4 border-t border-slate-200">
+                {pendingRequest ? (
+                  <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 flex flex-col gap-2">
+                    <span className="font-bold text-amber-800 text-xs">Reabertura solicitada</span>
+                    <span className="text-[11px] text-amber-700">Aguardando aprovação da gerência.</span>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <PremiumInput
+                      label={
+                        (!selectedOS.customer_signature_url && !selectedOS.is_billed && selectedOS.closed_at && (new Date().getTime() - new Date(selectedOS.closed_at).getTime()) / 3600000 <= 2)
+                          ? `Motivo da Reabertura (Restam ${Math.floor(2 - ((new Date().getTime() - new Date(selectedOS.closed_at).getTime()) / 3600000))}h)` 
+                          : "Motivo para Solicitar Reabertura"
+                      }
+                      name="reopenReason"
+                      value={reopenReason}
+                      onChange={(e) => setReopenReason(e.target.value)}
+                      placeholder="Motivo obrigatório..."
+                    />
+                    <PremiumButton
+                      type="button"
+                      onClick={handleReopen}
+                      disabled={!reopenReason.trim() || requestingReopen}
+                      loading={requestingReopen}
+                      variant="outline"
+                      className="w-full text-rose-600 border-rose-200 hover:bg-rose-50"
+                    >
+                      {(!selectedOS.customer_signature_url && !selectedOS.is_billed && selectedOS.closed_at && (new Date().getTime() - new Date(selectedOS.closed_at).getTime()) / 3600000 <= 2)
+                        ? "Reabrir OS"
+                        : "Solicitar reabertura"
+                      }
+                    </PremiumButton>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <>
+              <PremiumInput
+                label="Alterar Status do Serviço"
+                name="status"
+                as="select"
+                value={newStatus}
+                onChange={(e) => setNewStatus(e.target.value)}
+                options={[
+                  { value: 'visita_agendada', label: 'Visita Agendada' },
+                  { value: 'em_atendimento', label: 'Em Atendimento Local' },
+                  { value: 'aguardando_peca', label: 'Aguardando Peça de Reposição' },
+                  { value: 'orcamento_pendente', label: 'Aguardando Aprovação' },
+                  { value: 'concluida', label: 'Concluído (Finalizado)' },
+                  { value: 'cancelada', label: 'Cancelado' }
+                ]}
+              />
+
+              <PremiumInput
+                label="Observações Técnicas / Laudo de Campo"
+                name="notes"
+                as="textarea"
+                value={techNotes}
+                onChange={(e) => setTechNotes(e.target.value)}
+                placeholder="Descreva o diagnóstico, justificativas de mudança de status ou laudo final..."
+                rows={2}
+              />
+            </>
+          )}
 
           <div className="space-y-6 pt-4 border-t border-slate-100 mt-4">
             <h3 className="font-extrabold text-slate-800 text-sm">Histórico de Atualizações</h3>
@@ -312,23 +423,25 @@ export default function TecnicoServicoDetailPage({ params }: { params: Promise<{
                 )}
               </div>
 
-              <div className="flex gap-2 items-start pt-2">
-                <textarea
-                  value={newNotePeca}
-                  onChange={(e) => setNewNotePeca(e.target.value)}
-                  placeholder="Adicionar nota sobre peças..."
-                  className="flex-1 text-[11px] p-2 rounded-lg border border-orange-200 focus:outline-none focus:border-orange-400 bg-white min-h-[60px]"
-                />
-                <PremiumButton
-                  type="button"
-                  onClick={() => handleAddNote(selectedOS.id, 'aguardando_peca', newNotePeca, setNewNotePeca)}
-                  disabled={!newNotePeca.trim() || addingNote}
-                  variant="primary"
-                  className="shrink-0 text-[10px] py-2 px-3 h-auto"
-                >
-                  Adicionar
-                </PremiumButton>
-              </div>
+              {selectedOS.status !== 'concluida' && selectedOS.status !== 'cancelada' && (
+                <div className="flex gap-2 items-start pt-2">
+                  <textarea
+                    value={newNotePeca}
+                    onChange={(e) => setNewNotePeca(e.target.value)}
+                    placeholder="Adicionar nota sobre peças..."
+                    className="flex-1 text-[11px] p-2 rounded-lg border border-orange-200 focus:outline-none focus:border-orange-400 bg-white min-h-[60px]"
+                  />
+                  <PremiumButton
+                    type="button"
+                    onClick={() => handleAddNote(selectedOS.id, 'aguardando_peca', newNotePeca, setNewNotePeca)}
+                    disabled={!newNotePeca.trim() || addingNote}
+                    variant="primary"
+                    className="shrink-0 text-[10px] py-2 px-3 h-auto"
+                  >
+                    Adicionar
+                  </PremiumButton>
+                </div>
+              )}
             </div>
 
             <div className="space-y-3 bg-sky-50/50 p-4 rounded-xl border border-sky-100">
@@ -352,44 +465,76 @@ export default function TecnicoServicoDetailPage({ params }: { params: Promise<{
                 )}
               </div>
 
-              <div className="flex gap-2 items-start pt-2">
-                <textarea
-                  value={newNoteServico}
-                  onChange={(e) => setNewNoteServico(e.target.value)}
-                  placeholder="Adicionar nota sobre serviços realizados..."
-                  className="flex-1 text-[11px] p-2 rounded-lg border border-sky-200 focus:outline-none focus:border-sky-400 bg-white min-h-[60px]"
-                />
-                <PremiumButton
-                  type="button"
-                  onClick={() => handleAddNote(selectedOS.id, 'servicos_realizados', newNoteServico, setNewNoteServico)}
-                  disabled={!newNoteServico.trim() || addingNote}
-                  variant="primary"
-                  className="shrink-0 text-[10px] py-2 px-3 h-auto bg-sky-600 hover:bg-sky-700"
-                >
-                  Adicionar
-                </PremiumButton>
+              {selectedOS.status !== 'concluida' && selectedOS.status !== 'cancelada' && (
+                <div className="flex gap-2 items-start pt-2">
+                  <textarea
+                    value={newNoteServico}
+                    onChange={(e) => setNewNoteServico(e.target.value)}
+                    placeholder="Adicionar nota sobre serviços realizados..."
+                    className="flex-1 text-[11px] p-2 rounded-lg border border-sky-200 focus:outline-none focus:border-sky-400 bg-white min-h-[60px]"
+                  />
+                  <PremiumButton
+                    type="button"
+                    onClick={() => handleAddNote(selectedOS.id, 'servicos_realizados', newNoteServico, setNewNoteServico)}
+                    disabled={!newNoteServico.trim() || addingNote}
+                    variant="primary"
+                    className="shrink-0 text-[10px] py-2 px-3 h-auto bg-sky-600 hover:bg-sky-700"
+                  >
+                    Adicionar
+                  </PremiumButton>
+                </div>
+              )}
+            </div>
+            
+            {/* Histórico Geral */}
+            <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <h4 className="font-bold text-slate-800 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-slate-400" />
+                Histórico Geral / Complementos
+              </h4>
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-2 no-scrollbar">
+                {selectedOS.notes?.filter((n: any) => n.category === 'geral').map((n: any) => (
+                  <div key={n.id} className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm text-[11px]">
+                    <div className="flex justify-between items-start mb-1">
+                       <span className="font-bold text-slate-700">{n.profile?.name || 'Sistema'}</span>
+                       {selectedOS.status === 'concluida' && new Date(n.created_at) > new Date(selectedOS.closed_at) && (
+                         <span className="bg-rose-100 text-rose-700 text-[9px] px-1.5 py-0.5 rounded font-bold">Complemento após fechamento</span>
+                       )}
+                    </div>
+                    <p className="text-slate-600 font-medium whitespace-pre-wrap mt-1">{n.note}</p>
+                    <div className="flex justify-end mt-2 text-[10px] text-slate-400 font-semibold">
+                      <span>{new Date(n.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</span>
+                    </div>
+                  </div>
+                ))}
+                {(!selectedOS.notes || selectedOS.notes.filter((n: any) => n.category === 'geral').length === 0) && (
+                  <p className="text-[11px] text-slate-500 font-medium italic text-center py-2">Nenhum registro nesta categoria.</p>
+                )}
               </div>
             </div>
+
           </div>
 
-          <div className="flex gap-3 pt-6 border-t border-slate-100">
-            <PremiumButton
-              onClick={() => router.back()}
-              type="button"
-              variant="outline"
-              className="flex-1"
-            >
-              Cancelar
-            </PremiumButton>
-            <PremiumButton
-              type="submit"
-              loading={updating}
-              variant="primary"
-              className="flex-1"
-            >
-              Salvar Alterações
-            </PremiumButton>
-          </div>
+          {selectedOS.status !== 'concluida' && selectedOS.status !== 'cancelada' && (
+            <div className="flex gap-3 pt-6 border-t border-slate-100">
+              <PremiumButton
+                onClick={() => router.back()}
+                type="button"
+                variant="outline"
+                className="flex-1"
+              >
+                Cancelar
+              </PremiumButton>
+              <PremiumButton
+                type="submit"
+                loading={updating}
+                variant="primary"
+                className="flex-1"
+              >
+                Salvar Alterações
+              </PremiumButton>
+            </div>
+          )}
         </form>
       </div>
     </div>
