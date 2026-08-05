@@ -1103,71 +1103,74 @@ export default function AdminOrdensServicoPage() {
         size="md"
       >
         {reopenModal.req && (
-          <div className="space-y-6">
-            <p className="text-slate-600 text-sm">
-              {reopenModal.action === 'approve'
-                ? `Ao confirmar, a OS #${reopenModal.req.service_order_id.substring(0, 8).toUpperCase()} será reaberta para que o técnico possa realizar as correções solicitadas. Todo o histórico anterior será preservado.`
-                : `A OS #${reopenModal.req.service_order_id.substring(0, 8).toUpperCase()} permanecerá concluída e o técnico não poderá alterá-la.`
-              }
-            </p>
-
-            <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 text-sm space-y-2">
-              <div className="flex justify-between">
-                <span className="text-slate-500">Cliente:</span>
-                <span className="font-medium text-slate-800">
-                  {customers.find(c => c.id === reopenModal.req?.os?.customer_id)?.company_name || 'Desconhecido'}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Técnico:</span>
-                <span className="font-medium text-slate-800">
-                  {reopenModal.req.technician?.profile?.name || 'Desconhecido'}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Motivo da solicitação:</span>
-                <span className="font-medium text-slate-800 text-right max-w-[200px] truncate" title={reopenModal.req.reason}>
-                  {reopenModal.req.reason}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Data da solicitação:</span>
-                <span className="font-medium text-slate-800">
-                  {new Date(reopenModal.req.created_at).toLocaleString('pt-BR', { timeZone: 'America/Mexico_City' })}
-                </span>
-              </div>
-            </div>
-
-            {reopenModal.error && (
-              <div className="p-3 bg-rose-50 text-rose-700 rounded-lg text-sm font-medium border border-rose-200">
-                {reopenModal.error}
-              </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-800 mb-1">
-                {reopenModal.action === 'approve' ? 'Justificativa da aprovação' : 'Motivo da recusa'}
-              </label>
-              <textarea
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all resize-none disabled:opacity-50"
-                rows={3}
-                placeholder={reopenModal.action === 'approve' ? 'Informe por que esta reabertura está sendo autorizada...' : 'Explique por que a solicitação está sendo recusada...'}
-                value={reopenModal.reason}
-                onChange={(e) => setReopenModal(prev => ({ ...prev, reason: e.target.value, error: null }))}
-                disabled={processingReopening !== null}
-              />
-              <p className="text-xs text-slate-500 mt-2 font-medium">
+          <div className="flex flex-col max-h-[calc(100dvh-8rem)] -mx-6 -mb-6">
+            <div className="p-6 overflow-y-auto space-y-6">
+              <p className="text-slate-600 text-sm">
                 {reopenModal.action === 'approve'
-                  ? 'Esta justificativa será registrada no histórico de auditoria.'
-                  : 'O motivo será disponibilizado ao técnico e registrado na auditoria.'
+                  ? `Ao confirmar, a OS #${reopenModal.req.service_order_id.substring(0, 8).toUpperCase()} será reaberta para que o técnico possa realizar as correções solicitadas. Todo o histórico anterior será preservado.`
+                  : `A OS #${reopenModal.req.service_order_id.substring(0, 8).toUpperCase()} permanecerá concluída e o técnico não poderá alterá-la.`
                 }
               </p>
+
+              <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 text-sm space-y-3">
+                <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+                  <span className="text-slate-500 shrink-0">Cliente:</span>
+                  <span className="font-medium text-slate-800 text-left sm:text-right">
+                    {customers.find(c => c.id === reopenModal.req?.os?.customer_id)?.company_name || 'Desconhecido'}
+                  </span>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+                  <span className="text-slate-500 shrink-0">Técnico:</span>
+                  <span className="font-medium text-slate-800 text-left sm:text-right">
+                    {reopenModal.req.technician?.profile?.name || 'Desconhecido'}
+                  </span>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+                  <span className="text-slate-500 shrink-0">Motivo da solicitação:</span>
+                  <span className="font-medium text-slate-800 text-left sm:text-right break-words whitespace-pre-wrap">
+                    {reopenModal.req.reason}
+                  </span>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+                  <span className="text-slate-500 shrink-0">Data da solicitação:</span>
+                  <span className="font-medium text-slate-800 text-left sm:text-right">
+                    {new Date(reopenModal.req.created_at).toLocaleString('pt-BR', { timeZone: 'America/Mexico_City' })}
+                  </span>
+                </div>
+              </div>
+
+              {reopenModal.error && (
+                <div className="p-3 bg-rose-50 text-rose-700 rounded-lg text-sm font-medium border border-rose-200">
+                  {reopenModal.error}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-800 mb-1">
+                  {reopenModal.action === 'approve' ? 'Justificativa da aprovação' : 'Motivo da recusa'}
+                </label>
+                <textarea
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all resize-none disabled:opacity-50"
+                  rows={3}
+                  placeholder={reopenModal.action === 'approve' ? 'Informe por que esta reabertura está sendo autorizada...' : 'Explique por que a solicitação está sendo recusada...'}
+                  value={reopenModal.reason}
+                  onChange={(e) => setReopenModal(prev => ({ ...prev, reason: e.target.value, error: null }))}
+                  disabled={processingReopening !== null}
+                />
+                <p className="text-xs text-slate-500 mt-2 font-medium">
+                  {reopenModal.action === 'approve'
+                    ? 'Esta justificativa será registrada no histórico de auditoria.'
+                    : 'O motivo será disponibilizado ao técnico e registrado na auditoria.'
+                  }
+                </p>
+              </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 p-6 border-t border-slate-100 bg-slate-50 rounded-b-3xl shrink-0">
               <PremiumButton
                 type="button"
                 variant="outline"
+                className="w-full sm:w-auto"
                 onClick={() => setReopenModal({ isOpen: false, req: null, action: null, reason: '', error: null })}
                 disabled={processingReopening !== null}
               >
@@ -1176,7 +1179,7 @@ export default function AdminOrdensServicoPage() {
               <PremiumButton
                 type="button"
                 variant="primary"
-                className={reopenModal.action === 'reject' ? 'bg-rose-600 hover:bg-rose-700 border-transparent text-white' : ''}
+                className={`w-full sm:w-auto ${reopenModal.action === 'reject' ? 'bg-rose-600 hover:bg-rose-700 border-transparent text-white' : ''}`}
                 onClick={submitReopenModal}
                 loading={processingReopening !== null}
                 disabled={!reopenModal.reason.trim() || processingReopening !== null}
