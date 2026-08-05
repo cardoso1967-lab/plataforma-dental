@@ -90,6 +90,13 @@ export default function TecnicoServicosPage() {
             category,
             created_at,
             profile:profiles(name)
+          ),
+          status_history:service_order_status_history(
+            id,
+            status,
+            previous_status,
+            created_at,
+            profile:profiles(name)
           )
         `)
         .eq('technician_id', techData.id)
@@ -494,161 +501,49 @@ export default function TecnicoServicosPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={selectedOS ? `OS #${selectedOS.id.slice(0, 8).toUpperCase()}` : ''}
-        size="sm"
+        size="md"
       >
         {selectedOS && (
-          <form onSubmit={(e) => { e.preventDefault(); if (selectedOS.status !== 'concluida' && selectedOS.status !== 'cancelada') handleUpdateStatus(e); }} className="space-y-4 text-left">
-            {/* Informação do Cliente */}
-            <div className="space-y-1 bg-slate-50 p-4.5 rounded-2xl border border-slate-100 text-xs font-semibold text-slate-655 text-left">
-              <p className="text-slate-800 font-black">{getCustomerDisplayName(selectedOS.customer)}</p>
-              <p className="text-slate-400 font-semibold text-[10.5px] leading-relaxed">
-                {selectedOS.customer?.address_street}, {selectedOS.customer?.address_number} - {selectedOS.customer?.address_city}
-              </p>
-              {selectedOS.customer?.phone && (
-                <p className="text-sky-600 font-extrabold text-[10.5px] pt-1">
-                  Fone: {selectedOS.customer.phone}
+          <form onSubmit={(e) => { e.preventDefault(); if (selectedOS.status !== 'concluida' && selectedOS.status !== 'cancelada') handleUpdateStatus(e); }} className="flex flex-col h-full text-left">
+            <div className="space-y-4">
+              {/* Informação do Cliente */}
+              <div className="space-y-1 bg-slate-50 p-4.5 rounded-2xl border border-slate-100 text-xs font-semibold text-slate-655 text-left">
+                <p className="text-slate-800 font-black">{getCustomerDisplayName(selectedOS.customer)}</p>
+                <p className="text-slate-400 font-semibold text-[10.5px] leading-relaxed">
+                  {selectedOS.customer?.address_street}, {selectedOS.customer?.address_number} - {selectedOS.customer?.address_city}
                 </p>
-              )}
-            </div>
-
-            {(selectedOS.status === 'concluida' || selectedOS.status === 'cancelada') ? (
-              /* READ-ONLY MODE for finalized OS */
-              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-5">
-                <div className="flex items-center gap-2 text-rose-700 font-bold text-xs">
-                  <AlertCircle className="w-4 h-4" />
-                  Ordem de Serviço Finalizada — modo visualização
-                </div>
-
-                {/* Adicionar Complemento */}
-                <div className="space-y-2 bg-white p-4 rounded-xl border border-slate-200">
-                  <h4 className="font-bold text-slate-800 text-xs flex items-center gap-2">
-                    <User className="w-4 h-4 text-slate-400" />
-                    Adicionar complemento
-                  </h4>
-                  <div className="flex gap-2 items-start">
-                    <textarea
-                      value={newNoteComplemento}
-                      onChange={(e) => setNewNoteComplemento(e.target.value)}
-                      placeholder="Complemento após fechamento..."
-                      className="flex-1 text-[11px] p-2 rounded-lg border border-slate-200 focus:outline-none focus:border-slate-400 min-h-[60px]"
-                    />
-                    <PremiumButton
-                      type="button"
-                      onClick={() => handleAddNote(selectedOS.id, 'geral', newNoteComplemento, setNewNoteComplemento)}
-                      disabled={!newNoteComplemento.trim() || addingNote}
-                      variant="primary"
-                      className="shrink-0 text-[10px] py-2 px-3 h-auto"
-                    >
-                      Adicionar
-                    </PremiumButton>
-                  </div>
-                </div>
-
-                {/* Reopening controls — always shown, never hidden */}
-                <div className="pt-3 border-t border-slate-200">
-                  {pendingRequest ? (
-                    <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 flex flex-col gap-1">
-                      <span className="font-bold text-amber-800 text-xs">Reabertura solicitada</span>
-                      <span className="text-[11px] text-amber-700">Aguardando aprovação da gerência.</span>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <PremiumInput
-                        label={
-                          (!selectedOS.customer_signature_url && !selectedOS.is_billed && selectedOS.closed_at &&
-                           (new Date().getTime() - new Date(selectedOS.closed_at).getTime()) / 3600000 <= 2)
-                            ? `Motivo da Reabertura (até ${Math.max(0, Math.floor(2 - (new Date().getTime() - new Date(selectedOS.closed_at).getTime()) / 3600000))}h restantes)`
-                            : 'Motivo para Solicitar Reabertura'
-                        }
-                        name="reopenReason"
-                        value={reopenReason}
-                        onChange={(e) => setReopenReason(e.target.value)}
-                        placeholder="Motivo obrigatório..."
-                      />
-                      <PremiumButton
-                        type="button"
-                        onClick={handleReopen}
-                        disabled={!reopenReason.trim() || requestingReopen}
-                        loading={requestingReopen}
-                        variant="outline"
-                        className="w-full text-rose-600 border-rose-200 hover:bg-rose-50"
-                      >
-                        {(!selectedOS.customer_signature_url && !selectedOS.is_billed && selectedOS.closed_at &&
-                          (new Date().getTime() - new Date(selectedOS.closed_at).getTime()) / 3600000 <= 2)
-                          ? 'Reabrir OS'
-                          : 'Solicitar reabertura'
-                        }
-                      </PremiumButton>
-                    </div>
-                  )}
-                </div>
+                {selectedOS.customer?.phone && (
+                  <p className="text-sky-600 font-extrabold text-[10.5px] pt-1">
+                    Fone: {selectedOS.customer.phone}
+                  </p>
+                )}
               </div>
-            ) : (
-              /* EDIT MODE for active OS */
-              <>
-                {/* Selector de Status */}
-                <PremiumInput
-                  label="Alterar Status do Serviço"
-                  name="status"
-                  as="select"
-                  value={newStatus}
-                  onChange={(e) => setNewStatus(e.target.value)}
-                  options={[
-                    { value: 'visita_agendada', label: 'Visita Agendada' },
-                    { value: 'em_atendimento', label: 'Em Atendimento Local' },
-                    { value: 'aguardando_peca', label: 'Aguardando Peça de Reposição' },
-                    { value: 'orcamento_pendente', label: 'Aguardando Aprovação' },
-                    { value: 'concluida', label: 'Concluído (Finalizado)' },
-                    { value: 'cancelada', label: 'Cancelado' }
-                  ]}
-                />
 
-                {/* Anotações Técnicas */}
-                <PremiumInput
-                  label="Observações Técnicas / Laudo de Campo"
-                  name="notes"
-                  as="textarea"
-                  value={techNotes}
-                  onChange={(e) => setTechNotes(e.target.value)}
-                  placeholder="Descreva o diagnóstico, justificativas de mudança de status ou laudo final..."
-                  rows={2}
-                />
+              {(selectedOS.status === 'concluida' || selectedOS.status === 'cancelada') ? (
+                /* READ-ONLY MODE for finalized OS */
+                <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-5">
+                  <div className="flex items-center gap-2 text-rose-700 font-bold text-xs">
+                    <AlertCircle className="w-4 h-4" />
+                    Ordem de Serviço Finalizada — modo visualização
+                  </div>
 
-                {/* Históricos */}
-                <div className="space-y-6 pt-4 border-t border-slate-100 mt-4">
-                  <h3 className="font-extrabold text-slate-800 text-sm">Histórico de Atualizações</h3>
-
-                  {/* Aguardando Peça History */}
-                  <div className="space-y-3 bg-orange-50/50 p-4 rounded-xl border border-orange-100">
-                    <h4 className="font-bold text-orange-800 text-xs flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4" />
-                      Aguardando Peça
+                  {/* Adicionar Complemento */}
+                  <div className="space-y-2 bg-white p-4 rounded-xl border border-slate-200">
+                    <h4 className="font-bold text-slate-800 text-xs flex items-center gap-2">
+                      <User className="w-4 h-4 text-slate-400" />
+                      Adicionar complemento
                     </h4>
-                    <div className="space-y-2 max-h-40 overflow-y-auto pr-2 no-scrollbar">
-                      {selectedOS.notes?.filter((n: any) => n.category === 'aguardando_peca').map((n: any) => (
-                        <div key={n.id} className="bg-white p-3 rounded-lg border border-orange-100 shadow-sm text-[11px]">
-                          <p className="text-slate-700 font-medium whitespace-pre-wrap">{n.note}</p>
-                          <div className="flex justify-between items-center mt-2 text-[10px] text-slate-400 font-semibold">
-                            <span>{n.profile?.name || 'Sistema'}</span>
-                            <span>{new Date(n.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</span>
-                          </div>
-                        </div>
-                      ))}
-                      {(!selectedOS.notes || selectedOS.notes.filter((n: any) => n.category === 'aguardando_peca').length === 0) && (
-                        <p className="text-[11px] text-orange-600/60 font-medium italic text-center py-2">Nenhum registro nesta categoria.</p>
-                      )}
-                    </div>
-                    <div className="flex gap-2 items-start pt-2">
+                    <div className="flex gap-2 items-start">
                       <textarea
-                        value={newNotePeca}
-                        onChange={(e) => setNewNotePeca(e.target.value)}
-                        placeholder="Adicionar nota sobre peças..."
-                        className="flex-1 text-[11px] p-2 rounded-lg border border-orange-200 focus:outline-none focus:border-orange-400 bg-white min-h-[60px]"
+                        value={newNoteComplemento}
+                        onChange={(e) => setNewNoteComplemento(e.target.value)}
+                        placeholder="Complemento após fechamento..."
+                        className="flex-1 text-[11px] p-2 rounded-lg border border-slate-200 focus:outline-none focus:border-slate-400 min-h-[60px]"
                       />
                       <PremiumButton
                         type="button"
-                        onClick={() => handleAddNote(selectedOS.id, 'aguardando_peca', newNotePeca, setNewNotePeca)}
-                        disabled={!newNotePeca.trim() || addingNote}
+                        onClick={() => handleAddNote(selectedOS.id, 'geral', newNoteComplemento, setNewNoteComplemento)}
+                        disabled={!newNoteComplemento.trim() || addingNote}
                         variant="primary"
                         className="shrink-0 text-[10px] py-2 px-3 h-auto"
                       >
@@ -657,66 +552,189 @@ export default function TecnicoServicosPage() {
                     </div>
                   </div>
 
-                  {/* Serviços Realizados History */}
-                  <div className="space-y-3 bg-sky-50/50 p-4 rounded-xl border border-sky-100">
-                    <h4 className="font-bold text-sky-800 text-xs flex items-center gap-2">
-                      <Wrench className="w-4 h-4" />
-                      Serviços Realizados
-                    </h4>
-                    <div className="space-y-2 max-h-40 overflow-y-auto pr-2 no-scrollbar">
-                      {selectedOS.notes?.filter((n: any) => n.category === 'servicos_realizados').map((n: any) => (
-                        <div key={n.id} className="bg-white p-3 rounded-lg border border-sky-100 shadow-sm text-[11px]">
-                          <p className="text-slate-700 font-medium whitespace-pre-wrap">{n.note}</p>
-                          <div className="flex justify-between items-center mt-2 text-[10px] text-slate-400 font-semibold">
-                            <span>{n.profile?.name || 'Sistema'}</span>
-                            <span>{new Date(n.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</span>
+                  {/* Reopening controls */}
+                  <div className="pt-3 border-t border-slate-200">
+                    {pendingRequest ? (
+                      <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 flex flex-col gap-1">
+                        <span className="font-bold text-amber-800 text-xs">Reabertura solicitada</span>
+                        <span className="text-[11px] text-amber-700">Aguardando aprovação da gerência.</span>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <PremiumInput
+                          label={
+                            (!selectedOS.customer_signature_url && !selectedOS.is_billed && selectedOS.closed_at &&
+                             (new Date().getTime() - new Date(selectedOS.closed_at).getTime()) / 3600000 <= 2)
+                              ? `Motivo da Reabertura (até ${Math.max(0, Math.floor(2 - (new Date().getTime() - new Date(selectedOS.closed_at).getTime()) / 3600000))}h restantes)`
+                              : 'Motivo para Solicitar Reabertura'
+                          }
+                          name="reopenReason"
+                          value={reopenReason}
+                          onChange={(e) => setReopenReason(e.target.value)}
+                          placeholder="Motivo obrigatório..."
+                        />
+                        <PremiumButton
+                          type="button"
+                          onClick={handleReopen}
+                          disabled={!reopenReason.trim() || requestingReopen}
+                          loading={requestingReopen}
+                          variant="outline"
+                          className="w-full text-rose-600 border-rose-200 hover:bg-rose-50"
+                        >
+                          {(!selectedOS.customer_signature_url && !selectedOS.is_billed && selectedOS.closed_at &&
+                            (new Date().getTime() - new Date(selectedOS.closed_at).getTime()) / 3600000 <= 2)
+                            ? 'Reabrir OS'
+                            : 'Solicitar reabertura'
+                          }
+                        </PremiumButton>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                /* EDIT MODE for active OS */
+                <div className="space-y-4">
+                  {/* Selector de Status */}
+                  <PremiumInput
+                    label="Alterar Status do Serviço"
+                    name="status"
+                    as="select"
+                    value={newStatus}
+                    onChange={(e) => setNewStatus(e.target.value)}
+                    options={[
+                      { value: 'visita_agendada', label: 'Visita Agendada' },
+                      { value: 'em_atendimento', label: 'Em Atendimento Local' },
+                      { value: 'aguardando_peca', label: 'Aguardando Peça de Reposição' },
+                      { value: 'orcamento_pendente', label: 'Aguardando Aprovação' },
+                      { value: 'concluida', label: 'Concluído (Finalizado)' },
+                      { value: 'cancelada', label: 'Cancelado' }
+                    ]}
+                  />
+
+                  {/* Anotações Técnicas */}
+                  <PremiumInput
+                    label="Observações Técnicas / Laudo de Campo"
+                    name="notes"
+                    as="textarea"
+                    value={techNotes}
+                    onChange={(e) => setTechNotes(e.target.value)}
+                    placeholder="Descreva o diagnóstico, justificativas de mudança de status ou laudo final..."
+                    rows={2}
+                  />
+
+                  {/* Histórico Cronológico */}
+                  <div className="space-y-3 pt-4 border-t border-slate-100">
+                    <h3 className="font-extrabold text-slate-800 text-sm flex items-center gap-2">
+                      <ClipboardList className="w-4 h-4 text-slate-500" />
+                      Histórico Completo
+                    </h3>
+                    
+                    <div className="bg-slate-50 rounded-xl p-3 max-h-60 overflow-y-auto no-scrollbar border border-slate-200 space-y-2">
+                      {[
+                        ...(selectedOS.notes || []).map((n: any) => ({ type: 'note', ...n })),
+                        ...(selectedOS.status_history || []).map((sh: any) => ({ type: 'status_change', ...sh }))
+                      ]
+                        .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+                        .map((record: any, index: number) => (
+                          <div key={`${record.type}-${record.id || index}`} className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm text-[11px]">
+                            {record.type === 'status_change' ? (
+                              <div className="flex items-start gap-2">
+                                <AlertCircle className="w-3.5 h-3.5 text-sky-500 shrink-0 mt-0.5" />
+                                <div>
+                                  <span className="font-bold text-slate-700">Status alterado: </span>
+                                  <span className="text-slate-600">
+                                    {record.previous_status ? `${record.previous_status} → ` : ''}
+                                    <span className="font-semibold text-sky-700">{record.status}</span>
+                                  </span>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  {record.category === 'aguardando_peca' && <span className="px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded font-bold text-[9px] uppercase tracking-wider">Peça</span>}
+                                  {record.category === 'servicos_realizados' && <span className="px-1.5 py-0.5 bg-sky-100 text-sky-700 rounded font-bold text-[9px] uppercase tracking-wider">Serviço</span>}
+                                  {record.category === 'geral' && <span className="px-1.5 py-0.5 bg-slate-200 text-slate-700 rounded font-bold text-[9px] uppercase tracking-wider">Geral</span>}
+                                </div>
+                                <p className="text-slate-700 font-medium whitespace-pre-wrap">{record.note}</p>
+                              </div>
+                            )}
+                            <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-100 text-[10px] text-slate-400 font-semibold">
+                              <span>{record.profile?.name || 'Sistema'}</span>
+                              <span>{new Date(record.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</span>
+                            </div>
                           </div>
-                        </div>
                       ))}
-                      {(!selectedOS.notes || selectedOS.notes.filter((n: any) => n.category === 'servicos_realizados').length === 0) && (
-                        <p className="text-[11px] text-sky-600/60 font-medium italic text-center py-2">Nenhum registro nesta categoria.</p>
+                      {(!selectedOS.notes?.length && !selectedOS.status_history?.length) && (
+                        <p className="text-[11px] text-slate-400 font-medium italic text-center py-4">Nenhum histórico registrado.</p>
                       )}
                     </div>
-                    <div className="flex gap-2 items-start pt-2">
-                      <textarea
-                        value={newNoteServico}
-                        onChange={(e) => setNewNoteServico(e.target.value)}
-                        placeholder="Adicionar nota sobre serviços realizados..."
-                        className="flex-1 text-[11px] p-2 rounded-lg border border-sky-200 focus:outline-none focus:border-sky-400 bg-white min-h-[60px]"
-                      />
-                      <PremiumButton
-                        type="button"
-                        onClick={() => handleAddNote(selectedOS.id, 'servicos_realizados', newNoteServico, setNewNoteServico)}
-                        disabled={!newNoteServico.trim() || addingNote}
-                        variant="primary"
-                        className="shrink-0 text-[10px] py-2 px-3 h-auto bg-sky-600 hover:bg-sky-700"
-                      >
-                        Adicionar
-                      </PremiumButton>
+                  </div>
+
+                  {/* Adicionar Novos Registros */}
+                  <div className="space-y-3 pt-4 border-t border-slate-100">
+                    <h3 className="font-extrabold text-slate-800 text-sm">Adicionar Registro</h3>
+                    <div className="space-y-2">
+                      <div className="flex gap-2 items-start">
+                        <textarea
+                          value={newNotePeca}
+                          onChange={(e) => setNewNotePeca(e.target.value)}
+                          placeholder="Nota sobre peças..."
+                          className="flex-1 text-[11px] p-2 rounded-lg border border-orange-200 focus:outline-none focus:border-orange-400 bg-orange-50/30 min-h-[40px]"
+                        />
+                        <PremiumButton
+                          type="button"
+                          onClick={() => handleAddNote(selectedOS.id, 'aguardando_peca', newNotePeca, setNewNotePeca)}
+                          disabled={!newNotePeca.trim() || addingNote}
+                          variant="outline"
+                          className="shrink-0 text-[10px] py-1.5 px-3 h-auto text-orange-700 border-orange-200 hover:bg-orange-50 mt-1"
+                        >
+                          Salvar Peça
+                        </PremiumButton>
+                      </div>
+                      <div className="flex gap-2 items-start">
+                        <textarea
+                          value={newNoteServico}
+                          onChange={(e) => setNewNoteServico(e.target.value)}
+                          placeholder="Nota sobre serviços..."
+                          className="flex-1 text-[11px] p-2 rounded-lg border border-sky-200 focus:outline-none focus:border-sky-400 bg-sky-50/30 min-h-[40px]"
+                        />
+                        <PremiumButton
+                          type="button"
+                          onClick={() => handleAddNote(selectedOS.id, 'servicos_realizados', newNoteServico, setNewNoteServico)}
+                          disabled={!newNoteServico.trim() || addingNote}
+                          variant="outline"
+                          className="shrink-0 text-[10px] py-1.5 px-3 h-auto text-sky-700 border-sky-200 hover:bg-sky-50 mt-1"
+                        >
+                          Salvar Serviço
+                        </PremiumButton>
+                      </div>
                     </div>
                   </div>
                 </div>
+              )}
+            </div>
 
-                {/* Botões de ação */}
-                <div className="flex gap-3 pt-4 border-t border-slate-100">
-                  <PremiumButton
-                    onClick={() => setIsModalOpen(false)}
-                    variant="outline"
-                    className="flex-1"
-                  >
-                    Voltar
-                  </PremiumButton>
-                  <PremiumButton
-                    type="submit"
-                    loading={updating}
-                    variant="primary"
-                    className="flex-1"
-                  >
-                    Atualizar
-                  </PremiumButton>
-                </div>
-              </>
-            )}
+            {/* Botões de ação (Sticky Footer) */}
+            <div className="sticky bottom-0 bg-white pt-4 pb-2 border-t border-slate-100 flex gap-3 mt-4 -mx-6 px-6 shadow-[0_-12px_16px_-4px_rgba(255,255,255,0.9)] shrink-0 z-10">
+              <PremiumButton
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                variant="outline"
+                className="flex-1"
+              >
+                Voltar
+              </PremiumButton>
+              {selectedOS.status !== 'concluida' && selectedOS.status !== 'cancelada' && (
+                <PremiumButton
+                  type="submit"
+                  loading={updating}
+                  variant="primary"
+                  className="flex-1"
+                >
+                  Atualizar
+                </PremiumButton>
+              )}
+            </div>
           </form>
         )}
       </PremiumModal>

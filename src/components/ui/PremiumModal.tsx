@@ -41,10 +41,10 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
 
       {/* Caja del modal premium */}
       <div
-        className={`bg-white rounded-2xl w-full ${getSizeStyles()} overflow-hidden shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.7)] border border-slate-200/80 relative z-10 transform transition-all duration-300 animate-in zoom-in-95`}
+        className={`bg-white rounded-2xl w-full ${getSizeStyles()} flex flex-col max-h-[calc(100dvh-2rem)] overflow-hidden shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.7)] border border-slate-200/80 relative z-10 transform transition-all duration-300 animate-in zoom-in-95`}
       >
         {/* Cabecera del modal */}
-        <div className="px-6 py-4.5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-b from-slate-50 to-white">
+        <div className="shrink-0 px-6 py-4.5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-b from-slate-50 to-white z-10">
           <h3 className="font-extrabold text-sm text-slate-800 tracking-tight leading-none text-left">
             {title}
           </h3>
@@ -57,7 +57,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
         </div>
 
         {/* Cuerpo del modal */}
-        <div className="p-6 max-h-[80vh] overflow-y-auto no-scrollbar">
+        <div className="flex-1 p-6 overflow-y-auto no-scrollbar">
           {children}
         </div>
       </div>
