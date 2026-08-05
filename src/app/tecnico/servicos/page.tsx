@@ -178,7 +178,7 @@ export default function TecnicoServicosPage() {
   const openStatusModal = async (os: any) => {
     setSelectedOS(os);
     setNewStatus(os.status);
-    setTechNotes(os.reported_issues || '');
+    setTechNotes('');  // always start blank — previous notes are in Histórico Completo
     setNewNotePeca('');
     setNewNoteServico('');
     setNewNoteComplemento('');
@@ -242,17 +242,25 @@ export default function TecnicoServicosPage() {
 
   const handleUpdateStatus = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedOS || !profile?.id) return;
+    if (!selectedOS || !profile?.id || updating) return;
 
     try {
       setUpdating(true);
       const isConcluido = newStatus === 'concluida';
-      
+      const statusChanged = newStatus !== selectedOS.status;
+      const hasObservation = techNotes.trim().length > 0;
+
+      // Require at least one action: status change OR a non-empty observation.
+      if (!statusChanged && !hasObservation) {
+        showFeedback('error', 'Altere o status ou forneça uma observação técnica antes de atualizar.');
+        return;
+      }
+
+      // 1. Update the service_orders record.
       const payload: any = {
         status: newStatus,
-        reported_issues: techNotes || null
+        reported_issues: techNotes || null,
       };
-
       if (isConcluido) {
         payload.completion_date = new Date().toISOString();
       }
@@ -264,25 +272,50 @@ export default function TecnicoServicosPage() {
 
       if (updateError) throw updateError;
 
-      // Registrar historial de estatus
-      const { error: histError } = await supabase
-        .from('service_order_status_history')
-        .insert({
-          service_order_id: selectedOS.id,
-          status: newStatus,
-          changed_by: profile.id,
-          notes: techNotes ? `Status atualizado em campo: ${techNotes}` : 'Status atualizado em campo pelo técnico.'
-        });
+      // 2. Persist technical observation as an immutable note in service_order_notes.
+      // This is independent of whether the status changed, so the entry always
+      // appears in Histórico Completo after a reload.
+      if (hasObservation) {
+        const { error: noteError } = await supabase
+          .from('service_order_notes')
+          .insert({
+            service_order_id: selectedOS.id,
+            profile_id: profile.id,
+            category: 'geral',
+            note: techNotes.trim(),
+          });
 
-      if (histError) console.error('Erro ao registrar histórico:', histError.message);
+        if (noteError) {
+          // Note persistence failed — show explicit error, do not report success.
+          showFeedback('error', `Observação não foi salva: ${noteError.message}`);
+          console.error('[handleUpdateStatus] note insert failed:', noteError);
+          return;
+        }
+      }
+
+      // 3. Record status change in service_order_status_history (best-effort).
+      if (statusChanged) {
+        const { error: histError } = await supabase
+          .from('service_order_status_history')
+          .insert({
+            service_order_id: selectedOS.id,
+            status: newStatus,
+            previous_status: selectedOS.status,
+            changed_by: profile.id,
+          });
+
+        if (histError) {
+          console.error('[handleUpdateStatus] status history insert failed:', histError.message);
+        }
+      }
 
       setIsModalOpen(false);
       setSelectedOS(null);
       await loadData();
-      showFeedback('success', 'Status atualizado com sucesso.');
+      showFeedback('success', statusChanged ? 'Status e observação atualizados com sucesso.' : 'Observação técnica salva com sucesso.');
     } catch (err: any) {
       showFeedback('error', 'Não foi possível concluir a ação. Tente novamente.');
-      console.error('Erro ao atualizar chamado:', err.message);
+      console.error('[handleUpdateStatus] error:', err.message);
     } finally {
       setUpdating(false);
     }
