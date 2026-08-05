@@ -111,6 +111,20 @@ export default function AdminOrdensServicoPage() {
   const [reopeningRequests, setReopeningRequests] = useState<any[]>([]);
   const [processingReopening, setProcessingReopening] = useState<string | null>(null);
 
+  const [reopenModal, setReopenModal] = useState<{
+    isOpen: boolean;
+    req: any | null;
+    action: 'approve' | 'reject' | null;
+    reason: string;
+    error: string | null;
+  }>({
+    isOpen: false,
+    req: null,
+    action: null,
+    reason: '',
+    error: null,
+  });
+
   // Formulario de OS
   const [formOS, setFormOS] = useState({
     customer_id: '',
@@ -408,39 +422,45 @@ export default function AdminOrdensServicoPage() {
     return equipments.filter(eq => eq.customer_id === formOS.customer_id);
   };
 
-  const handleProcessReopening = async (reqId: string, action: 'approve' | 'reject') => {
-    let reason = '';
-    if (action === 'reject') {
-      const p = prompt('Informe o motivo da rejeição (Obrigatório):');
-      if (!p || !p.trim()) {
-        showFeedback('error', 'Motivo é obrigatório para rejeição.');
-        return;
-      }
-      reason = p.trim();
-    } else {
-      if (!confirm('Deseja realmente aprovar esta solicitação de reabertura?')) return;
-      const p = prompt('Informe o motivo da aprovação (Obrigatório):');
-      if (!p || !p.trim()) {
-        showFeedback('error', 'Motivo é obrigatório para aprovação.');
-        return;
-      }
-      reason = p.trim();
+  const openReopenModal = (req: any, action: 'approve' | 'reject') => {
+    setReopenModal({
+      isOpen: true,
+      req,
+      action,
+      reason: '',
+      error: null
+    });
+  };
+
+  const submitReopenModal = async () => {
+    if (!reopenModal.req || !reopenModal.action) return;
+    if (!reopenModal.reason || !reopenModal.reason.trim()) {
+      setReopenModal(prev => ({ ...prev, error: 'O motivo é obrigatório.' }));
+      return;
     }
 
     try {
-      setProcessingReopening(reqId);
+      setProcessingReopening(reopenModal.req.id);
+      setReopenModal(prev => ({ ...prev, error: null }));
+
       const { error } = await supabase.rpc('process_reopening_request', {
-        p_request_id: reqId,
-        p_action: action,
-        p_reason: reason
+        p_request_id: reopenModal.req.id,
+        p_action: reopenModal.action,
+        p_reason: reopenModal.reason.trim()
       });
 
       if (error) throw error;
+
+      if (reopenModal.action === 'approve') {
+        showFeedback('success', `Solicitação aprovada. A OS #${reopenModal.req.service_order_id.substring(0, 8).toUpperCase()} foi reaberta com sucesso.`);
+      } else {
+        showFeedback('success', `Solicitação recusada. A OS #${reopenModal.req.service_order_id.substring(0, 8).toUpperCase()} permanece concluída.`);
+      }
       
-      showFeedback('success', `Solicitação ${action === 'approve' ? 'aprovada' : 'rejeitada'} com sucesso.`);
+      setReopenModal({ isOpen: false, req: null, action: null, reason: '', error: null });
       loadData();
     } catch (err: any) {
-      showFeedback('error', err.message || 'Erro ao processar solicitação.');
+      setReopenModal(prev => ({ ...prev, error: err.message || 'Erro ao processar solicitação.' }));
       console.error(err);
     } finally {
       setProcessingReopening(null);
@@ -615,9 +635,8 @@ export default function AdminOrdensServicoPage() {
                       type="button"
                       variant="primary"
                       className="bg-emerald-600 hover:bg-emerald-700 text-xs px-3 py-1.5 h-auto"
-                      loading={processingReopening === req.id}
                       disabled={processingReopening !== null}
-                      onClick={() => handleProcessReopening(req.id, 'approve')}
+                      onClick={() => openReopenModal(req, 'approve')}
                     >
                       Aprovar
                     </PremiumButton>
@@ -626,7 +645,7 @@ export default function AdminOrdensServicoPage() {
                       variant="outline"
                       className="text-rose-600 border-rose-200 hover:bg-rose-50 text-xs px-3 py-1.5 h-auto"
                       disabled={processingReopening !== null}
-                      onClick={() => handleProcessReopening(req.id, 'reject')}
+                      onClick={() => openReopenModal(req, 'reject')}
                     >
                       Recusar
                     </PremiumButton>
@@ -1072,6 +1091,104 @@ export default function AdminOrdensServicoPage() {
             </PremiumButton>
           </div>
         </form>
+      </PremiumModal>
+      <PremiumModal
+        isOpen={reopenModal.isOpen}
+        onClose={() => {
+          if (!processingReopening) {
+            setReopenModal({ isOpen: false, req: null, action: null, reason: '', error: null });
+          }
+        }}
+        title={reopenModal.action === 'approve' ? 'Aprovar reabertura da OS?' : 'Recusar solicitação de reabertura?'}
+        size="md"
+      >
+        {reopenModal.req && (
+          <div className="space-y-6">
+            <p className="text-slate-600 text-sm">
+              {reopenModal.action === 'approve'
+                ? `Ao confirmar, a OS #${reopenModal.req.service_order_id.substring(0, 8).toUpperCase()} será reaberta para que o técnico possa realizar as correções solicitadas. Todo o histórico anterior será preservado.`
+                : `A OS #${reopenModal.req.service_order_id.substring(0, 8).toUpperCase()} permanecerá concluída e o técnico não poderá alterá-la.`
+              }
+            </p>
+
+            <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 text-sm space-y-2">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Cliente:</span>
+                <span className="font-medium text-slate-800">
+                  {customers.find(c => c.id === reopenModal.req?.os?.customer_id)?.company_name || 'Desconhecido'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Técnico:</span>
+                <span className="font-medium text-slate-800">
+                  {reopenModal.req.technician?.profile?.name || 'Desconhecido'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Motivo da solicitação:</span>
+                <span className="font-medium text-slate-800 text-right max-w-[200px] truncate" title={reopenModal.req.reason}>
+                  {reopenModal.req.reason}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Data da solicitação:</span>
+                <span className="font-medium text-slate-800">
+                  {new Date(reopenModal.req.created_at).toLocaleString('pt-BR', { timeZone: 'America/Mexico_City' })}
+                </span>
+              </div>
+            </div>
+
+            {reopenModal.error && (
+              <div className="p-3 bg-rose-50 text-rose-700 rounded-lg text-sm font-medium border border-rose-200">
+                {reopenModal.error}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-800 mb-1">
+                {reopenModal.action === 'approve' ? 'Justificativa da aprovação' : 'Motivo da recusa'}
+              </label>
+              <textarea
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all resize-none disabled:opacity-50"
+                rows={3}
+                placeholder={reopenModal.action === 'approve' ? 'Informe por que esta reabertura está sendo autorizada...' : 'Explique por que a solicitação está sendo recusada...'}
+                value={reopenModal.reason}
+                onChange={(e) => setReopenModal(prev => ({ ...prev, reason: e.target.value, error: null }))}
+                disabled={processingReopening !== null}
+              />
+              <p className="text-xs text-slate-500 mt-2 font-medium">
+                {reopenModal.action === 'approve'
+                  ? 'Esta justificativa será registrada no histórico de auditoria.'
+                  : 'O motivo será disponibilizado ao técnico e registrado na auditoria.'
+                }
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <PremiumButton
+                type="button"
+                variant="outline"
+                onClick={() => setReopenModal({ isOpen: false, req: null, action: null, reason: '', error: null })}
+                disabled={processingReopening !== null}
+              >
+                Cancelar
+              </PremiumButton>
+              <PremiumButton
+                type="button"
+                variant="primary"
+                className={reopenModal.action === 'reject' ? 'bg-rose-600 hover:bg-rose-700 border-transparent text-white' : ''}
+                onClick={submitReopenModal}
+                loading={processingReopening !== null}
+                disabled={!reopenModal.reason.trim() || processingReopening !== null}
+              >
+                {processingReopening !== null
+                  ? (reopenModal.action === 'approve' ? 'Aprovando...' : 'Recusando...')
+                  : (reopenModal.action === 'approve' ? 'Aprovar e reabrir OS' : 'Recusar solicitação')
+                }
+              </PremiumButton>
+            </div>
+          </div>
+        )}
       </PremiumModal>
     </div>
   );
