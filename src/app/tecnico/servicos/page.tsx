@@ -58,7 +58,7 @@ export default function TecnicoServicosPage() {
       setLoading(true);
       setError(null);
 
-      // 1. Obtener técnico
+      // 1. Obtain technician record
       const { data: techData, error: techError } = await supabase
         .from('technicians')
         .select('id')
@@ -73,14 +73,16 @@ export default function TecnicoServicosPage() {
       }
       setTechnician(techData);
 
-      // 2. Obtener órdenes de servicio
+      // 2. PRIMARY QUERY: load service orders + notes.
+      // status_history is intentionally excluded here to prevent a join
+      // permission failure from silently returning null/[] for the entire list.
       const { data: osData, error: osError } = await supabase
         .from('service_orders')
         .select(`
           *,
           customer:customers(
             id, trade_name, company_name, contact_name, email, phone, whatsapp,
-            address_street, address_number, address_complement, 
+            address_street, address_number, address_complement,
             address_neighborhood, address_city, address_state, address_zip
           ),
           equipment:client_equipment(id, name, brand, model, serial_number),
@@ -90,20 +92,49 @@ export default function TecnicoServicosPage() {
             category,
             created_at,
             profile:profiles(name)
-          ),
-          status_history:service_order_status_history(
-            id,
-            status,
-            previous_status,
-            created_at,
-            profile:profiles(name)
           )
         `)
         .eq('technician_id', techData.id)
         .order('created_at', { ascending: false });
 
       if (osError) throw osError;
-      setServices(osData || []);
+
+      const primaryList: any[] = osData || [];
+
+      // 3. SECONDARY QUERY: load status history independently.
+      // A failure here does NOT clear the OS list — it only attaches an empty
+      // array to each OS and logs the error for debugging.
+      let historyMap: Record<string, any[]> = {};
+      try {
+        const osIds = primaryList.map((os) => os.id);
+        if (osIds.length > 0) {
+          const { data: histData, error: histError } = await supabase
+            .from('service_order_status_history')
+            .select('id, service_order_id, status, previous_status, created_at, profile:profiles(name)')
+            .in('service_order_id', osIds)
+            .order('created_at', { ascending: true });
+
+          if (histError) {
+            // Auxiliary failure: log only, do not throw, do not clear OS list.
+            console.warn('[loadData] status_history query failed (non-critical):', histError.message);
+          } else {
+            for (const h of histData || []) {
+              if (!historyMap[h.service_order_id]) historyMap[h.service_order_id] = [];
+              historyMap[h.service_order_id].push(h);
+            }
+          }
+        }
+      } catch (histErr: any) {
+        console.warn('[loadData] status_history fetch threw (non-critical):', histErr.message);
+      }
+
+      // 4. Merge history into each OS — primary list is never replaced on failure.
+      const enriched = primaryList.map((os) => ({
+        ...os,
+        status_history: historyMap[os.id] || [],
+      }));
+
+      setServices(enriched);
 
     } catch (err: any) {
       console.error('Erro ao carregar serviços:', err);
