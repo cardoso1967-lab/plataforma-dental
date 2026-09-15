@@ -99,12 +99,9 @@ export const ProductHero: React.FC<ProductHeroProps> = ({
 
   const activeMedia = allMediaItems[activeMediaIndex] || allMediaItems[0];
 
-  // Pausar vídeo ao trocar a seleção da mídia
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.pause();
-    }
-  }, [activeMediaIndex]);
+  // O useEffect de pause() foi removido pois interrompia o preload="metadata" do Safari/Chrome.
+  // Ao usar key={activeMedia.url} na tag <video>, o React desmonta e recria o player
+  // garantindo que ele não tente reaproveitar o buffer e o estado interno corrompido.
 
   const handleSelectMedia = (idx: number) => {
     if (videoRef.current) {
@@ -225,6 +222,7 @@ export const ProductHero: React.FC<ProductHeroProps> = ({
                 <div className="w-full max-w-[540px] space-y-2">
                   <div className="w-full aspect-video rounded-2xl overflow-hidden shadow-lg border border-slate-200 bg-black">
                     <video
+                      key={activeMedia.url}
                       ref={videoRef}
                       src={activeMedia.url}
                       poster={activeMedia.posterUrl || primaryImageUrl}
@@ -339,6 +337,7 @@ export const ProductHero: React.FC<ProductHeroProps> = ({
               <div className="w-full space-y-2">
                 <div className="w-full aspect-video rounded-lg overflow-hidden bg-black shadow-inner">
                   <video
+                    key={activeMedia.url}
                     ref={videoRef}
                     src={activeMedia.url}
                     poster={activeMedia.posterUrl || primaryImageUrl}
