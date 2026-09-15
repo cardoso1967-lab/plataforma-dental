@@ -711,6 +711,7 @@ export default function AdminProdutosPage() {
                   retryDelays: [0, 3000, 5000, 10000],
                   headers: {
                     authorization: `Bearer ${accessToken}`,
+                    apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
                     'x-upsert': 'false',
                   },
                   uploadDataDuringCreation: true,
