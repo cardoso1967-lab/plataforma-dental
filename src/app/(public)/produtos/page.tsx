@@ -60,7 +60,7 @@ export default async function ProductsPage() {
     categories = Array.from(extracted);
   }
 
-  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '5514997403535';
 
   return (
     <ProductCatalog

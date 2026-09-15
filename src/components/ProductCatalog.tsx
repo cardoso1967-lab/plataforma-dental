@@ -24,16 +24,15 @@ interface ProductCatalogProps {
 export const ProductCatalog: React.FC<ProductCatalogProps> = ({
   initialProducts = [],
   categories = [],
-  whatsappNumber,
+  whatsappNumber = '5514997403535',
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
 
   // URL de WhatsApp para los CTAs generales del catálogo
+  const activeWhatsappNumber = whatsappNumber || '5514997403535';
   const createWhatsappUrl = (text: string) => {
-    return whatsappNumber
-      ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(text)}`
-      : '/contato';
+    return `https://wa.me/${activeWhatsappNumber}?text=${encodeURIComponent(text)}`;
   };
 
   const urlSolicitarCotacao = createWhatsappUrl(

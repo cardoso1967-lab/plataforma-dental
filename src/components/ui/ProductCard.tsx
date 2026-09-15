@@ -28,11 +28,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   const targetHref = slug ? `/produtos/${slug}` : '/produtos';
 
-  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '5514997403535';
   const whatsappText = encodeURIComponent(`Olá, gostaria de saber mais sobre o produto ${name} da M.MUNIZ.`);
-  const whatsappUrl = whatsappNumber 
-    ? `https://wa.me/${whatsappNumber}?text=${whatsappText}`
-    : null;
+  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappText}`;
 
   return (
     <div className="bg-white rounded-2xl border border-slate-100/70 shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group overflow-hidden">

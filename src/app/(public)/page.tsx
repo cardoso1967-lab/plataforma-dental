@@ -36,12 +36,10 @@ export default async function HomePage() {
     };
   });
 
-  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
-  const whatsappUrl = whatsappNumber 
-    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
-        'Olá, gostaria de saber mais sobre os equipamentos odontológicos da M.MUNIZ.'
-      )}`
-    : null;
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '5514997403535';
+  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+    'Olá, gostaria de saber mais sobre os equipamentos odontológicos da M.MUNIZ.'
+  )}`;
 
   return (
     <div className="bg-white">

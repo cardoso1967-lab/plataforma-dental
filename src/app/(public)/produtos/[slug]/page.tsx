@@ -100,19 +100,15 @@ export default async function ProductDetailPage({ params }: PageProps) {
     currency: 'BRL',
   }).format(Number(product.price));
 
-  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '5514997403535';
   
   // URL WhatsApp para Cotação
   const quoteText = encodeURIComponent(`Olá, gostaria de solicitar uma cotação para o equipamento ${product.name} (SKU: ${product.sku || 'N/A'}) da M.MUNIZ.`);
-  const quoteWhatsappUrl = whatsappNumber 
-    ? `https://wa.me/${whatsappNumber}?text=${quoteText}`
-    : '/contato';
+  const quoteWhatsappUrl = `https://wa.me/${whatsappNumber}?text=${quoteText}`;
 
   // URL WhatsApp para Especialista
   const specialistText = encodeURIComponent(`Olá, gostaria de falar com um especialista sobre o equipamento ${product.name} (SKU: ${product.sku || 'N/A'}) para entender especificações e condições.`);
-  const specialistWhatsappUrl = whatsappNumber 
-    ? `https://wa.me/${whatsappNumber}?text=${specialistText}`
-    : '/contato';
+  const specialistWhatsappUrl = `https://wa.me/${whatsappNumber}?text=${specialistText}`;
 
   return (
     <div className="py-10 bg-slate-50 flex-1">

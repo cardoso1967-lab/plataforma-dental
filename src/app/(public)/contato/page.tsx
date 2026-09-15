@@ -25,20 +25,16 @@ export default function ContactPage() {
   });
   const [enviado, setEnviado] = useState(false);
 
-  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '5514997403535';
 
   // Lógica dos links de WhatsApp
-  const urlSolicitarCotacao = whatsappNumber
-    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
-        'Olá! Gostaria de solicitar uma cotação para equipamentos odontológicos da M.MUNIZ.'
-      )}`
-    : '#contato-form';
+  const urlSolicitarCotacao = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+    'Olá! Gostaria de solicitar uma cotação para equipamentos odontológicos da M.MUNIZ.'
+  )}`;
 
-  const urlFalarEspecialista = whatsappNumber
-    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
-        'Olá! Gostaria de falar com um especialista sobre os equipamentos odontológicos da M.MUNIZ.'
-      )}`
-    : '#contato-form';
+  const urlFalarEspecialista = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+    'Olá! Gostaria de falar com um especialista sobre os equipamentos odontológicos da M.MUNIZ.'
+  )}`;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

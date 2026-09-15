@@ -13,17 +13,15 @@ export const WhatsAppFloatingButton: React.FC = () => {
 
   if (!isAllowed) return null;
 
-  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '5514997403535';
   
   // Link sugerido para o WhatsApp:
-  // https://wa.me/NUMERO?text=Olá,%20gostaria%20de%20saber%20mais%20sobre%20os%20equipamentos%20odontológicos%20da%20M.MUNIZ.
-  const href = whatsappNumber
-    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
-        'Olá, gostaria de saber mais sobre os equipamentos odontológicos da M.MUNIZ.'
-      )}`
-    : '/contato';
+  // https://wa.me/5514997403535?text=Olá,%20gostaria%20de%20saber%20mais%20sobre%20os%20equipamentos%20odontológicos%20da%20M.MUNIZ.
+  const href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+    'Olá, gostaria de saber mais sobre os equipamentos odontológicos da M.MUNIZ.'
+  )}`;
 
-  const isExternal = !!whatsappNumber;
+  const isExternal = true;
 
   return (
     <a
