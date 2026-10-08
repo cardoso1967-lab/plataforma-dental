@@ -24,27 +24,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   variants,
 }) => {
   let displayPrice = '';
-  let isMultiplePrices = false;
-  let activeVariants = [];
+  let activeVariants: any[] = [];
   
   if (variants) {
-    activeVariants = variants.filter(v => v.is_active).sort((a, b) => a.display_order - b.display_order);
+    activeVariants = variants
+      .filter((v: any) => v.is_active)
+      .sort((a: any, b: any) => {
+        const orderA = a.display_order ?? 0;
+        const orderB = b.display_order ?? 0;
+        if (orderA !== orderB) return orderA - orderB;
+        return Number(a.capacity_liters ?? 0) - Number(b.capacity_liters ?? 0);
+      });
   }
   
   const formatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
-  
-  if (activeVariants.length > 0) {
-    const min = Math.min(...activeVariants.map(v => v.price));
-    const max = Math.max(...activeVariants.map(v => v.price));
-    if (min === max) {
-      displayPrice = formatter.format(min);
-    } else {
-      isMultiplePrices = true;
-      displayPrice = `${formatter.format(min)} - ${formatter.format(max)}`;
-    }
-  } else {
-    displayPrice = formatter.format(price);
-  }
+  displayPrice = formatter.format(price);
 
   const targetHref = slug ? `/produtos/${slug}` : '/produtos';
 
@@ -116,20 +110,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <div className="space-y-4 pt-2">
           {activeVariants.length > 0 ? (
             <div className="border-t border-slate-50 pt-3">
-              <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-2 block">Capacidades</span>
+              <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-2 block">
+                Capacidades e Preços
+              </span>
               <div className="space-y-1.5">
                 {activeVariants.slice(0, 3).map((v, i) => (
-                  <div key={i} className="flex justify-between items-center text-xs">
-                    <span className="text-slate-600 font-medium">{v.capacity_liters} L</span>
-                    <span className="text-brand-dark font-bold">{formatter.format(v.price)}</span>
+                  <div key={v.id || i} className="flex justify-between items-center text-xs">
+                    <span className="text-slate-700 font-medium">{v.capacity_liters} L</span>
+                    <span className="text-slate-400 text-[11px] mx-1">—</span>
+                    <span className="text-brand-dark font-extrabold">{formatter.format(v.price)}</span>
                   </div>
                 ))}
                 {activeVariants.length > 3 && (
-                  <div className="text-[10px] text-sky-600 font-bold text-center pt-1">Ver mais opções</div>
+                  <Link href={targetHref} className="text-[10px] text-sky-600 font-bold block text-center pt-1 hover:underline">
+                    Ver mais opções
+                  </Link>
                 )}
               </div>
             </div>
-          ) : (price || activeVariants.length > 0) ? (
+          ) : price ? (
             <div className="flex items-baseline justify-between border-t border-slate-50 pt-3">
               <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Preço Sugerido</span>
               <span className="text-lg font-black text-brand-dark tracking-tight">

@@ -13,7 +13,7 @@ import {
   Package, Plus, Search, Edit2, Trash2, Copy, 
   X, Tag, DollarSign, Archive, Layers, RefreshCw,
   Upload, Image as ImageIcon, Loader2, ShieldAlert, AlertTriangle,
-  ChevronLeft, ChevronRight, Star, Film, Play, Video as VideoIcon, Eye
+  ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Star, Film, Play, Video as VideoIcon, Eye
 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
@@ -144,6 +144,65 @@ export default function AdminProdutosPage() {
   const [formVariants, setFormVariants] = useState<ProductVariant[]>([]);
   const [removedVariantIds, setRemovedVariantIds] = useState<string[]>([]);
   const [duplicatingProductId, setDuplicatingProductId] = useState<string | null>(null);
+  const [variantErrors, setVariantErrors] = useState<string | null>(null);
+  const [variantFieldErrors, setVariantFieldErrors] = useState<Record<number, { capacity?: string; sku?: string; price?: string; stock?: string }>>({});
+
+  const handleAddVariant = () => {
+    setFormVariants(prev => [
+      ...prev,
+      {
+        capacity_liters: 0,
+        sku: '',
+        price: 0,
+        stock_quantity: 0,
+        is_active: true,
+        display_order: prev.length,
+      }
+    ]);
+    setVariantErrors(null);
+  };
+
+  const handleRemoveVariant = (index: number) => {
+    const item = formVariants[index];
+    if (item.id) {
+      if (!confirm(`Deseja realmente remover a capacidade de ${item.capacity_liters || ''} L? Esta ação será confirmada ao salvar o produto.`)) {
+        return;
+      }
+      setRemovedVariantIds(prev => [...prev, item.id!]);
+    }
+    const remaining = formVariants.filter((_, idx) => idx !== index).map((v, i) => ({ ...v, display_order: i }));
+    setFormVariants(remaining);
+    setVariantErrors(null);
+  };
+
+  const handleMoveVariant = (index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= formVariants.length) return;
+    const reordered = [...formVariants];
+    const temp = reordered[index];
+    reordered[index] = reordered[targetIndex];
+    reordered[targetIndex] = temp;
+    setFormVariants(reordered.map((v, idx) => ({ ...v, display_order: idx })));
+  };
+
+  const handleVariantFieldChange = (index: number, field: keyof ProductVariant, value: any) => {
+    setFormVariants(prev => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], [field]: value };
+      return copy;
+    });
+    setVariantFieldErrors(prev => {
+      if (!prev[index]) return prev;
+      const copy = { ...prev };
+      const row = { ...copy[index] };
+      if (field === 'capacity_liters') delete row.capacity;
+      if (field === 'sku') delete row.sku;
+      if (field === 'price') delete row.price;
+      if (field === 'stock_quantity') delete row.stock;
+      copy[index] = row;
+      return copy;
+    });
+  };
 
   // Formulário
   const [formProduct, setFormProduct] = useState({
@@ -514,6 +573,8 @@ export default function AdminProdutosPage() {
     setEditingProduct(product);
     setGalleryModalError(null);
     setVideoModalError(null);
+    setVariantErrors(null);
+    setVariantFieldErrors({});
     setUploadProgress(null);
     setRemovedImageIds([]);
     setRemovedStoragePaths([]);
@@ -591,31 +652,67 @@ export default function AdminProdutosPage() {
   // Salvar produto e sincronizar galeria de imagens e vídeos no Supabase Storage e DB
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formProduct.name.trim() || !formProduct.price) return;
+    setVariantErrors(null);
+    setVariantFieldErrors({});
+
+    if (!formProduct.name.trim()) return;
+    if (!formHasVariants && !formProduct.price) return;
     if (galleryModalError || videoModalError) return;
-    if (formHasVariants && formVariants.length === 0) {
-      alert('Você deve adicionar pelo menos uma capacidade.');
-      return;
-    }
+
     if (formHasVariants) {
-      // Validate variants
-      const skus = new Set();
-      const capacities = new Set();
-      for (const v of formVariants) {
-        if (!v.sku || !v.price || v.price < 0 || v.stock_quantity < 0 || v.capacity_liters <= 0) {
-          alert('Preencha corretamente todos os campos das capacidades. Capacidade e preço devem ser positivos, estoque não negativo e SKU é obrigatório.');
-          return;
+      if (formVariants.length === 0) {
+        setVariantErrors('Você deve adicionar pelo menos uma capacidade para salvar o produto.');
+        return;
+      }
+
+      const fieldErrors: Record<number, { capacity?: string; sku?: string; price?: string; stock?: string }> = {};
+      const skus = new Set<string>();
+      const capacities = new Set<number>();
+      let hasError = false;
+
+      for (let i = 0; i < formVariants.length; i++) {
+        const v = formVariants[i];
+        const rowErr: { capacity?: string; sku?: string; price?: string; stock?: string } = {};
+
+        if (!v.capacity_liters || v.capacity_liters <= 0 || isNaN(Number(v.capacity_liters))) {
+          rowErr.capacity = 'Capacidade deve ser maior que zero';
+          hasError = true;
+        } else if (capacities.has(Number(v.capacity_liters))) {
+          rowErr.capacity = 'Capacidade já cadastrada';
+          hasError = true;
+        } else {
+          capacities.add(Number(v.capacity_liters));
         }
-        if (skus.has(v.sku)) {
-          alert('SKUs das capacidades não podem se repetir.');
-          return;
+
+        if (!v.sku || !v.sku.trim()) {
+          rowErr.sku = 'SKU é obrigatório';
+          hasError = true;
+        } else if (skus.has(v.sku.trim().toUpperCase())) {
+          rowErr.sku = 'SKU já cadastrado';
+          hasError = true;
+        } else {
+          skus.add(v.sku.trim().toUpperCase());
         }
-        skus.add(v.sku);
-        if (capacities.has(v.capacity_liters)) {
-          alert('Não podem haver capacidades repetidas para o mesmo produto.');
-          return;
+
+        if (v.price === undefined || v.price === null || v.price < 0 || isNaN(Number(v.price))) {
+          rowErr.price = 'Preço não pode ser negativo';
+          hasError = true;
         }
-        capacities.add(v.capacity_liters);
+
+        if (v.stock_quantity === undefined || v.stock_quantity === null || v.stock_quantity < 0 || isNaN(Number(v.stock_quantity))) {
+          rowErr.stock = 'Estoque não pode ser negativo';
+          hasError = true;
+        }
+
+        if (Object.keys(rowErr).length > 0) {
+          fieldErrors[i] = rowErr;
+        }
+      }
+
+      if (hasError) {
+        setVariantFieldErrors(fieldErrors);
+        setVariantErrors('Preencha corretamente os campos destacados em todas as capacidades.');
+        return;
       }
     }
 
@@ -649,12 +746,18 @@ export default function AdminProdutosPage() {
       }
 
       const payload = {
-        sku: formProduct.sku || null,
+        sku: formHasVariants
+          ? (editingProduct ? editingProduct.sku : (formVariants[0]?.sku || null))
+          : (formProduct.sku || null),
         name: formProduct.name,
         slug: uniqueSlug,
         description: formProduct.description || null,
-        price: parseFloat(formProduct.price),
-        stock_quantity: parseInt(formProduct.stock_quantity) || 0,
+        price: formHasVariants
+          ? (editingProduct ? editingProduct.price : (formVariants[0]?.price || 0))
+          : (parseFloat(formProduct.price) || 0),
+        stock_quantity: formHasVariants
+          ? (editingProduct ? editingProduct.stock_quantity : 0)
+          : (parseInt(formProduct.stock_quantity) || 0),
         product_type: formProduct.product_type,
         category_id: formProduct.category_id || null,
         is_active: formProduct.is_active,
@@ -1375,8 +1478,36 @@ export default function AdminProdutosPage() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {!formHasVariants && (
+          {/* Toggle Modo de Variantes */}
+          <div className="pt-1 pb-1">
+            <label className="flex items-start sm:items-center gap-3 cursor-pointer p-4 border rounded-2xl bg-slate-50/60 hover:bg-slate-50 transition-colors border-slate-200">
+              <input
+                type="checkbox"
+                checked={formHasVariants}
+                onChange={(e) => {
+                  if (!e.target.checked && formVariants.length > 0) {
+                    alert('Este equipamento possui capacidades cadastradas. Para desativar o modo de capacidades, você deve primeiro remover todas as capacidades individualmente.');
+                    return;
+                  }
+                  setFormHasVariants(e.target.checked);
+                  setVariantErrors(null);
+                  setVariantFieldErrors({});
+                }}
+                className="w-4 h-4 mt-0.5 sm:mt-0 rounded text-sky-600 focus:ring-sky-500 cursor-pointer"
+              />
+              <div className="flex-1">
+                <span className="text-xs font-bold text-slate-800 block">
+                  Este equipamento possui capacidades com preços diferentes
+                </span>
+                <span className="text-[11px] text-slate-500 font-normal">
+                  Habilite para definir múltiplas capacidades (em litros), preços e estoques para este produto.
+                </span>
+              </div>
+            </label>
+          </div>
+
+          {!formHasVariants && (
+            <div className="grid grid-cols-2 gap-4">
               <PremiumInput
                 label="Preço de Venda (R$)"
                 name="price"
@@ -1386,8 +1517,6 @@ export default function AdminProdutosPage() {
                 onChange={(e) => setFormProduct({ ...formProduct, price: e.target.value })}
                 placeholder="0,00"
               />
-            )}
-            {!formHasVariants && (
               <PremiumInput
                 label="Estoque Disponível"
                 name="stock_quantity"
@@ -1396,8 +1525,191 @@ export default function AdminProdutosPage() {
                 onChange={(e) => setFormProduct({ ...formProduct, stock_quantity: e.target.value })}
                 placeholder="0"
               />
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* Seção Capacidades e Preços (quando ativo) */}
+          {formHasVariants && (
+            <div className="space-y-3 pt-2 pb-2 border-t border-slate-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
+                    Capacidades e preços
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Cadastre cada litragem disponível com seu respectivo preço e controle de estoque.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddVariant}
+                  className="px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Adicionar capacidade
+                </button>
+              </div>
+
+              {variantErrors && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-bold flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600" />
+                  <span>{variantErrors}</span>
+                </div>
+              )}
+
+              {formVariants.length === 0 ? (
+                <div className="text-center py-6 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+                  <p className="text-xs font-bold text-slate-600">Nenhuma capacidade adicionada.</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Clique em &quot;Adicionar capacidade&quot; para cadastrar as litragens deste equipamento.</p>
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {formVariants.map((v, i) => {
+                    const rowErr = variantFieldErrors[i] || {};
+                    return (
+                      <div
+                        key={v.id || i}
+                        className={`p-3.5 bg-white border rounded-2xl space-y-3 transition-all ${
+                          Object.keys(rowErr).length > 0 ? 'border-rose-300 ring-1 ring-rose-200' : 'border-slate-200 shadow-2xs'
+                        }`}
+                      >
+                        <div className="grid grid-cols-2 sm:grid-cols-12 gap-3 items-end">
+                          {/* Capacidade (L) */}
+                          <div className="col-span-1 sm:col-span-3">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                              Capacidade (L) *
+                            </label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              min="0.1"
+                              placeholder="Ex: 18"
+                              value={v.capacity_liters || ''}
+                              onChange={(e) => handleVariantFieldChange(i, 'capacity_liters', parseFloat(e.target.value) || 0)}
+                              className={`w-full bg-slate-50 border text-xs font-bold px-3 py-2 rounded-xl focus:bg-white focus:outline-hidden transition-all ${
+                                rowErr.capacity ? 'border-rose-400 text-rose-700' : 'border-slate-200 text-slate-800'
+                              }`}
+                            />
+                            {rowErr.capacity && (
+                              <span className="text-[10px] text-rose-600 font-bold mt-0.5 block">{rowErr.capacity}</span>
+                            )}
+                          </div>
+
+                          {/* SKU */}
+                          <div className="col-span-1 sm:col-span-3">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                              SKU *
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="AUTO-TANZO-18"
+                              value={v.sku}
+                              onChange={(e) => handleVariantFieldChange(i, 'sku', e.target.value)}
+                              className={`w-full bg-slate-50 border text-xs font-mono font-bold px-3 py-2 rounded-xl focus:bg-white focus:outline-hidden transition-all ${
+                                rowErr.sku ? 'border-rose-400 text-rose-700' : 'border-slate-200 text-slate-800'
+                              }`}
+                            />
+                            {rowErr.sku && (
+                              <span className="text-[10px] text-rose-600 font-bold mt-0.5 block">{rowErr.sku}</span>
+                            )}
+                          </div>
+
+                          {/* Preço (R$) */}
+                          <div className="col-span-1 sm:col-span-3">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                              Preço de Venda (R$) *
+                            </label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              placeholder="0,00"
+                              value={v.price === 0 ? '0' : (v.price || '')}
+                              onChange={(e) => handleVariantFieldChange(i, 'price', parseFloat(e.target.value) || 0)}
+                              className={`w-full bg-slate-50 border text-xs font-bold px-3 py-2 rounded-xl focus:bg-white focus:outline-hidden transition-all ${
+                                rowErr.price ? 'border-rose-400 text-rose-700' : 'border-slate-200 text-slate-800'
+                              }`}
+                            />
+                            {rowErr.price && (
+                              <span className="text-[10px] text-rose-600 font-bold mt-0.5 block">{rowErr.price}</span>
+                            )}
+                          </div>
+
+                          {/* Estoque */}
+                          <div className="col-span-1 sm:col-span-2">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                              Estoque *
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              placeholder="0"
+                              value={v.stock_quantity === 0 ? '0' : (v.stock_quantity || '')}
+                              onChange={(e) => handleVariantFieldChange(i, 'stock_quantity', parseInt(e.target.value) || 0)}
+                              className={`w-full bg-slate-50 border text-xs font-bold px-3 py-2 rounded-xl focus:bg-white focus:outline-hidden transition-all ${
+                                rowErr.stock ? 'border-rose-400 text-rose-700' : 'border-slate-200 text-slate-800'
+                              }`}
+                            />
+                            {rowErr.stock && (
+                              <span className="text-[10px] text-rose-600 font-bold mt-0.5 block">{rowErr.stock}</span>
+                            )}
+                          </div>
+
+                          {/* Ações (Status, Reordenar, Remover) */}
+                          <div className="col-span-2 sm:col-span-1 flex items-center justify-end gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleMoveVariant(i, 'up')}
+                              disabled={i === 0}
+                              className="p-1.5 text-slate-400 hover:text-slate-700 disabled:opacity-30 rounded-lg hover:bg-slate-100 cursor-pointer"
+                              title="Mover para cima"
+                            >
+                              <ChevronUp className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleMoveVariant(i, 'down')}
+                              disabled={i === formVariants.length - 1}
+                              className="p-1.5 text-slate-400 hover:text-slate-700 disabled:opacity-30 rounded-lg hover:bg-slate-100 cursor-pointer"
+                              title="Mover para baixo"
+                            >
+                              <ChevronDown className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveVariant(i)}
+                              className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 cursor-pointer"
+                              title="Remover capacidade"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Status Ativo/Inativo na linha */}
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[11px]">
+                          <label className="flex items-center gap-2 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={v.is_active}
+                              onChange={(e) => handleVariantFieldChange(i, 'is_active', e.target.checked)}
+                              className="w-3.5 h-3.5 rounded text-sky-600 focus:ring-sky-500 cursor-pointer"
+                            />
+                            <span className={v.is_active ? 'font-bold text-slate-700' : 'text-slate-400 font-medium'}>
+                              {v.is_active ? 'Capacidade ativa (visível no catálogo)' : 'Capacidade inativa (oculta)'}
+                            </span>
+                          </label>
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            Ordem: #{i + 1}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
 
           <PremiumInput
             label="Descrição do Produto"

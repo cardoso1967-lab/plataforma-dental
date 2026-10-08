@@ -97,7 +97,14 @@ export const ProductHero: React.FC<ProductHeroProps> = ({
 
   const [activeMediaIndex, setActiveMediaIndex] = useState<number>(0);
   
-  const activeVariants = (product.variants || []).filter((v: any) => v.is_active).sort((a: any, b: any) => a.display_order - b.display_order);
+  const activeVariants = (product.variants || [])
+    .filter((v: any) => v.is_active)
+    .sort((a: any, b: any) => {
+      const orderA = a.display_order ?? 0;
+      const orderB = b.display_order ?? 0;
+      if (orderA !== orderB) return orderA - orderB;
+      return Number(a.capacity_liters ?? 0) - Number(b.capacity_liters ?? 0);
+    });
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(activeVariants.length > 0 ? activeVariants[0].id : null);
   
   const selectedVariant = activeVariants.find((v: any) => v.id === selectedVariantId);
@@ -120,13 +127,13 @@ export const ProductHero: React.FC<ProductHeroProps> = ({
     setActiveMediaIndex(idx);
   };
 
-  const whatsappTextDesktop = encodeURIComponent(`Olá, gostaria de saber mais sobre o produto ${product.name}${selectedVariant ? ` (${selectedVariant.capacity_liters} L - SKU: ${displaySku} - R$ ${displayPrice})` : ''} da M.MUNIZ.`);
-  const dynamicQuoteWhatsappUrl = `https://wa.me/${whatsappNumber || '5514997403535'}?text=${whatsappTextDesktop}`;
-  
   const formattedPrice = new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
   }).format(Number(displayPrice));
+
+  const whatsappTextDesktop = encodeURIComponent(`Olá, gostaria de saber mais sobre o produto ${product.name}${selectedVariant ? ` (${selectedVariant.capacity_liters} L - SKU: ${displaySku} - ${formattedPrice})` : ''} da M.MUNIZ.`);
+  const dynamicQuoteWhatsappUrl = `https://wa.me/${whatsappNumber || '5514997403535'}?text=${whatsappTextDesktop}`;
 
   const hasDescription = !!product.description && product.description.trim().length > 0;
   const hasFinancing = !!product.financing_details && product.financing_details.trim().length > 0;
