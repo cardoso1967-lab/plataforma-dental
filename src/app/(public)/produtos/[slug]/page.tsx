@@ -33,7 +33,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
       *,
       category:product_categories(id, name),
       images:product_images(id, url, public_url, is_primary, sort_order),
-      videos:product_videos(id, storage_path, public_url, title, poster_url, sort_order)
+      videos:product_videos(id, storage_path, public_url, title, poster_url, sort_order),
+      variants:product_variants(*)
     `)
     .eq('slug', slug)
     .eq('is_active', true)
@@ -75,7 +76,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
     .select(`
       *,
       category:product_categories(id, name),
-      images:product_images(id, url, public_url, is_primary, sort_order)
+      images:product_images(id, url, public_url, is_primary, sort_order),
+      variants:product_variants(*)
     `)
     .eq('is_active', true)
     .neq('id', product.id)
@@ -291,6 +293,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     imageUrl={imgUrl}
                     sku={p.sku || undefined}
                     description={p.description || undefined}
+                    variants={p.variants || []}
                   />
                 );
               })}

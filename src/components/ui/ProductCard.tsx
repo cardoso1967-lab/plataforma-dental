@@ -10,6 +10,7 @@ interface ProductCardProps {
   imageUrl?: string;
   sku?: string;
   description?: string;
+  variants?: any[];
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -20,11 +21,30 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   imageUrl,
   sku,
   description,
+  variants,
 }) => {
-  const formattedPrice = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(price);
+  let displayPrice = '';
+  let isMultiplePrices = false;
+  let activeVariants = [];
+  
+  if (variants) {
+    activeVariants = variants.filter(v => v.is_active).sort((a, b) => a.display_order - b.display_order);
+  }
+  
+  const formatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+  
+  if (activeVariants.length > 0) {
+    const min = Math.min(...activeVariants.map(v => v.price));
+    const max = Math.max(...activeVariants.map(v => v.price));
+    if (min === max) {
+      displayPrice = formatter.format(min);
+    } else {
+      isMultiplePrices = true;
+      displayPrice = `${formatter.format(min)} - ${formatter.format(max)}`;
+    }
+  } else {
+    displayPrice = formatter.format(price);
+  }
 
   const targetHref = slug ? `/produtos/${slug}` : '/produtos';
 
@@ -76,7 +96,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       <div className="p-5 flex flex-col flex-1 justify-between space-y-4">
         <div className="space-y-2">
           <div className="flex items-center justify-between text-[10px] font-semibold text-slate-400 tracking-wider">
-            <span>SKU: {sku || 'INDISPONÍVEL'}</span>
+            <span>SKU: {activeVariants.length > 0 ? `${activeVariants.length} opções` : (sku || 'INDISPONÍVEL')}</span>
             <span className="text-brand-clinical/85 font-bold uppercase">{category}</span>
           </div>
           
@@ -94,11 +114,26 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </div>
 
         <div className="space-y-4 pt-2">
-          {price ? (
+          {activeVariants.length > 0 ? (
+            <div className="border-t border-slate-50 pt-3">
+              <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-2 block">Capacidades</span>
+              <div className="space-y-1.5">
+                {activeVariants.slice(0, 3).map((v, i) => (
+                  <div key={i} className="flex justify-between items-center text-xs">
+                    <span className="text-slate-600 font-medium">{v.capacity_liters} L</span>
+                    <span className="text-brand-dark font-bold">{formatter.format(v.price)}</span>
+                  </div>
+                ))}
+                {activeVariants.length > 3 && (
+                  <div className="text-[10px] text-sky-600 font-bold text-center pt-1">Ver mais opções</div>
+                )}
+              </div>
+            </div>
+          ) : (price || activeVariants.length > 0) ? (
             <div className="flex items-baseline justify-between border-t border-slate-50 pt-3">
               <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Preço Sugerido</span>
               <span className="text-lg font-black text-brand-dark tracking-tight">
-                {formattedPrice}
+                {displayPrice}
               </span>
             </div>
           ) : (

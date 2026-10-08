@@ -11,7 +11,8 @@ export default async function ProductsPage() {
     .select(`
       *,
       category:product_categories(id, name),
-      images:product_images(url, public_url, is_primary, sort_order)
+      images:product_images(url, public_url, is_primary, sort_order),
+      variants:product_variants(*)
     `)
     .eq('is_active', true)
     .order('name', { ascending: true });
@@ -38,6 +39,7 @@ export default async function ProductsPage() {
       imageUrl: primaryImage,
       sku: p.sku || undefined,
       description: p.description || undefined,
+      variants: p.variants || [],
     };
   });
 

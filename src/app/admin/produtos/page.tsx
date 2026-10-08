@@ -10,7 +10,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { MetricCard } from '@/components/ui/MetricCard';
 import * as tus from 'tus-js-client';
 import { 
-  Package, Plus, Search, Edit2, Trash2, 
+  Package, Plus, Search, Edit2, Trash2, Copy, 
   X, Tag, DollarSign, Archive, Layers, RefreshCw,
   Upload, Image as ImageIcon, Loader2, ShieldAlert, AlertTriangle,
   ChevronLeft, ChevronRight, Star, Film, Play, Video as VideoIcon, Eye
@@ -44,6 +44,17 @@ interface ProductVideo {
   created_at?: string;
 }
 
+interface ProductVariant {
+  id?: string;
+  product_id?: string;
+  capacity_liters: number;
+  sku: string;
+  price: number;
+  stock_quantity: number;
+  is_active: boolean;
+  display_order: number;
+}
+
 interface Product {
   id: string;
   category_id: string | null;
@@ -60,6 +71,8 @@ interface Product {
   primaryImageUrl?: string | null;
   images?: ProductImage[];
   videos?: ProductVideo[];
+  variants?: ProductVariant[];
+  has_variants?: boolean;
 }
 
 interface GalleryItem {
@@ -126,6 +139,12 @@ export default function AdminProdutosPage() {
   const [previewVideoUrl, setPreviewVideoUrl] = useState<string | null>(null);
   const videoFileInputRef = useRef<HTMLInputElement>(null);
 
+  // Estados de Variantes
+  const [formHasVariants, setFormHasVariants] = useState(false);
+  const [formVariants, setFormVariants] = useState<ProductVariant[]>([]);
+  const [removedVariantIds, setRemovedVariantIds] = useState<string[]>([]);
+  const [duplicatingProductId, setDuplicatingProductId] = useState<string | null>(null);
+
   // Formulário
   const [formProduct, setFormProduct] = useState({
     sku: '',
@@ -152,6 +171,60 @@ export default function AdminProdutosPage() {
       .replace(/-+$/, '');
   };
 
+  const handleDuplicate = async (productId: string) => {
+    if (!confirm("Tem certeza que deseja duplicar este produto?")) return;
+    try {
+      setDuplicatingProductId(productId);
+      const { data, error } = await supabase.rpc('duplicate_product', { p_product_id: productId });
+      if (error) throw error;
+      
+      alert("Produto duplicado com sucesso! Abrindo para edição...");
+      
+      // We need to fetch the newly created product and open the modal
+      const { data: newProd, error: prodError } = await supabase
+        .from('products')
+        .select(`
+          *,
+          category:product_categories(id, name),
+          images:product_images(id, product_id, url, public_url, storage_path, is_primary, sort_order),
+          videos:product_videos(id, product_id, storage_path, public_url, title, poster_url, sort_order),
+          variants:product_variants(*)
+        `)
+        .eq('id', data)
+        .single();
+        
+      if (newProd) {
+        // Enriquecer
+        const sortedImgs = (newProd.images || []).sort((a: any, b: any) => {
+          if (a.is_primary) return -1;
+          if (b.is_primary) return 1;
+          return (a.sort_order || 0) - (b.sort_order || 0);
+        });
+        const primaryUrl = sortedImgs.find((img: any) => img.is_primary)?.public_url
+          || sortedImgs.find((img: any) => img.is_primary)?.url
+          || sortedImgs[0]?.public_url
+          || sortedImgs[0]?.url
+          || null;
+        const sortedVariants = (newProd.variants || []).sort((a: any, b: any) => (a.display_order || 0) - (b.display_order || 0));
+        
+        const enriched = {
+          ...newProd,
+          images: sortedImgs,
+          videos: newProd.videos || [],
+          variants: sortedVariants,
+          primaryImageUrl: primaryUrl,
+          has_variants: sortedVariants.length > 0
+        };
+        openModal(enriched);
+      }
+      loadData();
+    } catch (err: any) {
+      alert("Erro ao duplicar: " + err.message);
+    } finally {
+      setDuplicatingProductId(null);
+    }
+  };
+
   // Cargar datos
   const loadData = async () => {
     try {
@@ -165,7 +238,8 @@ export default function AdminProdutosPage() {
           *,
           category:product_categories(id, name),
           images:product_images(id, product_id, url, public_url, storage_path, is_primary, sort_order),
-          videos:product_videos(id, product_id, storage_path, public_url, title, poster_url, sort_order)
+          videos:product_videos(id, product_id, storage_path, public_url, title, poster_url, sort_order),
+          variants:product_variants(*)
         `)
         .order('name', { ascending: true });
 
@@ -179,6 +253,7 @@ export default function AdminProdutosPage() {
           return (a.sort_order || 0) - (b.sort_order || 0);
         });
 
+        const sortedVariants = (p.variants || []).sort((a: any, b: any) => (a.display_order || 0) - (b.display_order || 0));
         const primaryUrl = sortedImgs.find((img: any) => img.is_primary)?.public_url
           || sortedImgs.find((img: any) => img.is_primary)?.url
           || sortedImgs[0]?.public_url
@@ -189,6 +264,8 @@ export default function AdminProdutosPage() {
           ...p,
           images: sortedImgs,
           primaryImageUrl: primaryUrl,
+          variants: sortedVariants,
+          has_variants: sortedVariants.length > 0,
         };
       });
 
@@ -477,6 +554,9 @@ export default function AdminProdutosPage() {
         .sort((a, b) => a.sortOrder - b.sortOrder);
 
       setVideoItems(initialVideos);
+      setFormVariants(product.variants || []);
+      setFormHasVariants((product.variants && product.variants.length > 0) ? true : false);
+      setRemovedVariantIds([]);
 
       setFormProduct({
         sku: product.sku || '',
@@ -491,6 +571,9 @@ export default function AdminProdutosPage() {
     } else {
       setGalleryItems([]);
       setVideoItems([]);
+      setFormVariants([]);
+      setFormHasVariants(false);
+      setRemovedVariantIds([]);
       setFormProduct({
         sku: '',
         name: '',
@@ -510,6 +593,31 @@ export default function AdminProdutosPage() {
     e.preventDefault();
     if (!formProduct.name.trim() || !formProduct.price) return;
     if (galleryModalError || videoModalError) return;
+    if (formHasVariants && formVariants.length === 0) {
+      alert('Você deve adicionar pelo menos uma capacidade.');
+      return;
+    }
+    if (formHasVariants) {
+      // Validate variants
+      const skus = new Set();
+      const capacities = new Set();
+      for (const v of formVariants) {
+        if (!v.sku || !v.price || v.price < 0 || v.stock_quantity < 0 || v.capacity_liters <= 0) {
+          alert('Preencha corretamente todos os campos das capacidades. Capacidade e preço devem ser positivos, estoque não negativo e SKU é obrigatório.');
+          return;
+        }
+        if (skus.has(v.sku)) {
+          alert('SKUs das capacidades não podem se repetir.');
+          return;
+        }
+        skus.add(v.sku);
+        if (capacities.has(v.capacity_liters)) {
+          alert('Não podem haver capacidades repetidas para o mesmo produto.');
+          return;
+        }
+        capacities.add(v.capacity_liters);
+      }
+    }
 
     try {
       setLoading(true);
@@ -571,6 +679,34 @@ export default function AdminProdutosPage() {
       }
 
       if (!productId) throw new Error("ID do produto não foi retornado pelo servidor.");
+
+      // Save variants
+      if (formHasVariants) {
+        for (let i = 0; i < formVariants.length; i++) {
+          const v = formVariants[i];
+          const vPayload = {
+            product_id: productId,
+            capacity_liters: v.capacity_liters,
+            sku: v.sku,
+            price: v.price,
+            stock_quantity: v.stock_quantity,
+            is_active: v.is_active,
+            display_order: i
+          };
+          if (v.id) {
+            const { error: vErr } = await supabase.from('product_variants').update(vPayload).eq('id', v.id);
+            if (vErr) throw vErr;
+          } else {
+            const { error: vErr } = await supabase.from('product_variants').insert(vPayload);
+            if (vErr) throw vErr;
+          }
+        }
+      }
+      
+      // Delete removed variants
+      if (removedVariantIds.length > 0) {
+        await supabase.from('product_variants').delete().in('id', removedVariantIds);
+      }
 
       // 2. Upload de novos arquivos de imagem para o Supabase Storage (bucket product-images)
       const newFilesToUpload = galleryItems.filter(item => item.file);
@@ -1192,14 +1328,16 @@ export default function AdminProdutosPage() {
       >
         <form onSubmit={handleSave} className="space-y-4 text-left">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <PremiumInput
-              label="Código SKU"
-              name="sku"
-              value={formProduct.sku}
-              onChange={(e) => setFormProduct({ ...formProduct, sku: e.target.value })}
-              placeholder="CAD-S500"
-              className="font-mono"
-            />
+            {!formHasVariants && (
+              <PremiumInput
+                label="Código SKU"
+                name="sku"
+                value={formProduct.sku}
+                onChange={(e) => setFormProduct({ ...formProduct, sku: e.target.value })}
+                placeholder="CAD-S500"
+                className="font-mono"
+              />
+            )}
             <PremiumInput
               label="Nome do Produto"
               name="name"
@@ -1238,23 +1376,27 @@ export default function AdminProdutosPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <PremiumInput
-              label="Preço de Venda (R$)"
-              name="price"
-              type="number"
-              required
-              value={formProduct.price}
-              onChange={(e) => setFormProduct({ ...formProduct, price: e.target.value })}
-              placeholder="0,00"
-            />
-            <PremiumInput
-              label="Estoque Disponível"
-              name="stock_quantity"
-              type="number"
-              value={formProduct.stock_quantity}
-              onChange={(e) => setFormProduct({ ...formProduct, stock_quantity: e.target.value })}
-              placeholder="0"
-            />
+            {!formHasVariants && (
+              <PremiumInput
+                label="Preço de Venda (R$)"
+                name="price"
+                type="number"
+                required
+                value={formProduct.price}
+                onChange={(e) => setFormProduct({ ...formProduct, price: e.target.value })}
+                placeholder="0,00"
+              />
+            )}
+            {!formHasVariants && (
+              <PremiumInput
+                label="Estoque Disponível"
+                name="stock_quantity"
+                type="number"
+                value={formProduct.stock_quantity}
+                onChange={(e) => setFormProduct({ ...formProduct, stock_quantity: e.target.value })}
+                placeholder="0"
+              />
+            )}
           </div>
 
           <PremiumInput

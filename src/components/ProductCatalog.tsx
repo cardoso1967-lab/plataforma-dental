@@ -13,6 +13,7 @@ interface Product {
   imageUrl?: string;
   sku?: string;
   description?: string;
+  variants?: any[];
 }
 
 interface ProductCatalogProps {

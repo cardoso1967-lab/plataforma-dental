@@ -34,6 +34,7 @@ export interface ProductHeroData {
   category?: { id: string; name: string } | null;
   images?: GalleryImage[];
   videos?: GalleryVideo[];
+  variants?: any[];
 }
 
 interface ProductHeroProps {
@@ -95,6 +96,15 @@ export const ProductHero: React.FC<ProductHeroProps> = ({
   const allMediaItems: MediaItem[] = [...mediaImages, ...mediaVideos];
 
   const [activeMediaIndex, setActiveMediaIndex] = useState<number>(0);
+  
+  const activeVariants = (product.variants || []).filter((v: any) => v.is_active).sort((a: any, b: any) => a.display_order - b.display_order);
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(activeVariants.length > 0 ? activeVariants[0].id : null);
+  
+  const selectedVariant = activeVariants.find((v: any) => v.id === selectedVariantId);
+  const displayPrice = selectedVariant ? selectedVariant.price : product.price;
+  const displaySku = selectedVariant ? selectedVariant.sku : product.sku;
+  const displayStock = selectedVariant ? selectedVariant.stock_quantity : product.stock_quantity;
+
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const activeMedia = allMediaItems[activeMediaIndex] || allMediaItems[0];
@@ -110,10 +120,13 @@ export const ProductHero: React.FC<ProductHeroProps> = ({
     setActiveMediaIndex(idx);
   };
 
+  const whatsappTextDesktop = encodeURIComponent(`Olá, gostaria de saber mais sobre o produto ${product.name}${selectedVariant ? ` (${selectedVariant.capacity_liters} L - SKU: ${displaySku} - R$ ${displayPrice})` : ''} da M.MUNIZ.`);
+  const dynamicQuoteWhatsappUrl = `https://wa.me/${whatsappNumber || '5514997403535'}?text=${whatsappTextDesktop}`;
+  
   const formattedPrice = new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
-  }).format(Number(product.price));
+  }).format(Number(displayPrice));
 
   const hasDescription = !!product.description && product.description.trim().length > 0;
   const hasFinancing = !!product.financing_details && product.financing_details.trim().length > 0;
@@ -144,21 +157,44 @@ export const ProductHero: React.FC<ProductHeroProps> = ({
               </p>
             )}
 
+            
+            {/* Seletor de Capacidade */}
+            {activeVariants.length > 0 && (
+              <div className="pt-3 border-t border-slate-800/80">
+                <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest block mb-2">Selecione a Capacidade</span>
+                <div className="flex flex-wrap gap-2">
+                  {activeVariants.map((v: any) => (
+                    <button
+                      key={v.id}
+                      onClick={() => setSelectedVariantId(v.id)}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+                        selectedVariantId === v.id 
+                          ? 'bg-sky-500 text-white border-sky-500' 
+                          : 'bg-slate-800/50 text-slate-300 border-slate-700 hover:border-slate-500'
+                      }`}
+                    >
+                      {v.capacity_liters} L
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+    
             {/* SKU & Estoque */}
             <div className="pt-2 flex flex-wrap items-center gap-3 border-t border-slate-800/80">
               <span className="text-slate-400 font-mono text-xs font-semibold">
-                SKU: {product.sku || 'N/A'}
+                SKU: {displaySku || 'N/A'}
               </span>
               <span className="text-slate-700">•</span>
               <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 ${
-                product.stock_quantity > 0 
+                displayStock > 0 
                   ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
                   : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
               }`}>
-                {product.stock_quantity > 0 ? (
+                {displayStock > 0 ? (
                   <>
                     <PackageCheck className="w-3.5 h-3.5" />
-                    Em Estoque ({product.stock_quantity} un)
+                    Em Estoque ({displayStock} un)
                   </>
                 ) : (
                   <>
@@ -175,11 +211,11 @@ export const ProductHero: React.FC<ProductHeroProps> = ({
             {/* Bloco de Preço */}
             <div>
               <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest block mb-1">
-                {product.price > 0 ? 'Valor do Equipamento' : 'Preço'}
+                {displayPrice > 0 ? 'Valor do Equipamento' : 'Preço'}
               </span>
               <div className="flex items-baseline gap-3">
                 <h2 className="text-3xl xl:text-4xl font-black text-white tracking-tight">
-                  {product.price > 0 ? formattedPrice : 'Sob Consulta'}
+                  {displayPrice > 0 ? formattedPrice : 'Sob Consulta'}
                 </h2>
               </div>
               {hasFinancing && (
@@ -192,7 +228,7 @@ export const ProductHero: React.FC<ProductHeroProps> = ({
             {/* Ações em Desktop */}
             <div className="grid grid-cols-2 gap-3">
               <Link
-                href={quoteWhatsappUrl}
+                href={dynamicQuoteWhatsappUrl}
                 target={whatsappNumber ? "_blank" : undefined}
                 rel={whatsappNumber ? "noopener noreferrer" : undefined}
                 className="bg-sky-500 hover:bg-sky-600 text-white font-extrabold text-xs uppercase tracking-wider py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all duration-200 hover:-translate-y-0.5 cursor-pointer text-center"
@@ -322,10 +358,10 @@ export const ProductHero: React.FC<ProductHeroProps> = ({
             {product.name}
           </h1>
           <div className="flex items-center gap-2 pt-1 text-slate-400 font-mono text-[11px]">
-            <span>SKU: {product.sku || 'N/A'}</span>
+            <span>SKU: {displaySku || 'N/A'}</span>
             <span>•</span>
-            <span className={product.stock_quantity > 0 ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
-              {product.stock_quantity > 0 ? `Em Estoque (${product.stock_quantity} un)` : 'Sob Encomenda'}
+            <span className={displayStock > 0 ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
+              {displayStock > 0 ? `Em Estoque (${displayStock} un)` : 'Sob Encomenda'}
             </span>
           </div>
         </div>
@@ -417,6 +453,29 @@ export const ProductHero: React.FC<ProductHeroProps> = ({
           </div>
         )}
 
+        
+        {/* Seletor de Capacidade Mobile */}
+        {activeVariants.length > 0 && (
+          <div className="border-t border-slate-800 pt-4">
+            <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest block mb-2">Selecione a Capacidade</span>
+            <div className="flex flex-wrap gap-2">
+              {activeVariants.map((v: any) => (
+                <button
+                  key={v.id}
+                  onClick={() => setSelectedVariantId(v.id)}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+                    selectedVariantId === v.id 
+                      ? 'bg-sky-500 text-white border-sky-500' 
+                      : 'bg-slate-800/50 text-slate-300 border-slate-700 hover:border-slate-500'
+                  }`}
+                >
+                  {v.capacity_liters} L
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+    
         {/* 5. Descrição (apenas se cadastrada no banco) */}
         {hasDescription && (
           <div className="text-left text-slate-300 text-xs font-normal leading-relaxed whitespace-pre-line border-t border-slate-800 pt-4">
@@ -427,10 +486,10 @@ export const ProductHero: React.FC<ProductHeroProps> = ({
         {/* 6. Preço */}
         <div className="text-left border-t border-slate-800 pt-4 space-y-1">
           <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest block">
-            {product.price > 0 ? 'Preço Sugerido' : 'Valor'}
+            {displayPrice > 0 ? 'Preço Sugerido' : 'Valor'}
           </span>
           <h2 className="text-2xl font-black text-white">
-            {product.price > 0 ? formattedPrice : 'Sob Consulta'}
+            {displayPrice > 0 ? formattedPrice : 'Sob Consulta'}
           </h2>
           {hasFinancing && (
             <p className="text-sky-300 text-xs font-medium">
@@ -442,7 +501,7 @@ export const ProductHero: React.FC<ProductHeroProps> = ({
         {/* 7. Botões em Largura Total */}
         <div className="flex flex-col gap-2.5 pt-2">
           <Link
-            href={quoteWhatsappUrl}
+            href={dynamicQuoteWhatsappUrl}
             target={whatsappNumber ? "_blank" : undefined}
             rel={whatsappNumber ? "noopener noreferrer" : undefined}
             className="w-full bg-sky-500 hover:bg-sky-600 text-white font-extrabold text-xs uppercase tracking-wider py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all text-center cursor-pointer"
