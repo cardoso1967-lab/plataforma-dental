@@ -109,29 +109,51 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         <div className="space-y-4 pt-2">
           {activeVariants.length > 0 ? (
-            <div className="border-t border-slate-50 pt-3">
+            <div className="border-t border-slate-100/70 pt-3">
               <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-2 block">
                 Capacidades e Preços
               </span>
               <div className="space-y-1.5">
                 {activeVariants.slice(0, 3).map((v, i) => (
-                  <div key={v.id || i} className="flex justify-between items-center text-xs">
-                    <span className="text-slate-700 font-medium">{v.capacity_liters} L</span>
-                    <span className="text-slate-400 text-[11px] mx-1">—</span>
-                    <span className="text-brand-dark font-extrabold">{formatter.format(v.price)}</span>
+                  <div key={v.id || i} className="flex items-center justify-between gap-2 py-0.5">
+                    <span
+                      className="text-[13px] font-medium text-slate-700 whitespace-nowrap shrink-0"
+                      style={{ fontSize: '13px', fontWeight: 500 }}
+                    >
+                      {v.capacity_liters} L
+                    </span>
+                    <span className="text-slate-300 text-xs shrink-0 select-none">—</span>
+                    <span
+                      className="text-[15px] font-bold leading-[1.5] tracking-[0.02em] tabular-nums text-[#111827] text-right whitespace-nowrap ml-auto"
+                      style={{
+                        fontSize: '15px',
+                        fontWeight: 700,
+                        lineHeight: '1.5',
+                        letterSpacing: '0.02em',
+                        fontVariantNumeric: 'tabular-nums',
+                        color: '#111827',
+                        textAlign: 'right',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {formatter.format(v.price)}
+                    </span>
                   </div>
                 ))}
                 {activeVariants.length > 3 && (
-                  <Link href={targetHref} className="text-[10px] text-sky-600 font-bold block text-center pt-1 hover:underline">
+                  <Link href={targetHref} className="text-[11px] text-sky-600 font-bold block text-center pt-1 hover:underline">
                     Ver mais opções
                   </Link>
                 )}
               </div>
             </div>
           ) : price ? (
-            <div className="flex items-baseline justify-between border-t border-slate-50 pt-3">
+            <div className="flex items-baseline justify-between border-t border-slate-100/70 pt-3">
               <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Preço Sugerido</span>
-              <span className="text-lg font-black text-brand-dark tracking-tight">
+              <span
+                className="text-lg font-black text-brand-dark tracking-tight tabular-nums"
+                style={{ fontVariantNumeric: 'tabular-nums' }}
+              >
                 {displayPrice}
               </span>
             </div>

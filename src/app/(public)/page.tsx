@@ -13,7 +13,8 @@ export default async function HomePage() {
     .select(`
       *,
       category:product_categories(id, name),
-      images:product_images(url, is_primary)
+      images:product_images(url, is_primary),
+      variants:product_variants(*)
     `)
     .eq('is_active', true)
     .order('created_at', { ascending: false })
@@ -33,6 +34,7 @@ export default async function HomePage() {
       imageUrl: primaryImage,
       sku: p.sku || undefined,
       description: p.description || undefined,
+      variants: p.variants || [],
     };
   });
 
