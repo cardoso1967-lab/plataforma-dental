@@ -110,8 +110,9 @@ export default function AdminProdutosPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Estados de busca
+  // Estados de busca e filtro
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'todos' | 'ativos' | 'inativos'>('todos');
 
   // Estados de modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -164,7 +165,7 @@ export default function AdminProdutosPage() {
 
   const handleRemoveVariant = (index: number) => {
     const item = formVariants[index];
-    if (item.id) {
+    if (editingProduct && item.id) {
       if (!confirm(`Deseja realmente remover a capacidade de ${item.capacity_liters || ''} L? Esta ação será confirmada ao salvar o produto.`)) {
         return;
       }
@@ -230,58 +231,77 @@ export default function AdminProdutosPage() {
       .replace(/-+$/, '');
   };
 
-  const handleDuplicate = async (productId: string) => {
-    if (!confirm("Tem certeza que deseja duplicar este produto?")) return;
-    try {
-      setDuplicatingProductId(productId);
-      const { data, error } = await supabase.rpc('duplicate_product', { p_product_id: productId });
-      if (error) throw error;
-      
-      alert("Produto duplicado com sucesso! Abrindo para edição...");
-      
-      // We need to fetch the newly created product and open the modal
-      const { data: newProd, error: prodError } = await supabase
-        .from('products')
-        .select(`
-          *,
-          category:product_categories(id, name),
-          images:product_images(id, product_id, url, public_url, storage_path, is_primary, sort_order),
-          videos:product_videos(id, product_id, storage_path, public_url, title, poster_url, sort_order),
-          variants:product_variants(*)
-        `)
-        .eq('id', data)
-        .single();
-        
-      if (newProd) {
-        // Enriquecer
-        const sortedImgs = (newProd.images || []).sort((a: any, b: any) => {
-          if (a.is_primary) return -1;
-          if (b.is_primary) return 1;
-          return (a.sort_order || 0) - (b.sort_order || 0);
-        });
-        const primaryUrl = sortedImgs.find((img: any) => img.is_primary)?.public_url
-          || sortedImgs.find((img: any) => img.is_primary)?.url
-          || sortedImgs[0]?.public_url
-          || sortedImgs[0]?.url
-          || null;
-        const sortedVariants = (newProd.variants || []).sort((a: any, b: any) => (a.display_order || 0) - (b.display_order || 0));
-        
-        const enriched = {
-          ...newProd,
-          images: sortedImgs,
-          videos: newProd.videos || [],
-          variants: sortedVariants,
-          primaryImageUrl: primaryUrl,
-          has_variants: sortedVariants.length > 0
-        };
-        openModal(enriched);
-      }
-      loadData();
-    } catch (err: any) {
-      alert("Erro ao duplicar: " + err.message);
-    } finally {
-      setDuplicatingProductId(null);
+  // Ação "Duplicar produto": abre o formulário de cadastro de novo produto preenchido com os dados
+  const handleDuplicateProduct = (product: Product) => {
+    setEditingProduct(null); // Tratar como novo produto independente
+    setGalleryModalError(null);
+    setVideoModalError(null);
+    setVariantErrors(null);
+    setVariantFieldErrors({});
+    setUploadProgress(null);
+    setRemovedImageIds([]);
+    setRemovedStoragePaths([]);
+    setRemovedVideoIds([]);
+    setRemovedVideoStoragePaths([]);
+    if (galleryFileInputRef.current) galleryFileInputRef.current.value = '';
+    if (videoFileInputRef.current) videoFileInputRef.current.value = '';
+
+    // Copiar referências das imagens sem id (novos registros ao salvar, reutilizando arquivos do Storage)
+    const initialGallery: GalleryItem[] = (product.images || [])
+      .map((img: any, idx: number) => ({
+        publicUrl: img.public_url || img.url || '',
+        storagePath: img.storage_path || extractStoragePath(img.public_url || img.url),
+        isPrimary: !!img.is_primary,
+        sortOrder: img.sort_order !== undefined ? img.sort_order : idx,
+      }))
+      .sort((a, b) => {
+        if (a.isPrimary) return -1;
+        if (b.isPrimary) return 1;
+        return a.sortOrder - b.sortOrder;
+      });
+
+    if (initialGallery.length > 0 && !initialGallery.some(item => item.isPrimary)) {
+      initialGallery[0].isPrimary = true;
     }
+    setGalleryItems(initialGallery);
+
+    // Copiar vídeos sem id
+    const initialVideos: VideoItem[] = (product.videos || [])
+      .map((vid: any, idx: number) => ({
+        publicUrl: vid.public_url,
+        storagePath: vid.storage_path,
+        title: vid.title || '',
+        sortOrder: vid.sort_order !== undefined ? vid.sort_order : idx,
+      }))
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+    setVideoItems(initialVideos);
+
+    // Copiar variantes sem id (novos registros independentes ao salvar), preservando capacidades e preços
+    const initialVariants: ProductVariant[] = (product.variants || []).map((v: any, idx: number) => ({
+      capacity_liters: v.capacity_liters,
+      sku: v.sku ? `${v.sku}-COPIA` : '',
+      price: v.price,
+      stock_quantity: v.stock_quantity ?? 0,
+      is_active: v.is_active,
+      display_order: v.display_order !== undefined ? v.display_order : idx,
+    }));
+    setFormVariants(initialVariants);
+    setFormHasVariants(initialVariants.length > 0);
+    setRemovedVariantIds([]);
+
+    // Dados do produto base
+    setFormProduct({
+      sku: product.sku ? `${product.sku}-COPIA` : '',
+      name: product.name ? `${product.name} (Cópia)` : '',
+      description: product.description || '',
+      price: product.price !== undefined ? product.price.toString() : '',
+      stock_quantity: product.stock_quantity !== undefined ? product.stock_quantity.toString() : '0',
+      product_type: product.product_type || 'equipamento',
+      category_id: product.category_id || '',
+      is_active: product.is_active,
+    });
+
+    setIsModalOpen(true);
   };
 
   // Cargar datos
@@ -438,13 +458,13 @@ export default function AdminProdutosPage() {
     setGalleryItems(updated);
   };
 
-  // Remover imagem da galeria (marcando para exclusão se já existia no banco/storage)
+  // Remover imagem da galeria (marcando para exclusão se já existia no banco/storage do produto sendo editado)
   const handleRemoveGalleryImage = (index: number) => {
     const itemToRemove = galleryItems[index];
-    if (itemToRemove.id) {
+    if (editingProduct && itemToRemove.id) {
       setRemovedImageIds(prev => [...prev, itemToRemove.id!]);
     }
-    if (itemToRemove.storagePath) {
+    if (editingProduct && itemToRemove.storagePath) {
       setRemovedStoragePaths(prev => [...prev, itemToRemove.storagePath!]);
     }
 
@@ -551,10 +571,10 @@ export default function AdminProdutosPage() {
     }
 
     const itemToRemove = videoItems[index];
-    if (itemToRemove.id) {
+    if (editingProduct && itemToRemove.id) {
       setRemovedVideoIds(prev => [...prev, itemToRemove.id!]);
     }
-    if (itemToRemove.storagePath) {
+    if (editingProduct && itemToRemove.storagePath) {
       setRemovedVideoStoragePaths(prev => [...prev, itemToRemove.storagePath!]);
     }
 
@@ -742,6 +762,47 @@ export default function AdminProdutosPage() {
           counter++;
         } else {
           isUnique = true;
+        }
+      }
+
+      // 1.1 Unicidade de SKU do produto simples
+      if (!formHasVariants && formProduct.sku && formProduct.sku.trim()) {
+        const skuQuery = supabase
+          .from('products')
+          .select('id')
+          .eq('sku', formProduct.sku.trim());
+        if (editingProduct) {
+          skuQuery.neq('id', editingProduct.id);
+        }
+        const { data: existingSku } = await skuQuery;
+        if (existingSku && existingSku.length > 0) {
+          setGalleryModalError(`O SKU "${formProduct.sku.trim()}" já está cadastrado em outro produto.`);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // 1.2 Unicidade de SKU das variantes
+      if (formHasVariants) {
+        for (let i = 0; i < formVariants.length; i++) {
+          const v = formVariants[i];
+          const vSkuQuery = supabase
+            .from('product_variants')
+            .select('id')
+            .eq('sku', v.sku.trim());
+          if (v.id) {
+            vSkuQuery.neq('id', v.id);
+          }
+          const { data: existingVSku } = await vSkuQuery;
+          if (existingVSku && existingVSku.length > 0) {
+            setVariantFieldErrors(prev => ({
+              ...prev,
+              [i]: { ...prev[i], sku: 'SKU já cadastrado em outra variante' }
+            }));
+            setVariantErrors(`O SKU "${v.sku.trim()}" já está cadastrado em outra variante. Cada SKU deve ser único.`);
+            setLoading(false);
+            return;
+          }
         }
       }
 
@@ -1198,15 +1259,33 @@ export default function AdminProdutosPage() {
     }
   };
 
-  const filteredProducts = products.filter(p => {
-    const text = searchTerm.toLowerCase();
-    const name = p.name.toLowerCase();
-    const sku = (p.sku || '').toLowerCase();
-    const desc = (p.description || '').toLowerCase();
-    const catName = (p.category?.name || '').toLowerCase();
+  const filteredProducts = products
+    .filter(p => {
+      // 1. Filtro por status: Todos (padrão), Ativos ou Inativos
+      if (statusFilter === 'ativos' && !p.is_active) return false;
+      if (statusFilter === 'inativos' && p.is_active) return false;
 
-    return name.includes(text) || sku.includes(text) || desc.includes(text) || catName.includes(text);
-  });
+      // 2. Busca combinada com texto
+      if (searchTerm.trim()) {
+        const text = searchTerm.toLowerCase();
+        const name = (p.name || '').toLowerCase();
+        const sku = (p.sku || '').toLowerCase();
+        const desc = (p.description || '').toLowerCase();
+        const catName = (p.category?.name || '').toLowerCase();
+
+        return name.includes(text) || sku.includes(text) || desc.includes(text) || catName.includes(text);
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      // Em "Todos": mostrar primeiro produtos ativos e inativos no final
+      if (a.is_active && !b.is_active) return -1;
+      if (!a.is_active && b.is_active) return 1;
+
+      // Ordenar pelo nome em português (considerando acentos e maiúsculas/minúsculas)
+      return (a.name || '').localeCompare(b.name || '', 'pt-BR');
+    });
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -1259,21 +1338,45 @@ export default function AdminProdutosPage() {
 
       {/* Listado */}
       <div className="bg-white rounded-3xl border border-slate-100 shadow-xs p-6 space-y-5">
-        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between pb-2 border-b border-slate-50">
+        <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between pb-2 border-b border-slate-50">
           <h3 className="font-extrabold text-sm text-slate-800 flex items-center gap-1.5 text-left">
             Produtos no Portfólio ({filteredProducts.length})
           </h3>
           
-          {/* Buscador */}
-          <div className="relative w-full sm:max-w-xs">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Buscar SKU, nome, categoria..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 bg-slate-50/20 transition-all text-slate-700 font-sans"
-            />
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            {/* Filtro por status: Todos, Ativos e Inativos */}
+            <div className="inline-flex items-center bg-slate-100/80 p-1 rounded-xl border border-slate-200/60 shadow-2xs">
+              {(['todos', 'ativos', 'inativos'] as const).map((filterOpt) => {
+                const label = filterOpt === 'todos' ? 'Todos' : filterOpt === 'ativos' ? 'Ativos' : 'Inativos';
+                const isSelected = statusFilter === filterOpt;
+                return (
+                  <button
+                    key={filterOpt}
+                    type="button"
+                    onClick={() => setStatusFilter(filterOpt)}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-white text-slate-900 shadow-xs'
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Buscador */}
+            <div className="relative w-full sm:w-64">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Buscar SKU, nome, categoria..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-brand-clinical focus:ring-2 focus:ring-sky-100 bg-slate-50/20 transition-all text-slate-700 font-sans"
+              />
+            </div>
           </div>
         </div>
 
@@ -1347,6 +1450,14 @@ export default function AdminProdutosPage() {
                       <td className="py-4 pr-2 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <button
+                            onClick={() => handleDuplicateProduct(prod)}
+                            className="p-1.5 text-slate-450 hover:text-indigo-650 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+                            title="Duplicar produto"
+                            aria-label="Duplicar produto"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                          <button
                             onClick={() => openModal(prod)}
                             className="p-1.5 text-slate-450 hover:text-sky-655 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
                             title="Editar Produto"
@@ -1401,7 +1512,15 @@ export default function AdminProdutosPage() {
                     </div>
                   </div>
 
-                  <div className="flex justify-end gap-2 border-t border-slate-50/80 pt-3">
+                  <div className="flex flex-wrap justify-end gap-2 border-t border-slate-50/80 pt-3">
+                    <button
+                      onClick={() => handleDuplicateProduct(prod)}
+                      className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-black text-slate-700 transition-all flex items-center gap-1 shadow-2xs hover:scale-[1.01]"
+                      title="Duplicar produto"
+                      aria-label="Duplicar produto"
+                    >
+                      <Copy className="w-3 h-3 text-slate-450" /> Duplicar produto
+                    </button>
                     <button
                       onClick={() => openModal(prod)}
                       className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-black text-slate-700 transition-all flex items-center gap-1 shadow-2xs hover:scale-[1.01]"
